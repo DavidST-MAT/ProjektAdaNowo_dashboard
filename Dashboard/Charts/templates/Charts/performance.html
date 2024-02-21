@@ -1,0 +1,271 @@
+{% extends 'Charts/index.html' %}
+
+{% block content %}
+
+<div class="container-fluid" style="background: #ffffff">
+  <div class="row">
+    <div class="col-12">
+       <div id="time-selectors">
+        <div class="time-selector active" id="1h" data-time="1h">1h</div>
+        <div class="time-selector" id="4h" data-time="4h">4h</div>
+        {% comment %} <div class="time-selector" id="1d" data-time="1D">1d</div> {% endcomment %}
+       </div>
+        <script>
+         const timeSelectors = document.querySelectorAll('.time-selector');
+            timeSelectors.forEach(selector => {
+            selector.addEventListener('click', () => {
+            timeSelectors.forEach(selector => {
+            selector.classList.remove('active');
+            });
+         selector.classList.add('active');
+         const selectedTime = selector.getAttribute('data-time');
+         });
+         });
+       </script>
+       <div class="border1">
+         <h1>Performance Measure</h1>
+          <canvas id="mycanvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+   
+  
+<script>
+    // create initial chart
+    var lastMinute = [];
+    var meineDaten = {{ performance_measure|safe }}
+
+
+    for (var i = 0; i < 10; i++) {
+        lastMinute.push(meineDaten[i]);
+    }
+    console.log(lastMinute)
+
+    var numberElements = 12;
+    var updateCount = 12;
+
+    let labels = [];
+    let now = new Date();
+
+    for (let i = 59; i >= 0; i--) {
+        let time = new Date(now - i * 60000);
+        labels.push(time.toLocaleTimeString());
+        }
+
+    const options = {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: {
+          display: true,
+        },
+        legend: {
+          display: false
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            drawBorder: false,
+          },
+          y: {
+            beginAtZero: true,
+            type: 'linear',
+            grid: {
+              drawBorder: false,
+              color: (context) => {
+              if(context.tick.value === 0) {
+                 return 'black'
+              }
+              } 
+            },
+            beginAtZero: false,
+            suggestedMin: 0,
+            suggestedMax: 0,
+          }
+        }
+      };
+
+    var ctx_live = document.getElementById("mycanvas");
+    var myChart = new Chart(ctx_live, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: lastMinute,
+          borderWidth: 2,
+          radius: 0,
+          borderColor:'rgba(255, 99, 132, 1)',
+          label: 'Performance Measure [%] - Betrachtungszeitraum: 1 Stunde',
+          tension: 0.25,
+          //fill: {
+          // target: 'origin',
+            //below: 'rgba(255, 99, 132, 0.2)',
+            //above: 'rgba(4, 216, 14, 0.2)'
+          //}, 
+        }]
+      },
+      options: options,
+    });
+
+
+// logic to get new data for '1h' chart
+    var getData = function() {
+      $.ajax({
+        type: "GET",
+        url: "/Charts/getPerformanceMeasureOneHour",
+        success: function(data) {
+            console.log(data)
+            var _data=data;
+            var _chartLabels=_data[0];
+            var _chartData=_data[0];
+            
+            //const myFloat = parseFloat(_chartData.contr_Margin);
+
+            var today = new Date();
+            if (document.getElementById('1h').classList.contains('active')) {
+              var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+            } else {
+              var time = today.getHours() + ":" + today.getMinutes();
+            }
+            console.log(time)
+            myChart.data.labels.push(time);
+            myChart.data.datasets[0].data.push(_chartData);
+      
+              if (updateCount == numberElements){
+                 myChart.data.labels.shift();
+                 myChart.data.datasets[0].data.shift();
+               }
+              else updateCount++;
+      
+           myChart.update('none');
+       }
+      });
+    };
+
+
+   updateCanvas = setInterval(getData, 5000);
+
+
+
+// Selecting '1h' via time-selector
+document.getElementById('1h').addEventListener('click', function(){
+
+    clearInterval(updateCanvas);
+    labels.splice(0);
+
+    let currentTime = new Date();
+    for (let i = 59; i >= 0; i--) {
+    let newTime = new Date(currentTime - i * 60000);
+    labels.push(newTime.toLocaleTimeString());
+    }
+
+    if(myChart){
+        myChart.destroy();
+
+    }
+
+    $.ajax({
+    type: "GET",
+    url: "/Charts/getPerformanceMeasureOneHour",
+    success: function(data) {
+        var _data=data;
+
+        var lastHour = [];
+        for (var i = 0; i < 12; i++) {
+            lastHour.push(_data[0]);
+        }
+
+        var ctx_live = document.getElementById("mycanvas");
+          myChart = new Chart(ctx_live, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: lastHour,
+              borderWidth: 2,
+              radius: 0,
+              borderColor:'rgba(255, 99, 132, 1)',
+              label: 'Performance Measure [%] - Betrachtungszeitraum: 1 Stunde',
+              tension: 0.25,
+              //fill: {
+              //  target: 'origin',
+              //  below: 'rgba(255, 99, 132, 0.2)',
+              //  above: 'rgba(4, 216, 14, 0.2)'
+              //}, 
+            }]
+          },
+          options: options,
+        });
+        myChart.update('none');
+    }
+  });
+    updateCanvas = setInterval(getData, 5000);
+});
+
+
+
+// Selecting '4h' via time-selector
+document.getElementById('4h').addEventListener('click', function(){
+
+  clearInterval(updateCanvas);
+  labels.splice(0);
+
+  let currentTime = new Date();
+  for (let i = 236; i >= 0; i--) {
+  let newTime = new Date(currentTime - i * 60000);
+  labels.push(newTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+  }
+
+  if(myChart){
+      myChart.destroy();
+  }
+
+  $.ajax({
+  type: "GET",
+  url: "/Charts/getPerformanceMeasureFourHour",
+  success: function(data) {
+      console.log(data)
+      var _data=data;
+
+      var lastFourHours = [];
+        for (var i = 0; i < 12; i++) {
+          lastFourHours.push(_data[0]);
+      }
+
+      var ctx_live = document.getElementById("mycanvas");
+        myChart = new Chart(ctx_live, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: lastFourHours,
+            borderWidth: 2,
+            radius: 0,
+            borderColor:'rgba(255, 99, 132, 1)',
+            label: 'Performance Measure [%] - Betrachtungszeitraum: 4 Stunden',
+            tension: 0.25,
+            //fill: {
+            //  target: 'origin',
+            //  below: 'rgba(255, 99, 132, 0.2)',
+            //  above: 'rgba(4, 216, 14, 0.2)'
+            //}, 
+          }]
+        },
+        options: options,
+      });
+      myChart.update('none');
+  }
+});
+  updateCanvas = setInterval(getData, 5000);
+});
+
+
+
+
+
+
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% load static %}
+
+{% url 'index' as index %}
+{% url 'energiewerte' as energiewerte %}
+{% url 'umweltwerte' as umweltwerte %}
+{% url 'test4' as test4 %}
+{% url 'v2_kostenfunktion' as v2_kostenfunktion %}
+
+
+<div class="wrapper d-flex">
+	<div class="sidebar">
+		<ul class="nav nav-pills flex-column mb-auto">
+			<li class="nav-item"> 
+
+                <a class="nav-link {% if request.path == index %}active{% endif %}" href="{{ index }}"> 
+                    <i class="fa fa-chart-line"></i>
+                    <span class="ms-2">Qualitätswerte</span> 
+                </a> 
+
+                <a class="nav-link {% if request.path == energiewerte %}active{% endif %}" href="{{ energiewerte }}"> 
+                    <i class="fa fa-chart-line"></i>
+                    <span class="ms-2">Energiewerte</span> 
+                </a> 
+
+                <a class="nav-link {% if request.path == umweltwerte %}active{% endif %}" href="{{ umweltwerte }}"> 
+                    <i class="fa fa-chart-line"></i>
+                    <span class="ms-2">Umweltwerte</span> 
+                </a> 
+                
+            </li>
+		</ul>
+        
+    </div>
+</div>
+    
