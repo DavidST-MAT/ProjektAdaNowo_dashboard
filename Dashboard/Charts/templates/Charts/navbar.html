@@ -5,14 +5,15 @@
             <a class="navbar-brand me-2 mb-1 d-flex" href="#">
             <img src="{% static 'images/LogoAdaNowoV2.png' %}" width="30" height="30" alt="">
             </a>
-            <form class="input-group w-auto my-auto d-none d-sm-flex">
+            {% comment %} <form class="input-group w-auto my-auto d-none d-sm-flex">
             <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" id="searchInput">
             <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="searchBtn" style="color: #eaeaec;">Search</button>
-            </form>
+            </form> {% endcomment %}
 
+        
         </div>
     
-        <li class="navbar-text" id="date">
+        {% comment %} <li class="navbar-text" id="date"> {% endcomment %}
             <div id="time"></div>
             <script>
                 const timeDisplay = document.getElementById("time");
@@ -25,7 +26,7 @@
                 updateTime();
                 setInterval(updateTime, 1000);
             </script>
-        </li>
+        {% comment %} </li> {% endcomment %}
     
         
         <img src="{% static 'images/mat.png' %}" width="30" height="30" alt="">

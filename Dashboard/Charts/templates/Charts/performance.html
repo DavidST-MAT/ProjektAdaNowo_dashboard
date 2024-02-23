@@ -13,14 +13,14 @@
         <script>
          const timeSelectors = document.querySelectorAll('.time-selector');
             timeSelectors.forEach(selector => {
-            selector.addEventListener('click', () => {
-            timeSelectors.forEach(selector => {
-            selector.classList.remove('active');
+              selector.addEventListener('click', () => {
+                timeSelectors.forEach(selector => {
+                selector.classList.remove('active');
+                });
+              selector.classList.add('active');
+              const selectedTime = selector.getAttribute('data-time');
+              });
             });
-         selector.classList.add('active');
-         const selectedTime = selector.getAttribute('data-time');
-         });
-         });
        </script>
        <div class="border1">
          <h1>Performance Measure</h1>
@@ -222,7 +222,7 @@ document.getElementById('4h').addEventListener('click', function(){
 
   $.ajax({
   type: "GET",
-  url: "/Charts/getPerformanceMeasureFourHour",
+  url: "energiewerte/get_energy_consumption_four_hour",
   success: function(data) {
       console.log(data)
       var _data=data;
