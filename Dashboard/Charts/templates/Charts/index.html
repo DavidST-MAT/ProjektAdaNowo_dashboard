@@ -19,8 +19,13 @@
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     {% comment %} <script src="path/to/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js"></script> {% endcomment %}
 
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'css/all.min.css' %}"> {% endcomment %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fontawesome.css' %}">
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'css/fontawesome.css' %}"> {% endcomment %}
+  
+
+    <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
 
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,7 +37,26 @@
     {% include 'Charts/navbar.html' %}
     <div class="d-flex">
         {% include 'Charts/sidebar.html' %}
-        {% block content %}{% endblock %}
+        <div class="container-fluid" style="background: #ffffff">
+            <div class="row">
+                <div class="col-12">
+                    {% include 'Charts/performance.html' %}
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="col-12">
+                    {% include 'Charts/energiewerte.html' %}
+                </div>
+            </div>
+       
+            <div class="row">
+                <div class="col-12">
+                    {% include 'Charts/laborwerte.html' %}
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <footer class="border-top footer text-muted">

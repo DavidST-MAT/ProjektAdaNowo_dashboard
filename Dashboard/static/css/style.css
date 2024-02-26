@@ -189,14 +189,14 @@ ul{
 }
 
 .sidebar ul li a{
-	color: rgb(32, 31, 31);	
+	color: rgb(32, 31, 31);    	
 }
 
-/* .sidebar ul li:hover{
+ /* .sidebar ul li:hover{
 	background: #575656;
-} */
+}  */
 
-/* .sidebar ul li:hover a i{
+.sidebar ul li:hover a i{
     color: #ffffff; 
 } 
 
@@ -209,9 +209,11 @@ ul{
 .nav-link:hover .fa{
     transform:rotate(360deg);
 }
+
 .nav-link .fa{
     transition:all 1s;
-}
+} 
+
 
 
 

@@ -7,6 +7,7 @@
 {% url 'v2_kostenfunktion' as v2_kostenfunktion %}
 
 
+
 <div class="wrapper d-flex">
 	<div class="sidebar">
 		<ul class="nav nav-pills flex-column mb-auto">
@@ -18,12 +19,12 @@
                 </a> 
 
                 <a class="nav-link {% if request.path == energiewerte %}active{% endif %}" href="{{ energiewerte }}"> 
-                    <i class="fa fa-chart-line"></i>
+                    <i class="fa fa-bolt"></i>
                     <span class="ms-2">Energiewerte</span> 
                 </a> 
 
                 <a class="nav-link {% if request.path == umweltwerte %}active{% endif %}" href="{{ umweltwerte }}"> 
-                    <i class="fa fa-chart-line"></i>
+                    <i class="fa fa-chart-simple"></i>
                     <span class="ms-2">Umweltwerte</span> 
                 </a> 
                 

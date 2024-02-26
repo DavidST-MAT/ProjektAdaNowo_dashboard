@@ -5,7 +5,7 @@ from influxdb_client import InfluxDBClient, Point
 from django.views.decorators.csrf import csrf_exempt
 import datetime
 import pandas as pd
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 def index(request):
@@ -15,33 +15,138 @@ def index(request):
 
     query_api = client_influxdb.query_api()
 
-    query_Actual_Values = """from(bucket: "AdaNowoTest")
-    |> range(start: 0, stop: now())
-    |> filter(fn: (r) => r["_measurement"] == "SetValues" and r["_field"] == "PerformanceMeasure")
-    |> group(columns: ["_field"])
-    |> sort(columns: ["_time"], desc: true)
-    |> limit(n: 10)"""
+    query_performance_measure = """from(bucket: "AdaNowoTest")
+        |> range(start: -1h, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues")
+        |> filter(fn: (r) => r["_field"] == "PerformanceMeasure")
+        |> aggregateWindow(every: 1m, fn: last)
+        |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
-    tables = query_api.query(query_Actual_Values, org="MAT")
+    tables_performance_measure = query_api.query(query_performance_measure, org="MAT")
     performance_measure = []
     performance_measure_time = []
 
 
-    for table in tables:
-        for record in table.records:
-            value = record.values["_value"]
-            time = record.values["_time"]
-            performance_measure.append(value)
-            performance_measure_time.append([time])
+    for table_performance_measure in tables_performance_measure:
+        for record_performance_measure in table_performance_measure.records:
+            pm_value = record_performance_measure.values["_value"]
+            pm_time = record_performance_measure.values["_time"]
+            if pm_value == None: 
+                pm_value = 0
+            performance_measure.append(pm_value)
+            pm_time_updated = pm_time + timedelta(hours=1)
+            pm_formatted_datetime = pm_time_updated.strftime("%H:%M:%S")
+            performance_measure_time.append(pm_formatted_datetime)
 
     print(performance_measure)
-
-    performance_measure_context = {'performance_measure': performance_measure, 'performance_measure_time': performance_measure_time}
-
+    print(performance_measure_time)
 
 
-    return render(request, 'Charts/performance.html', performance_measure_context)
+
+    # Query for the data
+    query_energy_consumption = """from(bucket: "AdaNowoTest")
+        |> range(start: -1h, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues")
+        |> filter(fn: (r) => r["_field"] == "Energy")
+        |> aggregateWindow(every: 1m, fn: last)
+        |> yield(name: "last")"""
+
+    # Execute the Flux query and store the result in tables
+    tables_energy_consumption = query_api.query(query_energy_consumption, org="MAT")
+    energy_consumption = []
+    energy_consumption_time = []
+
+
+    for table_energy_consumption in tables_energy_consumption:
+        print(table_energy_consumption)
+        for record_energy_consumption in table_energy_consumption.records:
+            ec_value = record_energy_consumption.values["_value"]
+            ec_time = record_energy_consumption.values["_time"]
+            if ec_value == None: 
+                ec_value = 0
+            energy_consumption.append(ec_value)
+            ec_updated_time = ec_time + timedelta(hours=1)
+            ec_formatted_datetime = ec_updated_time.strftime("%H:%M:%S")
+            energy_consumption_time.append(ec_formatted_datetime)
+
+    print(energy_consumption)
+    print(energy_consumption_time)
+
+
+
+
+
+    area_weights = []
+    area_weight_time = []
+    aggregation_fns = ["min", "max", "median"]
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_area_weight = f'''
+        from(bucket: "LabData")
+        |> range(start: -2h, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: 1m, fn: {aggregation_fn})
+        |> yield(name: "min")
+        '''
+
+        # Execute the Flux query and store the result in tables
+        tables_area_weight = query_api.query(query_area_weight, org="MAT")
+        area_weight = []
+        
+
+        for table_area_weight in tables_area_weight:
+            print(table_area_weight)
+            for record_area_weight in table_area_weight.records:
+                aw_value = record_area_weight.values["_value"]
+                aw_time = record_area_weight.values["_time"]
+                if aw_value == None: 
+                    aw_value = 0
+                area_weight.append(aw_value)
+                aw_updated_time = aw_time + timedelta(hours=1)
+                aw_formatted_datetime = aw_updated_time.strftime("%H:%M:%S")
+                area_weight_time.append(aw_formatted_datetime)
+
+        area_weights.append(area_weight)
+
+    print(area_weights)
+    print(area_weight_time)
+
+
+
+
+
+    context = {'performance_measure': performance_measure, 'performance_measure_time': performance_measure_time, 'energy_consumption': energy_consumption, 'energy_consumption_time': energy_consumption_time, 'area_weights': area_weights, 'area_weight_time': area_weight_time}
+
+    return render(request, 'Charts/index.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

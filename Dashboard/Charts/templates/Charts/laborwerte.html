@@ -1,0 +1,111 @@
+
+<div id="time-selectors">
+    </div>
+        <div class="border1">
+         <h1>Laborwerte</h1>
+          <canvas id="labData"></canvas>
+      </div>
+</div>
+
+
+  
+
+
+
+<script>
+    // create initial chart
+    var lastMinute = [];
+    var meineDaten = {{ area_weights|safe }}
+    var meineDaten2 = {{ area_weight_time|safe }}
+
+
+    console.log(meineDaten[0])
+
+    var numberElements = 12;
+    var updateCount = 12;
+
+
+
+    const options5 = {
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: {
+          display: true,
+        },
+        legend: {
+          display: false
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            drawBorder: false,
+          },
+          y: {
+            position: 'right',
+            beginAtZero: true,
+            type: 'linear',
+            grid: {
+              drawBorder: false,
+              color: (context) => {
+              if(context.tick.value === 0) {
+                 return 'black'
+              }
+              } 
+            },
+            beginAtZero: false,
+            suggestedMin: 0,
+            suggestedMax: 0,
+                  title: {
+        display: true,
+        text: '[g/m^2]', // Hier kannst du den Namen für die Y-Achse festlegen
+        font: {
+          size: 16, // Du kannst die Schriftgröße anpassen, wenn gewünscht
+        },
+      },
+          }
+        }
+      };
+
+    var ctx_live = document.getElementById("labData");
+    var myChart = new Chart(ctx_live, {
+      type: 'line',
+      data: {
+        labels: meineDaten2,
+    datasets: [
+      {
+        data: meineDaten[0],
+        borderWidth: 2,
+        radius: 0,
+        borderColor: 'rgba(255, 99, 132, 1)',
+        label: 'Area Weight min',
+        tension: 0.25,
+      },
+      {
+        data: meineDaten[1],
+        borderWidth: 2,
+        radius: 0,
+        borderColor: 'rgba(4, 216, 14, 1)',
+        label: 'Area Weight max',
+        tension: 0.25,
+      },
+      {
+        data: meineDaten[2],
+        borderWidth: 2,
+        radius: 0,
+        borderColor: 'rgba(0, 0, 255, 1)',
+        label: 'Area Weight median',
+        tension: 0.25,
+      },
+    ]
+      },
+      options: options5,
+    });
+
+
+
+
+
+</script>
+
+
+
