@@ -6,6 +6,7 @@ from .views import getPerformanceMeasureOneHour
 urlpatterns = [
     path('', views.index, name="index"),
 
+    path('Charts/updateChartOneMinute/', views.updateChartOneMinute, name='updateChartOneMinute'),
     path('Charts/getPerformanceMeasureOneHour/', views.getPerformanceMeasureOneHour, name='getPerformanceMeasureOneHour'),
     path('Charts/getPerformanceMeasureFourHour/', views.getPerformanceMeasureFourHour, name='getPerformanceMeasureFourHour'),
 

@@ -35,28 +35,11 @@
 
 <body>
     {% include 'Charts/navbar.html' %}
-    <div class="d-flex">
+    <div class="d-flex" style="background: #ffffff">
         {% include 'Charts/sidebar.html' %}
-        <div class="container-fluid" style="background: #ffffff">
-            <div class="row">
-                <div class="col-12">
-                    {% include 'Charts/performance.html' %}
-                </div>
-            </div>
-    
-            <div class="row">
-                <div class="col-12">
-                    {% include 'Charts/energiewerte.html' %}
-                </div>
-            </div>
-       
-            <div class="row">
-                <div class="col-12">
-                    {% include 'Charts/laborwerte.html' %}
-                </div>
-            </div>
-        </div>
+        {% block content %}{% endblock %}
 
+            
     </div>
 
     <footer class="border-top footer text-muted">

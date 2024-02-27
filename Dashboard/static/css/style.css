@@ -238,7 +238,8 @@ ul{
 .row {
     text-align: right;
     height: 350px;
-    margin-top: 15%;
+    margin-bottom: 5%;
+    margin-top: 5%;
     margin-left: 50px;
     margin-right: 50px;
     background: #ffffff;
@@ -255,6 +256,8 @@ ul{
 }
 
 .border1 {
+    border-left: 1px solid red;
+    border-right: 1px solid red;
     height: 350px;
     padding-bottom: 50px;
     background-color: #eaeaec;

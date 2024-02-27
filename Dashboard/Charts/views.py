@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import datetime
 import pandas as pd
 from datetime import datetime, timedelta
+from statistics import median
 
 
 def index(request):
@@ -19,6 +20,7 @@ def index(request):
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues")
         |> filter(fn: (r) => r["_field"] == "PerformanceMeasure")
+        |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: last)
         |> yield(name: "last")"""
 
@@ -78,13 +80,12 @@ def index(request):
 
 
     area_weights = []
-    area_weight_time = []
-    aggregation_fns = ["min", "max", "median"]
+    aggregation_fns = ["min", "max", "mean"]
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_area_weight = f'''
         from(bucket: "LabData")
-        |> range(start: -2h, stop: now())
+        |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
         |> group(columns: ["_measurement"])
@@ -95,6 +96,7 @@ def index(request):
         # Execute the Flux query and store the result in tables
         tables_area_weight = query_api.query(query_area_weight, org="MAT")
         area_weight = []
+        area_weight_time = []
         
 
         for table_area_weight in tables_area_weight:
@@ -113,6 +115,7 @@ def index(request):
 
     print(area_weights)
     print(area_weight_time)
+    print(len(area_weight_time))
 
 
 
@@ -120,7 +123,7 @@ def index(request):
 
     context = {'performance_measure': performance_measure, 'performance_measure_time': performance_measure_time, 'energy_consumption': energy_consumption, 'energy_consumption_time': energy_consumption_time, 'area_weights': area_weights, 'area_weight_time': area_weight_time}
 
-    return render(request, 'Charts/index.html', context)
+    return render(request, 'Charts/performance.html', context)
 
 
 
@@ -129,6 +132,76 @@ def index(request):
 
 
 
+################################ TEST UPDATING ######################################
+
+# Function for updating the Charts 
+def updateChartOneMinute(request):
+    updated_values = []
+
+    client_influxdb = InfluxDBClient(url="http://localhost:8086", token="Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==", org="MAT")
+
+    query_api = client_influxdb.query_api()
+
+
+    ### Updating PerformanceMeasurement ###
+    query_performance = """from(bucket: "AdaNowoTest")
+    |> range(start: 0, stop: now())
+    |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["_field"] == "PerformanceMeasure")
+    |> group(columns: ["_field"])
+    |> last()"""
+
+    tables = query_api.query(query_performance, org="MAT")
+
+    for table in tables:
+        for record in table.records:
+            value = record.values["_value"]
+            updated_values.append(value)
+
+
+
+    ### Updating Energieverbrauch ###
+    query_energy = """from(bucket: "AdaNowoTest")
+        |> range(start: 0, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "Energy")
+        |> group(columns: ["_field"])
+        |> last()"""
+
+    tables = query_api.query(query_energy, org="MAT")
+
+    for table in tables:
+        for record in table.records:
+            value = record.values["_value"]
+            updated_values.append(value)
+
+
+
+    ### Updating AreaWeight ###
+    query_area = """from(bucket: "LabData")
+        |> range(start: 0, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
+        |> group(columns: ["_field"])
+        |> last()"""
+    
+    tables = query_api.query(query_area, org="MAT")
+    area_weight = []
+    
+    for table in tables:
+        for record in table.records:
+            value = record.values["_value"]
+            area_weight.append(value)
+
+    max_area = max(area_weight)
+    min_area = min(area_weight)
+    median_area = median(area_weight)
+
+    updated_values.append(max_area)
+    updated_values.append(min_area)
+    updated_values.append(median_area)
+ 
+    print(updated_values)
+    
+    return JsonResponse(updated_values, safe=False)
 
 
 
@@ -137,13 +210,33 @@ def index(request):
 
 
 
+#######################################################################################
 
 
 
 
+def get_energy_consumption_one_hour_update(request):
+
+    client_influxdb = InfluxDBClient(url="http://localhost:8086", token="Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==", org="MAT")
+
+    query_api = client_influxdb.query_api()
+
+    query_Actual_Values = """from(bucket: "AdaNowoTest")
+        |> range(start: 0, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "Energy")
+        |> group(columns: ["_field"])
+        |> sort(columns: ["_time"], desc: true)
+        |> limit(n: 1)"""
+
+    tables = query_api.query(query_Actual_Values, org="MAT")
 
 
-
+    for table in tables:
+        for record in table.records:
+            value = record.values["_value"]
+      
+    print(value)
+    return JsonResponse(value, safe=False)
 
 
 
@@ -159,22 +252,31 @@ def getPerformanceMeasureOneHour(request):
 
     query_Actual_Values = """from(bucket: "AdaNowoTest")
     |> range(start: 0, stop: now())
-    |> filter(fn: (r) => r["_measurement"] == "SetValues" and r["_field"] == "PerformanceMeasure")
+    |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["_field"] == "PerformanceMeasure")
     |> group(columns: ["_field"])
     |> sort(columns: ["_time"], desc: true)
     |> limit(n: 1)"""
 
     tables = query_api.query(query_Actual_Values, org="MAT")
 
-
     for table in tables:
         for record in table.records:
             value = record.values["_value"]
-            time = record.values["_time"]
-            performance_measure.append(value)
+
+    return JsonResponse(value, safe=False)
 
 
-    return JsonResponse(performance_measure, safe=False)
+####################################################################################################
+
+
+
+
+
+
+
+
+
+
 
 
 

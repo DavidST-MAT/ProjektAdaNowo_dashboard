@@ -1,4 +1,3 @@
-
 <div id="time-selectors2">
   <div class="time-selector2 active" id="1h" data-time="1h">1h</div>
   <div class="time-selector2" id="4h" data-time="4h">4h</div> 
@@ -106,13 +105,11 @@ var energieConsumptionChart = new Chart(ctx_live, {
 var getData = function() {
  $.ajax({
  type: "GET",
-url: "/energiewerte/get_energy_consumption_one_hour_update",
+  url: "/energiewerte/get_energy_consumption_one_hour_update",
     success: function(data) {
         var _data = data;
-        
         var now = new Date();
         var time = now.toLocaleTimeString();
-        console.log(_data)
          energieConsumptionChart.data.labels.push(time);
          energieConsumptionChart.data.datasets[0].data.push(_data);
 

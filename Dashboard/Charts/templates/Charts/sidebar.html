@@ -9,28 +9,28 @@
 
 
 <div class="wrapper d-flex">
-	<div class="sidebar">
-		<ul class="nav nav-pills flex-column mb-auto">
-			<li class="nav-item"> 
-
-                <a class="nav-link {% if request.path == index %}active{% endif %}" href="{{ index }}"> 
+    <div class="sidebar h-100">
+        <form>
+            <div class="nav flex-column mb-auto">
+                <label class="nav-item">
+                    <input type="checkbox" {% if request.path == index %}checked{% endif %}>
                     <i class="fa fa-chart-line"></i>
-                    <span class="ms-2">Qualitätswerte</span> 
-                </a> 
+                    <span class="ms-2">Qualitätswerte</span>
+                </label>
 
-                <a class="nav-link {% if request.path == energiewerte %}active{% endif %}" href="{{ energiewerte }}"> 
+                <label class="nav-item">
+                    <input type="checkbox" {% if request.path == energiewerte %}checked{% endif %}>
                     <i class="fa fa-bolt"></i>
-                    <span class="ms-2">Energiewerte</span> 
-                </a> 
+                    <span class="ms-2">Energiewerte</span>
+                </label>
 
-                <a class="nav-link {% if request.path == umweltwerte %}active{% endif %}" href="{{ umweltwerte }}"> 
+                <label class="nav-item">
+                    <input type="checkbox" {% if request.path == umweltwerte %}checked{% endif %}>
                     <i class="fa fa-chart-simple"></i>
-                    <span class="ms-2">Umweltwerte</span> 
-                </a> 
-                
-            </li>
-		</ul>
-        
+                    <span class="ms-2">Umweltwerte</span>
+                </label>
+            </div>
+        </form>
     </div>
 </div>
     
