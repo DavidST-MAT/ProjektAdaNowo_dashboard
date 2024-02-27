@@ -9,28 +9,62 @@
 
 
 <div class="wrapper d-flex">
-    <div class="sidebar h-100">
-        <form>
-            <div class="nav flex-column mb-auto">
-                <label class="nav-item">
-                    <input type="checkbox" {% if request.path == index %}checked{% endif %}>
-                    <i class="fa fa-chart-line"></i>
-                    <span class="ms-2">Qualitätswerte</span>
-                </label>
 
-                <label class="nav-item">
-                    <input type="checkbox" {% if request.path == energiewerte %}checked{% endif %}>
-                    <i class="fa fa-bolt"></i>
-                    <span class="ms-2">Energiewerte</span>
-                </label>
+  <div class="sidebar h-100">
+  
+        <select class="form-select" aria-label="Default select example">
+        <option selected>Last Hour</option>
+        <option value="4">Last 4 Hours</option>
+        </select>
 
-                <label class="nav-item">
-                    <input type="checkbox" {% if request.path == umweltwerte %}checked{% endif %}>
-                    <i class="fa fa-chart-simple"></i>
-                    <span class="ms-2">Umweltwerte</span>
-                </label>
-            </div>
-        </form>
-    </div>
+      <div class="nav flex-column mb-auto">
+      
+        <label class="nav-item">
+          <input type="checkbox" class="canvas-checkbox" data-canvas-id="PerformanceMeasure" data-row-id="row1" checked>
+     
+          <span class="ms-2">Performance Measure</span>
+        </label>
+
+        <label class="nav-item">
+          <input type="checkbox" class="canvas-checkbox" data-canvas-id="EnergieConsumption" data-row-id="row2" checked>
+
+          <span class="ms-2">Energy</span>
+        </label>
+
+        <label class="nav-item">
+          <input type="checkbox" class="canvas-checkbox" data-canvas-id="LabValues" data-row-id="row3" checked>
+
+          <span class="ms-2">Laboratory Values</span>
+        </label>
+      </div>
+   
+    
+  </div>
 </div>
     
+
+<script>
+  $(document).ready(function () {
+    // Setzen Sie die Checkboxen standardmäßig auf ausgewählt
+    $('.canvas-checkbox').prop('checked', true);
+
+    // Verwalten Sie die Anzeige und den Platz der Canvas-Elemente basierend auf den Checkbox-Änderungen
+    $('.canvas-checkbox').change(function () {
+      var rowId = $(this).data('row-id');
+      var rowElement = $('[data-row-id="' + rowId + '"]');
+
+      if ($(this).prop('checked')) {
+        rowElement.slideDown();
+      } else {
+        rowElement.slideUp();
+      }
+    });
+  });
+</script>
+
+<style>
+  .nav-item {
+    margin-top: 10px;
+    margin-left: 10px; /* Hier können Sie die gewünschte Pixelanzahl oder Einheit angeben */
+  }
+</style>

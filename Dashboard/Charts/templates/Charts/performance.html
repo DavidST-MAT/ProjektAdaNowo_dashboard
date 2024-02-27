@@ -4,7 +4,7 @@
 
 <div class="container-fluid" style="background: #ffffff">
 
-  <div class="row">
+  <div class="row" data-row-id="row1">
     <div class="col-12">
       <div class="border1">
         <h1>Performance Measure</h1>
@@ -13,7 +13,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row" data-row-id="row2">
     <div class="col-12">
       <div class="border1">
         <h1>Energy Consumption</h1>
@@ -22,8 +22,7 @@
     </div>
   </div>
 
-
-  <div class="row">
+  <div class="row" data-row-id="row3">
     <div class="col-12">
       <div class="border1">
         <h1>Lab Values</h1>
@@ -32,7 +31,7 @@
     </div>
   </div>
 
-</div> 
+</div>
 
 
 
@@ -165,7 +164,7 @@ var energieConsumptionChart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 0,
       borderColor:'rgba(255, 99, 132, 1)',
-      label: 'Energieverbrauch',
+      label: 'Energy Consumption',
       tension: 0.25,
       //fill: {
       // target: 'origin',
@@ -310,8 +309,8 @@ var getData1 = function() {
        // Updating AreaWeight
       area_weight_chart.data.labels.push(time);
       area_weight_chart.data.datasets[0].data.push(_data_area_max);
-      area_weight_chart.data.datasets[1].data.push(_data_area_min);
-      area_weight_chart.data.datasets[2].data.push(_data_area_median);
+      area_weight_chart.data.datasets[1].data.push(_data_area_max);
+      area_weight_chart.data.datasets[2].data.push(_data_area_max);
 
       area_weight_chart.data.labels.shift();
       area_weight_chart.data.datasets[0].data.shift();
@@ -324,20 +323,7 @@ var getData1 = function() {
   });
 };
 
-updateCanvas = setInterval(getData1, 10000);
-
-
-
-
-
-
-
-
-
-
-
-
-
+updateCanvas = setInterval(getData1, 60000);
 
 
 </script>
