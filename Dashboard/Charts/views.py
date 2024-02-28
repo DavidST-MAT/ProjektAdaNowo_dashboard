@@ -85,7 +85,7 @@ def index(request):
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_area_weight = f'''
         from(bucket: "LabData")
-        |> range(start: -2h, stop: now())
+        |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
         |> group(columns: ["_measurement"])
@@ -125,7 +125,7 @@ def index(request):
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_md = f'''
         from(bucket: "LabData")
-        |> range(start: -2h, stop: now())
+        |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_md_1" or r["_field"] == "maximum_tensile_force_md_2" or r["_field"] == "maximum_tensile_force_md_3")
         |> group(columns: ["_measurement"])
@@ -159,7 +159,7 @@ def index(request):
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_cd = f'''
         from(bucket: "LabData")
-        |> range(start: -2h, stop: now())
+        |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_cd_1" or r["_field"] == "maximum_tensile_force_cd_2" or r["_field"] == "maximum_tensile_force_cd_3")
         |> group(columns: ["_measurement"])

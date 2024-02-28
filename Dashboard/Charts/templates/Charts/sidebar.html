@@ -1,10 +1,9 @@
 {% load static %}
 
 {% url 'index' as index %}
-{% url 'energiewerte' as energiewerte %}
-{% url 'umweltwerte' as umweltwerte %}
-{% url 'test4' as test4 %}
-{% url 'v2_kostenfunktion' as v2_kostenfunktion %}
+{% url 'energiewerte' as performance %}
+{% url 'time' as time %}
+
 
 
 
@@ -12,10 +11,15 @@
 
   <div class="sidebar h-100">
   
-    <select id="timeRangeSelect" class="form-select" aria-label="Default select example">
-      <option selected>Last Hour</option>
-      <option value="4">Last 4 Hours</option>
-    </select>
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+         Time Range
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+          <li><a class="dropdown-item" href="{{ index }}" >Last Hour</a></li>
+          <li><a class="dropdown-item" href="{{ time }}" >Last 4 Hours</a></li>
+        </ul>
+      </div>
 
       <div class="nav flex-column mb-auto">
       
@@ -60,6 +64,13 @@
       }
     });
   });
+
+
+function updateDropdownText(selectedValue) {
+  // Setze den Text des Dropdown-Buttons auf den ausgewählten Wert
+  document.getElementById("dropdownMenuButton1").innerText = selectedValue;
+  
+}
 </script>
 
 <style>
