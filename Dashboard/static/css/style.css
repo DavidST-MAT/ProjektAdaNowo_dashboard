@@ -207,6 +207,21 @@ navbar li {
     transition:all 1s;
 } 
 
+.nav-item {
+    margin-top: 10px;
+    margin-left: 10px;
+/* Hier können Sie die gewünschte Pixelanzahl oder Einheit angeben */
+}
+
+.nav-item:hover {
+    background-color: #e0e0e0; /* Change this to your desired hover background color */
+    cursor: pointer;
+}
+
+.canvas-checkbox {
+    margin-right: 5px;
+}
+
 
 
 
