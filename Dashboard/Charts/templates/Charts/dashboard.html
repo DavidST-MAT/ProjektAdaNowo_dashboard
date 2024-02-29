@@ -37,21 +37,45 @@
 
 
 <script>
-console.log(slider.value)
+
+function getValueFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('value');
+}
+
+const sliderValue = getValueFromURL();
+console.log(sliderValue);
+
+
+var dict = {
+  1: 60,
+  2: 120,
+  3: 180,
+  4: 240,
+  5: 300,
+  6: 360,
+  7: 420,
+  8: 480,
+};
+
+var valueForsliderValue = dict[sliderValue];
+
+
+
 // create initial chart PerformanceMeasure
 var performance_measure = {{ performance_measure|safe }}
 var performance_measure_time = {{ performance_measure_time|safe }}
 
 if (performance_measure_time.length === 0) {
     let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
         performance_measure_time.push(time.toLocaleTimeString());
     }
 }
 
 if (performance_measure.length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         performance_measure.push(0);
     }
 }
@@ -128,14 +152,14 @@ var energyConsumptionTime = {{ energy_consumption_time|safe }}
 
 if (energyConsumptionTime.length === 0) {
     let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
         energyConsumptionTime.push(time.toLocaleTimeString());
     }
 }
 
 if (energyConsumption.length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         energyConsumption.push(0);
     }
 }
@@ -217,60 +241,60 @@ var data_tensile_force_cd_ = {{ tensile_force_cd_all|safe }}
 
 if (data_area_time_.length === 0) {
     let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
         data_area_time_.push(time.toLocaleTimeString());
     }
 }
 
 if (data_area_[0].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_area_[0].push(0);
     }
 }
 if (data_area_[1].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_area_[1].push(0);
     }
 }
 if (data_area_[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_area_[2].push(0);
     }
 }
 
 if (data_tensile_force_cd_[0].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_cd_[0].push(0);
     }
 }
 
 if (data_tensile_force_cd_[1].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_cd_[1].push(0);
     }
 }
 
 if (data_tensile_force_cd_[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_cd_[2].push(0);
     }
 }
 
 if (data_tensile_force_md_[0].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_md_[0].push(0);
     }
 }
 
 if (data_tensile_force_md_[1].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_md_[1].push(0);
     }
 }
 
 if (data_tensile_force_md_[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = valueForsliderValue; i >= 0; i--) {
         data_tensile_force_md_[2].push(0);
     }
 }
@@ -513,7 +537,7 @@ var getData1 = function() {
   });
 };
 
-//var updateCanvas = setInterval(getData1, 60000);
+var updateCanvas = setInterval(getData1, 60000);
 
 window.addEventListener('beforeunload', function() {
     clearInterval(updateCanvas);

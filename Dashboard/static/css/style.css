@@ -19,8 +19,8 @@ body{
 /* Navbar */
 .navbar {
     background-color: #eaeaec;
-    border-left: 5px solid red; /* Hier wird der rote Streifen hinzugefügt */
-    border-bottom: 2px solid red; /* Hier wird der rote Streifen hinzugefügt */
+    border-left: 5px solid red; 
+    border-bottom: 2px solid red;
  }
 
 .navbar-brand {
@@ -71,6 +71,8 @@ navbar li {
 
 #time {
     color: rgb(32, 31, 31);
+    font-weight: bold;
+    font-size: 15px;
 }
 
 
@@ -182,7 +184,7 @@ navbar li {
     display: flex;
     flex-direction: column;
     align-items: left;
-  }
+}
 
 
 .nav-link:hover {
@@ -201,11 +203,10 @@ navbar li {
 .nav-item {
     margin-top: 10px;
     margin-left: 10px;
-/* Hier können Sie die gewünschte Pixelanzahl oder Einheit angeben */
 }
 
 .nav-item:hover {
-    background-color: #e0e0e0; /* Change this to your desired hover background color */
+    background-color: #e0e0e0; 
     cursor: pointer;
 }
 
@@ -215,25 +216,7 @@ navbar li {
 
 
 
-
-
 /* Dashboard */
-.time-selector {
-    display: inline-block;
-    font-size: 15px;
-    cursor: pointer;
-    padding: 10px;
-    margin-bottom: 5px;
-    color: black;
-    background-color: #eaeaec;
-    border-radius: 10px;
-}
-
-.time-selector.active {
-    background: #a8a7a7;
-    border-left: 3px solid red;
-}
-
 .row {
     text-align: right;
     height: 350px;
@@ -255,12 +238,13 @@ navbar li {
 }
 
 .border1 {
-    border-left: 1px solid red;
-    border-left: 1px solid red;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    border: 1px solid rgb(139, 2, 2);
     height: 350px;
     padding-bottom: 50px;
     background-color: #eaeaec;
-    border-radius: 10px;
+   
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 10px;
@@ -281,6 +265,7 @@ navbar li {
     width: auto;
     margin-right:auto;
 }
+
 
 /* Footer */
 .footer {

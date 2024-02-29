@@ -1,8 +1,8 @@
 {% load static %}
 
 {% url 'index' as index %}
-{% url 'energiewerte' as performance %}
-{% url 'time' as time %}
+{% url 'dashboard' as dashboard %}
+
 
 
 
@@ -11,71 +11,106 @@
 
   <div class="sidebar h-100">
   
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-         Time Range
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-          <li><a class="dropdown-item" href="{{ index }}" >Last Hour</a></li>
-          <li><a class="dropdown-item" href="{{ time }}" >Last 4 Hours</a></li>
-        </ul>
-      </div>
+    <input type="range" id="slider" name="slider" min="1" max="8" value="1">
+    <p>Selected Time: <span id="sliderValue">1</span> h</p>
 
       <div class="nav flex-column mb-auto">
       
         <label class="nav-item">
           <input type="checkbox" class="canvas-checkbox" data-canvas-id="PerformanceMeasure" data-row-id="row1" checked>
-     
           <span class="ms-2">Performance Measure</span>
         </label>
 
         <label class="nav-item">
           <input type="checkbox" class="canvas-checkbox" data-canvas-id="EnergieConsumption" data-row-id="row2" checked>
-
           <span class="ms-2">Energy</span>
         </label>
 
         <label class="nav-item">
           <input type="checkbox" class="canvas-checkbox" data-canvas-id="LabValues" data-row-id="row3" checked>
-
           <span class="ms-2">Laboratory Values</span>
         </label>
+
       </div>
    
-    
   </div>
+
 </div>
     
 
 <script>
-  $(document).ready(function () {
-    // Setzen Sie die Checkboxen standardmäßig auf ausgewählt
-    $('.canvas-checkbox').prop('checked', true);
 
-    // Verwalten Sie die Anzeige und den Platz der Canvas-Elemente basierend auf den Checkbox-Änderungen
-    $('.canvas-checkbox').change(function () {
-      var rowId = $(this).data('row-id');
-      var rowElement = $('[data-row-id="' + rowId + '"]');
+$(document).ready(function () {
+  $('.canvas-checkbox').prop('checked', true);
+  $('.canvas-checkbox').change(function () {
+    var rowId = $(this).data('row-id');
+    var rowElement = $('[data-row-id="' + rowId + '"]');
 
-      if ($(this).prop('checked')) {
-        rowElement.slideDown();
-      } else {
-        rowElement.slideUp();
-      }
-    });
+    if ($(this).prop('checked')) {
+      rowElement.slideDown();
+    } else {
+      rowElement.slideUp();
+    }
   });
+});
 
+var slider = document.getElementById("slider");
+var sliderValueElement = document.getElementById("sliderValue");
 
-function updateDropdownText(selectedValue) {
-  // Setze den Text des Dropdown-Buttons auf den ausgewählten Wert
-  document.getElementById("dropdownMenuButton1").innerText = selectedValue;
-  
+var savedSliderValue = localStorage.getItem("sliderValue");
+if (savedSliderValue) {
+  slider.value = savedSliderValue;
+  updateSliderValue();
 }
+
+var sliderUsed = false;
+
+function updateSliderValue() {
+  sliderValueElement.textContent = slider.value;
+  sliderUsed = true;
+  localStorage.setItem("sliderValue", slider.value);
+}
+
+function handleConfirmButtonClick() {
+  if (sliderUsed) {
+    var selectedValue = slider.value;
+    window.location.href = "{{ dashboard }}?value=" + selectedValue;
+    sliderUsed = false;
+  }
+}
+
+slider.addEventListener("change", function() {
+  updateSliderValue();
+  setTimeout(handleConfirmButtonClick, 2000); 
+});
+
 </script>
 
+
 <style>
-  .nav-item {
-    margin-top: 10px;
-    margin-left: 10px; /* Hier können Sie die gewünschte Pixelanzahl oder Einheit angeben */
-  }
+.nav-item {
+  margin-top: 10px;
+  margin-left: 10px; /
+}
+
+#slider {
+  width: 80%;
+  margin-top: 20px;
+  margin-left: 20px;
+  background-color: red !important; 
+  background: red !important; 
+}
+
+p {
+  font-weight: bold;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+span {
+  font-weight: bold;
+  font-size: 15px;
+  color: red; 
+}
 </style>

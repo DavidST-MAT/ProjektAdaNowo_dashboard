@@ -8,9 +8,6 @@ urlpatterns = [
 
     path('Charts/updateChartOneMinute/', views.updateChartOneMinute, name='updateChartOneMinute'),
 
-
-
     path('time/', views.time, name='time'),
-
-    
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
