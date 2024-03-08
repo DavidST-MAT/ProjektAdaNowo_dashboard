@@ -7,16 +7,28 @@ import datetime
 import pandas as pd
 from datetime import datetime, timedelta
 from statistics import median
+import os
+
+
+# Influx Configuration
+class InfluxDBConfig:
+
+    def __init__(self):
+        self.url = os.getenv("INFLUXDB_URL", "http://localhost:8086")
+        #self.token = os.getenv("INFLUXDB_TOKEN", "Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==")
+        self.token = os.getenv("INFLUXDB_TOKEN", "L43SXxiyt-jYReLa0NdsUgvIvCSk_BsC7shKlf2HXiboELJsVYbWEQfv57-Ml0GX58m1CjateBgEBwFKEtK4mQ==")
+        self.org = os.getenv("INFLUXDB_ORG", "MAT")
+
 
 
 def index(request):
+    influxdb_config = InfluxDBConfig()
 
-    influxdb_settings = settings.INFLUXDB_SETTINGS
-    client_influxdb = InfluxDBClient(url="http://localhost:8086", token="Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==", org="MAT")  # for testing on local machine
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
 
     query_api = client_influxdb.query_api()
 
-    query_performance_measure = """from(bucket: "AdaNowoTest")
+    query_performance_measure = """from(bucket: "AgentValues")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues")
         |> filter(fn: (r) => r["_field"] == "PerformanceMeasure")
@@ -25,7 +37,7 @@ def index(request):
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
-    tables_performance_measure = query_api.query(query_performance_measure, org="MAT")
+    tables_performance_measure = query_api.query(query_performance_measure, org=influxdb_config.org)
     performance_measure = []
     performance_measure_time = []
 
@@ -47,7 +59,7 @@ def index(request):
 
 
     # Query for the data
-    query_energy_consumption = """from(bucket: "AdaNowoTest")
+    query_energy_consumption = """from(bucket: "AgentValues")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues")
         |> filter(fn: (r) => r["_field"] == "Energy")
@@ -55,7 +67,7 @@ def index(request):
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
-    tables_energy_consumption = query_api.query(query_energy_consumption, org="MAT")
+    tables_energy_consumption = query_api.query(query_energy_consumption, org=influxdb_config.org)
     energy_consumption = []
     energy_consumption_time = []
 
@@ -84,7 +96,7 @@ def index(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_area_weight = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
@@ -94,7 +106,7 @@ def index(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_area_weight = query_api.query(query_area_weight, org="MAT")
+        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
         area_weight = []
         area_weight_time = []
         
@@ -124,7 +136,7 @@ def index(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_md = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_md_1" or r["_field"] == "maximum_tensile_force_md_2" or r["_field"] == "maximum_tensile_force_md_3")
@@ -134,7 +146,7 @@ def index(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org="MAT")
+        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
         tensile_force_md = []
   
         
@@ -158,7 +170,7 @@ def index(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_cd = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_cd_1" or r["_field"] == "maximum_tensile_force_cd_2" or r["_field"] == "maximum_tensile_force_cd_3")
@@ -168,7 +180,7 @@ def index(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org="MAT")
+        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
         tensile_force_cd = []
   
         
@@ -203,20 +215,20 @@ def index(request):
 def updateChartOneMinute(request):
     updated_values = []
 
-    
-    client_influxdb = InfluxDBClient(url="http://localhost:8086", token="Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==", org="MAT")
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
 
     query_api = client_influxdb.query_api()
 
 
     ### Updating PerformanceMeasurement ###
-    query_performance = """from(bucket: "AdaNowoTest")
+    query_performance = """from(bucket: "AgentValues")
     |> range(start: -5m, stop: now())
     |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["_field"] == "PerformanceMeasure")
     |> group(columns: ["_field"])
     |> last()"""
 
-    tables = query_api.query(query_performance, org="MAT")
+    tables = query_api.query(query_performance, org=influxdb_config.org)
 
     if tables == []:
         updated_values.append(0)
@@ -229,13 +241,13 @@ def updateChartOneMinute(request):
 
 
     ### Updating Energieverbrauch ###
-    query_energy = """from(bucket: "AdaNowoTest")
+    query_energy = """from(bucket: "AgentValues")
         |> range(start: -5m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "Energy")
         |> group(columns: ["_field"])
         |> last()"""
 
-    tables = query_api.query(query_energy, org="MAT")
+    tables = query_api.query(query_energy, org=influxdb_config.org)
 
     if tables == []:
         updated_values.append(0)
@@ -248,14 +260,14 @@ def updateChartOneMinute(request):
 
 
     ### Updating AreaWeight ###
-    query_area = """from(bucket: "LabData")
+    query_area = """from(bucket: "LabValues")
         |> range(start: -5m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3" or r["_field"] == "maximum_tensile_force_md_1" or r["_field"] == "maximum_tensile_force_md_2" or r["_field"] == "maximum_tensile_force_md_3" or r["_field"] == "maximum_tensile_force_cd_1" or r["_field"] == "maximum_tensile_force_cd_2" or r["_field"] == "maximum_tensile_force_cd_3")
         |> group(columns: ["_field"])
         |> last()"""
     
-    tables = query_api.query(query_area, org="MAT")
+    tables = query_api.query(query_area, org=influxdb_config.org)
     lab_values = []
     
     if tables == []:
@@ -316,18 +328,15 @@ def updateChartOneMinute(request):
 
 
 def dashboard(request):
-    # Annahme: request ist Ihr WSGIRequest-Objekt
     get_hours = request.GET.get('value')
-
-    # Now, value_param contains the value of the 'value' parameter
-    print(get_hours)
     query_hours = f"-{get_hours}h"
 
-    client_influxdb = InfluxDBClient(url="http://localhost:8086", token="Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==", org="MAT")  # for testing on local machine
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
 
     query_api = client_influxdb.query_api()
 
-    query_performance_measure = f"""from(bucket: "AdaNowoTest")
+    query_performance_measure = f"""from(bucket: "AgentValues")
         |> range(start: {query_hours}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues")
         |> filter(fn: (r) => r["_field"] == "PerformanceMeasure")
@@ -336,7 +345,7 @@ def dashboard(request):
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
-    tables_performance_measure = query_api.query(query_performance_measure, org="MAT")
+    tables_performance_measure = query_api.query(query_performance_measure, org=influxdb_config.org)
     performance_measure = []
     performance_measure_time = []
 
@@ -358,7 +367,7 @@ def dashboard(request):
 
 
     # Query for the data
-    query_energy_consumption = f"""from(bucket: "AdaNowoTest")
+    query_energy_consumption = f"""from(bucket: "AgentValues")
         |> range(start: {query_hours}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues")
         |> filter(fn: (r) => r["_field"] == "Energy")
@@ -366,7 +375,7 @@ def dashboard(request):
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
-    tables_energy_consumption = query_api.query(query_energy_consumption, org="MAT")
+    tables_energy_consumption = query_api.query(query_energy_consumption, org=influxdb_config.org)
     energy_consumption = []
     energy_consumption_time = []
 
@@ -395,7 +404,7 @@ def dashboard(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_area_weight = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "area_weight_1" or r["_field"] == "area_weight_2" or r["_field"] == "area_weight_3")
@@ -405,7 +414,7 @@ def dashboard(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_area_weight = query_api.query(query_area_weight, org="MAT")
+        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
         area_weight = []
         area_weight_time = []
         
@@ -435,7 +444,7 @@ def dashboard(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_md = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_md_1" or r["_field"] == "maximum_tensile_force_md_2" or r["_field"] == "maximum_tensile_force_md_3")
@@ -445,7 +454,7 @@ def dashboard(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org="MAT")
+        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
         tensile_force_md = []
   
         
@@ -469,7 +478,7 @@ def dashboard(request):
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_cd = f'''
-        from(bucket: "LabData")
+        from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "maximum_tensile_force_cd_1" or r["_field"] == "maximum_tensile_force_cd_2" or r["_field"] == "maximum_tensile_force_cd_3")
@@ -479,7 +488,7 @@ def dashboard(request):
         '''
 
         # Execute the Flux query and store the result in tables
-        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org="MAT")
+        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
         tensile_force_cd = []
   
         
