@@ -7,7 +7,7 @@
   <div class="row" data-row-id="row1">
     <div class="col-12">
       <div class="border1">
-        <h1>Performance Measure</h1>
+        <h1>Nonwoven Unevenness</h1>
         <canvas id="PerformanceMeasure"></canvas>
       </div>
     </div>
@@ -16,7 +16,7 @@
   <div class="row" data-row-id="row2">
     <div class="col-12">
       <div class="border1">
-        <h1>Energy Consumption</h1>
+        <h1>Line Power Consumption</h1>
         <canvas id="EnergieConsumption"></canvas>
       </div>
     </div>
@@ -111,7 +111,7 @@ const options = {
       suggestedMax: 0,
       title: {
         display: true,
-        text: '[%]', 
+        text: '[quantity]', 
         font: {
           size: 16, 
         },
@@ -130,7 +130,7 @@ var performance_measure_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 0,
       borderColor:'rgba(255, 99, 132, 1)',
-      label: 'Performance Measure',
+      label: 'Nonwoven Unevenness',
       tension: 0.25,
       //fill: {
       // target: 'origin',
@@ -374,7 +374,7 @@ datasets: [
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(255, 99, 132, 1)',
-    label: 'Area Weight min',
+    label: 'AreaWeight min',
     tension: 0.25,
   },
   {
@@ -382,7 +382,7 @@ datasets: [
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(4, 216, 14, 1)',
-    label: 'Area Weight max',
+    label: 'AreaWeight max',
     tension: 0.25,
   },
   {
@@ -390,7 +390,7 @@ datasets: [
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(0, 0, 255, 1)',
-    label: 'Area Weight median',
+    label: 'AreaWeight median',
     tension: 0.25,
   },
       {
@@ -398,7 +398,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(128, 0, 0, 1)', // Darker red for min
-        label: 'Tensile Force MD min',
+        label: 'TensileStrengthMD min',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
@@ -407,7 +407,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(100, 50, 0, 1)', // Darker orange for max
-        label: 'Tensile Force MD max',
+        label: 'TensileStrengthMD max',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
@@ -416,7 +416,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(128, 0, 0, 1)', // Darker red for median
-        label: 'Tensile Force MD median',
+        label: 'TensileStrengthMD median',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
@@ -427,7 +427,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for min
-        label: 'Tensile Force CD min',
+        label: 'TensileStrengthCD min',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
@@ -436,7 +436,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 180, 100, 1)', // Lighter orange for max
-        label: 'Tensile Force CD max',
+        label: 'TensileStrengthCD max',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
@@ -445,7 +445,7 @@ datasets: [
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for median
-        label: 'Tensile Force CD median',
+        label: 'TensileStrengthCD median',
         tension: 0.25,
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
