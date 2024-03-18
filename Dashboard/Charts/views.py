@@ -223,7 +223,7 @@ def updateChartOneMinute(request):
 
     ### Updating PerformanceMeasurement ###
     query_performance = """from(bucket: "AgentValues")
-    |> range(start: -5m, stop: now())
+    |> range(start: -30m, stop: now())
     |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "NonwovenUnevenness")
     |> group(columns: ["_field"])
     |> last()"""
@@ -242,7 +242,7 @@ def updateChartOneMinute(request):
 
     ### Updating Energieverbrauch ###
     query_energy = """from(bucket: "AgentValues")
-        |> range(start: -5m, stop: now())
+        |> range(start: -30m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption")
         |> group(columns: ["_field"])
         |> last()"""
@@ -261,7 +261,7 @@ def updateChartOneMinute(request):
 
     ### Updating AreaWeight ###
     query_area = """from(bucket: "LabValues")
-        |> range(start: -5m, stop: now())
+        |> range(start: -30m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
         |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3" or r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5" or r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
         |> group(columns: ["_field"])

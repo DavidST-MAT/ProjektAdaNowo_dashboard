@@ -513,7 +513,7 @@ var getData1 = function() {
   });
 };
 
-//var updateCanvas = setInterval(getData1, 60000);
+var updateCanvas = setInterval(getData1, 60000);
 
 window.addEventListener('beforeunload', function() {
     clearInterval(updateCanvas);
