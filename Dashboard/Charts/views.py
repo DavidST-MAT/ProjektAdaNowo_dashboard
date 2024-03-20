@@ -30,7 +30,7 @@ def index(request):
 
     query_performance_measure = """from(bucket: "AgentValues")
         |> range(start: -1h, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues")
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: last)
@@ -61,7 +61,7 @@ def index(request):
     # Query for the data
     query_energy_consumption = """from(bucket: "AgentValues")
         |> range(start: -1h, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues")
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> aggregateWindow(every: 1m, fn: last)
         |> yield(name: "last")"""
@@ -98,7 +98,7 @@ def index(request):
         query_area_weight = f'''
         from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
@@ -138,7 +138,7 @@ def index(request):
         query_tables_tensile_md = f'''
         from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
@@ -172,7 +172,7 @@ def index(request):
         query_tables_tensile_cd = f'''
         from(bucket: "LabValues")
         |> range(start: -1h, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
@@ -224,7 +224,7 @@ def updateChartOneMinute(request):
     ### Updating PerformanceMeasurement ###
     query_performance = """from(bucket: "AgentValues")
     |> range(start: -30m, stop: now())
-    |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "NonwovenUnevenness")
+    |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "NonwovenUnevenness" and r["Iteration"] == "-1")
     |> group(columns: ["_field"])
     |> last()"""
 
@@ -243,7 +243,7 @@ def updateChartOneMinute(request):
     ### Updating Energieverbrauch ###
     query_energy = """from(bucket: "AgentValues")
         |> range(start: -30m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption")
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
         |> group(columns: ["_field"])
         |> last()"""
 
@@ -262,7 +262,7 @@ def updateChartOneMinute(request):
     ### Updating AreaWeight ###
     query_area = """from(bucket: "LabValues")
         |> range(start: -30m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3" or r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5" or r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
         |> group(columns: ["_field"])
         |> last()"""
@@ -338,7 +338,7 @@ def dashboard(request):
 
     query_performance_measure = f"""from(bucket: "AgentValues")
         |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues")
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: last)
@@ -369,7 +369,7 @@ def dashboard(request):
     # Query for the data
     query_energy_consumption = f"""from(bucket: "AgentValues")
         |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues")
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> aggregateWindow(every: 1m, fn: last)
         |> yield(name: "last")"""
@@ -406,7 +406,7 @@ def dashboard(request):
         query_area_weight = f'''
         from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
@@ -446,7 +446,7 @@ def dashboard(request):
         query_tables_tensile_md = f'''
         from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
@@ -480,7 +480,7 @@ def dashboard(request):
         query_tables_tensile_cd = f'''
         from(bucket: "LabValues")
         |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: 1m, fn: {aggregation_fn})
