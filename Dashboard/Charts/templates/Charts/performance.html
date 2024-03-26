@@ -5,27 +5,51 @@
 <div class="container-fluid" style="background: #ffffff">
 
   <div class="row" data-row-id="row1">
-    <div class="col-12">
+    <div class="col-4">
       <div class="border1">
         <h1>Nonwoven Unevenness</h1>
         <canvas id="PerformanceMeasure"></canvas>
       </div>
     </div>
-  </div>
+  
 
-  <div class="row" data-row-id="row2">
-    <div class="col-12">
+    <div class="col-4">
       <div class="border1">
         <h1>Line Power Consumption</h1>
         <canvas id="EnergieConsumption"></canvas>
       </div>
     </div>
+
+    <div class="col-4">
+      <div class="border1">
+        <h1>Ambient Temperature</h1>
+        <canvas id="AmbientTemperature"></canvas>
+      </div>
+    </div>
   </div>
+
+  <div class="row" data-row-id="row3">
+    <div class="col-8">
+      <div class="border1">
+        <h1>Lab Values</h1>
+        <canvas id="LabValues"></canvas>
+      </div>
+    </div>
+
+    <div class="col-4">
+      <div class="border1">
+        <h1>Humidity Environment</h1>
+        <canvas id="HumidityEnvironment"></canvas>
+      </div>
+    </div>
+
+  </div>
+
 
   <div class="row" data-row-id="row3">
     <div class="col-12">
       <div class="border1">
-        <h1>Lab Values</h1>
+        <h1>Placeholder</h1>
         <canvas id="LabValues"></canvas>
       </div>
     </div>
@@ -37,25 +61,28 @@
 
 
 <script>
-console.log(slider.value)
-// create initial chart PerformanceMeasure
-var performance_measure = {{ performance_measure|safe }}
-var performance_measure_time = {{ performance_measure_time|safe }}
+////////////////////////////////////////////////////////////////////////////////////////
+// create initial chart nonwoven_unevenness
+var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
+var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
 
-if (performance_measure_time.length === 0) {
+if (nonwoven_uvenness_time.length === 0) {
     let time_now = new Date();
     for (let i = 60; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
-        performance_measure_time.push(time.toLocaleTimeString());
+        nonwoven_unevenness_time.push(time.toLocaleTimeString());
     }
 }
 
-if (performance_measure.length === 0) {
+if (nonwoven_uvenness.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        performance_measure.push(0);
+        nonwoven_unevenness.push(0);
     }
 }
 
+console.log(nonwoven_uvenness)
+console.log(nonwoven_uvenness_time)
+console.log('hi')
 
 const options = {
   maintainAspectRatio: false,
@@ -89,7 +116,7 @@ const options = {
         display: true,
         text: '[quantity]', 
         font: {
-          size: 16, 
+          size: 12, 
         },
       },
     }
@@ -97,15 +124,15 @@ const options = {
 };
 
 var ctx_live = document.getElementById("PerformanceMeasure");
-var performance_measure_chart = new Chart(ctx_live, {
+var nonwoven_unevenness_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: performance_measure_time,
+    labels: nonwoven_uvenness_time,
     datasets: [{
-      data: performance_measure,
+      data: nonwoven_uvenness,
       borderWidth: 2,
       radius: 0,
-      borderColor:'rgba(255, 99, 132, 1)',
+      borderColor: 'rgba(54, 162, 235, 1)',
       label: 'Nonwoven Unevenness',
       tension: 0.25,
       //fill: {
@@ -173,7 +200,7 @@ const options2 = {
         display: true,
         text: '[kW]', 
         font: {
-          size: 16, 
+          size: 12, 
         },
         position: 'top',
       },
@@ -190,7 +217,7 @@ var energieConsumptionChart = new Chart(ctx_live, {
       data: energyConsumption,
       borderWidth: 2,
       radius: 0,
-      borderColor:'rgba(255, 99, 132, 1)',
+      borderColor: 'rgba(0, 128, 0, 1)',
       label: 'Energy Consumption',
       tension: 0.25,
       //fill: {
@@ -204,6 +231,91 @@ var energieConsumptionChart = new Chart(ctx_live, {
 });
 
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// create initial chart Ambient Temperature
+var ambient_temperature = {{ ambient_temperature|safe }}
+var ambient_temperature_time = {{ ambient_temperature_time|safe }}
+
+if (ambient_temperature_time.length === 0) {
+    let time_now = new Date();
+    for (let i = 60; i >= 0; i--) {
+        let time = new Date(time_now - i * 60000);
+        ambient_temperature_time.push(time.toLocaleTimeString());
+    }
+}
+
+if (ambient_temperature.length === 0) {
+    for (let i = 60; i >= 0; i--) {
+        ambient_temperature.push(0);
+    }
+}
+
+
+const options3 = {
+  maintainAspectRatio: false,
+  responsive: true,
+  legend: {
+    display: true,
+  },
+  legend: {
+    display: false
+  },
+  scales: {
+    x: {
+      beginAtZero: true,
+      drawBorder: false,
+    },
+    y: {
+      beginAtZero: true,
+      type: 'linear',
+      grid: {
+        drawBorder: false,
+        color: (context) => {
+        if(context.tick.value === 0) {
+            return 'black'
+        }
+        } 
+      },
+      beginAtZero: false,
+      suggestedMin: 0,
+      suggestedMax: 0,
+      title: {
+        display: true,
+        text: '[°C]', 
+        font: {
+          size: 12, 
+        },
+        position: 'top',
+      },
+    }
+  }
+};
+
+var ctx_live = document.getElementById("AmbientTemperature");
+var ambient_temperature_chart = new Chart(ctx_live, {
+  type: 'line',
+  data: {
+    labels: ambient_temperature_time,
+    datasets: [{
+      data: ambient_temperature,
+      borderWidth: 2,
+      radius: 0,
+      borderColor: 'rgba(255, 0, 0, 1)',
+      label: 'Temperature',
+      tension: 0.25,
+      //fill: {
+      // target: 'origin',
+        //below: 'rgba(255, 99, 132, 0.2)',
+        //above: 'rgba(4, 216, 14, 0.2)'
+      //}, 
+    }]
+  },
+  options: options3,
+});
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +421,7 @@ const options5 = {
         display: true,
         text: '[g/m^2]', 
         font: {
-          size: 16, 
+          size: 12, 
         },
       },
     },
@@ -332,7 +444,7 @@ const options5 = {
         display: true,
         text: '[N]', 
         font: {
-          size: 16, 
+          size: 12, 
         },
       },
     }
@@ -433,10 +545,92 @@ datasets: [
 });
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// create initial chart Ambient Temperature
+var humidity_environment = {{ energy_consumption|safe }}
+var humidity_environment_time = {{ energy_consumption_time|safe }}
+
+if (humidity_environment_time.length === 0) {
+    let time_now = new Date();
+    for (let i = 60; i >= 0; i--) {
+        let time = new Date(time_now - i * 60000);
+        humidity_environment_time.push(time.toLocaleTimeString());
+    }
+}
+
+if (humidity_environment.length === 0) {
+    for (let i = 60; i >= 0; i--) {
+        humidity_environment.push(0);
+    }
+}
 
 
+const options4 = {
+  maintainAspectRatio: false,
+  responsive: true,
+  legend: {
+    display: true,
+  },
+  legend: {
+    display: false
+  },
+  scales: {
+    x: {
+      beginAtZero: true,
+      drawBorder: false,
+    },
+    y: {
+      beginAtZero: true,
+      type: 'linear',
+      grid: {
+        drawBorder: false,
+        color: (context) => {
+        if(context.tick.value === 0) {
+            return 'black'
+        }
+        } 
+      },
+      beginAtZero: false,
+      suggestedMin: 0,
+      suggestedMax: 0,
+      title: {
+        display: true,
+        text: '[%]', 
+        font: {
+          size: 12, 
+        },
+        position: 'bottom',
+      },
+    }
+  }
+};
+
+var ctx_live = document.getElementById("HumidityEnvironment");
+var humidity_environment_chart = new Chart(ctx_live, {
+  type: 'line',
+  data: {
+    labels: energyConsumptionTime,
+    datasets: [{
+      data: energyConsumption,
+      borderWidth: 2,
+      radius: 0,
+      borderColor:'rgba(255, 99, 132, 1)',
+      label: 'Humidity',
+      tension: 0.25,
+      //fill: {
+      // target: 'origin',
+        //below: 'rgba(255, 99, 132, 0.2)',
+        //above: 'rgba(4, 216, 14, 0.2)'
+      //}, 
+    }]
+  },
+  options: options4,
+});
+
+
+////////////////////////////////////////////////////////////////////
 
 
 // logic to get new data for '1h' chart
@@ -462,13 +656,13 @@ var getData1 = function() {
       var time = now.toLocaleTimeString();
 
       // Updating Performance
-      performance_measure_chart.data.labels.push(time);
-      performance_measure_chart.data.datasets[0].data.push(_data_performance);
+      nonwoven_unevenness_chart.data.labels.push(time);
+      nonwoven_unevenness_chart.data.datasets[0].data.push(_data_performance);
       
-      performance_measure_chart.data.labels.shift();
-      performance_measure_chart.data.datasets[0].data.shift();
+      nonwoven_unevenness_chart.data.labels.shift();
+      nonwoven_unevenness_chart.data.datasets[0].data.shift();
   
-      performance_measure_chart.update('none');
+      nonwoven_unevenness_chart.update('none');
 
 
       // Updating Energieverbrauch
