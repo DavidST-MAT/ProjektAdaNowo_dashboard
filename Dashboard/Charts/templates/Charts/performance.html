@@ -8,7 +8,7 @@
     <div class="col-4">
       <div class="border1">
         <h1>Nonwoven Unevenness</h1>
-        <canvas id="PerformanceMeasure"></canvas>
+        <canvas id="NonwovenUnevenness"></canvas>
       </div>
     </div>
   
@@ -61,6 +61,16 @@
 
 
 <script>
+
+function getValueFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const value = urlParams.get('value');
+    return value !== null ? value : '1';
+}
+
+const sliderValue = getValueFromURL();
+console.log(sliderValue)
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // create initial chart nonwoven_unevenness
 var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
@@ -70,19 +80,19 @@ if (nonwoven_uvenness_time.length === 0) {
     let time_now = new Date();
     for (let i = 60; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
-        nonwoven_unevenness_time.push(time.toLocaleTimeString());
+        nonwoven_uvenness_time.push(time.toLocaleTimeString());
     }
 }
 
 if (nonwoven_uvenness.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        nonwoven_unevenness.push(0);
+        nonwoven_uvenness.push(0);
     }
 }
 
 console.log(nonwoven_uvenness)
 console.log(nonwoven_uvenness_time)
-console.log('hi')
+
 
 const options = {
   maintainAspectRatio: false,
@@ -123,7 +133,7 @@ const options = {
   }
 };
 
-var ctx_live = document.getElementById("PerformanceMeasure");
+var ctx_live = document.getElementById("NonwovenUnevenness");
 var nonwoven_unevenness_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
@@ -150,20 +160,20 @@ var nonwoven_unevenness_chart = new Chart(ctx_live, {
 
 
 // create initial chart Energieverbrauch
-var energyConsumption = {{ energy_consumption|safe }}
-var energyConsumptionTime = {{ energy_consumption_time|safe }}
+var energy_consumption = {{ energy_consumption|safe }}
+var energy_consumption_time = {{ energy_consumption_time|safe }}
 
-if (energyConsumptionTime.length === 0) {
+if (energy_consumption_time.length === 0) {
     let time_now = new Date();
     for (let i = 60; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
-        energyConsumptionTime.push(time.toLocaleTimeString());
+        energy_consumption_time.push(time.toLocaleTimeString());
     }
 }
 
-if (energyConsumption.length === 0) {
+if (energy_consumption.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        energyConsumption.push(0);
+        energy_consumption.push(0);
     }
 }
 
@@ -209,12 +219,12 @@ const options2 = {
 };
 
 var ctx_live = document.getElementById("EnergieConsumption");
-var energieConsumptionChart = new Chart(ctx_live, {
+var energy_consumption_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: energyConsumptionTime,
+    labels: energy_consumption_time,
     datasets: [{
-      data: energyConsumption,
+      data: energy_consumption,
       borderWidth: 2,
       radius: 0,
       borderColor: 'rgba(0, 128, 0, 1)',
@@ -549,8 +559,8 @@ datasets: [
 
 
 // create initial chart Ambient Temperature
-var humidity_environment = {{ energy_consumption|safe }}
-var humidity_environment_time = {{ energy_consumption_time|safe }}
+var humidity_environment = {{ humidity_environment|safe }}
+var humidity_environment_time = {{ humidity_environment_time|safe }}
 
 if (humidity_environment_time.length === 0) {
     let time_now = new Date();
@@ -611,9 +621,9 @@ var ctx_live = document.getElementById("HumidityEnvironment");
 var humidity_environment_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: energyConsumptionTime,
+    labels: humidity_environment_time,
     datasets: [{
-      data: energyConsumption,
+      data: humidity_environment,
       borderWidth: 2,
       radius: 0,
       borderColor:'rgba(255, 99, 132, 1)',
@@ -640,7 +650,7 @@ var getData1 = function() {
     type: "GET",
     url: "/Charts/updateChartOneMinute",
     success: function(data) {
-      var _data_performance=data[0];
+      var _data_nonwoven_unevenness=data[0];
       var _data_energy=data[1];
       var _data_area_max=data[2];
       var _data_area_min=data[3];
@@ -655,24 +665,27 @@ var getData1 = function() {
       var now = new Date();
       var time = now.toLocaleTimeString();
 
-      // Updating Performance
+      // Updating NonwovenUvenness
       nonwoven_unevenness_chart.data.labels.push(time);
-      nonwoven_unevenness_chart.data.datasets[0].data.push(_data_performance);
-      
+      nonwoven_unevenness_chart.data.datasets[0].data.push(_data_nonwoven_unevenness);
       nonwoven_unevenness_chart.data.labels.shift();
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
-  
       nonwoven_unevenness_chart.update('none');
 
 
-      // Updating Energieverbrauch
-      energieConsumptionChart.data.labels.push(time);
-      energieConsumptionChart.data.datasets[0].data.push(_data_energy);
+      // Updating LinePowerConsumption
+      energy_consumption_chart.data.labels.push(time);
+      energy_consumption_chart.data.datasets[0].data.push(_data_energy);
+      energy_consumption_chart.data.labels.shift();
+      energy_consumption_chart.data.datasets[0].data.shift();
+      energy_consumption_chart.update('none');
 
-      energieConsumptionChart.data.labels.shift();
-      energieConsumptionChart.data.datasets[0].data.shift();
-
-      energieConsumptionChart.update('none');
+      // Updating AmbientTemperature
+      ambient_temperature_chart.data.labels.push(time);
+      ambient_temperature_chart.data.datasets[0].data.push(_data_energy);
+      ambient_temperature_chart.data.labels.shift();
+      ambient_temperature_chart.data.datasets[0].data.shift();
+      ambient_temperature_chart.update('none');
 
 
        // Updating AreaWeight

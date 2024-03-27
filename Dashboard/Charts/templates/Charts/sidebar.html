@@ -74,7 +74,7 @@ function updateSliderValue() {
 function handleConfirmButtonClick() {
   if (sliderUsed) {
     var selectedValue = slider.value;
-    window.location.href = "{{ dashboard }}?value=" + selectedValue;
+    window.location.href = "{{ index }}?value=" + selectedValue;
     sliderUsed = false;
   }
 }

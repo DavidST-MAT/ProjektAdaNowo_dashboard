@@ -87,20 +87,20 @@ var valueForsliderValue = dict[sliderValue];
 
 
 // create initial chart PerformanceMeasure
-var performance_measure = {{ performance_measure|safe }}
-var performance_measure_time = {{ performance_measure_time|safe }}
+var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
+var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
 
-if (performance_measure_time.length === 0) {
+if (nonwoven_uvenness_time.length === 0) {
     let time_now = new Date();
     for (let i = valueForsliderValue; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
-        performance_measure_time.push(time.toLocaleTimeString());
+        nonwoven_uvenness_time.push(time.toLocaleTimeString());
     }
 }
 
-if (performance_measure.length === 0) {
+if (nonwoven_uvenness.length === 0) {
     for (let i = valueForsliderValue; i >= 0; i--) {
-        performance_measure.push(0);
+        nonwoven_uvenness.push(0);
     }
 }
 
@@ -148,9 +148,9 @@ var ctx_live = document.getElementById("PerformanceMeasure");
 var performance_measure_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: performance_measure_time,
+    labels: nonwoven_uvenness_time,
     datasets: [{
-      data: performance_measure,
+      data: nonwoven_uvenness,
       borderWidth: 2,
       radius: 0,
       borderColor:'rgba(255, 99, 132, 1)',
@@ -509,14 +509,12 @@ var getData1 = function() {
       var now = new Date();
       var time = now.toLocaleTimeString();
 
-      // Updating Performance
-      performance_measure_chart.data.labels.push(time);
-      performance_measure_chart.data.datasets[0].data.push(_data_performance);
-      
-      performance_measure_chart.data.labels.shift();
-      performance_measure_chart.data.datasets[0].data.shift();
-  
-      performance_measure_chart.update('none');
+      // Updating NonwovenUvenness
+      nonwoven_unevenness_chart.data.labels.push(time);
+      nonwoven_unevenness_chart.data.datasets[0].data.push(_data_performance);
+      nonwoven_unevenness_chart.data.labels.shift();
+      nonwoven_unevenness_chart.data.datasets[0].data.shift();
+      nonwoven_unevenness_chart.update('none');
 
 
       // Updating Energieverbrauch
