@@ -5,114 +5,145 @@
 
 
 
-
-
 <div class="wrapper d-flex">
 
+  <button id="sidebarToggleBtn"><i class="fa fa-bars"></i></button>
+
   <div class="sidebar h-100">
-  
     <input type="range" id="slider" name="slider" min="1" max="8" value="1">
     <p>Selected Time: <span id="sliderValue">1</span> h</p>
 
-      <div class="nav flex-column mb-auto">
-      
-        <label class="nav-item">
-          <input type="checkbox" class="canvas-checkbox" data-canvas-id="PerformanceMeasure" data-row-id="row1" checked>
-          <span class="ms-2">Nonwoven Unevenness</span>
-        </label>
+    <div class="nav flex-column mb-auto">
+      <label class="nav-item">
+        <input type="checkbox" class="canvas-checkbox" data-canvas-id="PerformanceMeasure" data-row-id="row1" checked>
+        <span class="ms-2">Nonwoven Unevenness</span>
+      </label>
 
-        <label class="nav-item">
-          <input type="checkbox" class="canvas-checkbox" data-canvas-id="EnergieConsumption" data-row-id="row2" checked>
-          <span class="ms-2">Line Power Consumption</span>
-        </label>
+      <label class="nav-item">
+        <input type="checkbox" class="canvas-checkbox" data-canvas-id="EnergieConsumption" data-row-id="row2" checked>
+        <span class="ms-2">Line Power Consumption</span>
+      </label>
 
-        <label class="nav-item">
-          <input type="checkbox" class="canvas-checkbox" data-canvas-id="LabValues" data-row-id="row3" checked>
-          <span class="ms-2">Laboratory Values</span>
-        </label>
-
-      </div>
-   
+      <label class="nav-item">
+        <input type="checkbox" class="canvas-checkbox" data-canvas-id="LabValues" data-row-id="row3" checked>
+        <span class="ms-2">Laboratory Values</span>
+      </label>
+    </div>
   </div>
-
 </div>
-    
 
 <script>
+  $(document).ready(function () {
+    $('.canvas-checkbox').prop('checked', true);
+    $('.canvas-checkbox').change(function () {
+      var rowId = $(this).data('row-id');
+      var rowElement = $('[data-row-id="' + rowId + '"]');
 
-$(document).ready(function () {
-  $('.canvas-checkbox').prop('checked', true);
-  $('.canvas-checkbox').change(function () {
-    var rowId = $(this).data('row-id');
-    var rowElement = $('[data-row-id="' + rowId + '"]');
+      if ($(this).prop('checked')) {
+        rowElement.slideDown();
+      } else {
+        rowElement.slideUp();
+      }
+    });
 
-    if ($(this).prop('checked')) {
-      rowElement.slideDown();
-    } else {
-      rowElement.slideUp();
-    }
+    $('#sidebarToggleBtn').click(function () {
+      $('.sidebar').toggleClass('sidebar-open');
+      $('.sidebar-content').toggle(); // Toggle visibility of sidebar content
+    });
   });
-});
 
-var slider = document.getElementById("slider");
-var sliderValueElement = document.getElementById("sliderValue");
+  var slider = document.getElementById("slider");
+  var sliderValueElement = document.getElementById("sliderValue");
 
-var savedSliderValue = localStorage.getItem("sliderValue");
-if (savedSliderValue) {
-  slider.value = savedSliderValue;
-  updateSliderValue();
-}
-
-var sliderUsed = false;
-
-function updateSliderValue() {
-  sliderValueElement.textContent = slider.value;
-  sliderUsed = true;
-  localStorage.setItem("sliderValue", slider.value);
-}
-
-function handleConfirmButtonClick() {
-  if (sliderUsed) {
-    var selectedValue = slider.value;
-    window.location.href = "{{ index }}?value=" + selectedValue;
-    sliderUsed = false;
+  var savedSliderValue = localStorage.getItem("sliderValue");
+  if (savedSliderValue) {
+    slider.value = savedSliderValue;
+    updateSliderValue();
   }
-}
 
-slider.addEventListener("change", function() {
-  updateSliderValue();
-  setTimeout(handleConfirmButtonClick, 2000); 
-});
+  var sliderUsed = false;
 
+  function updateSliderValue() {
+    sliderValueElement.textContent = slider.value;
+    sliderUsed = true;
+    localStorage.setItem("sliderValue", slider.value);
+  }
 
-console.log(slider.value)
+  function handleConfirmButtonClick() {
+    if (sliderUsed) {
+      var selectedValue = slider.value;
+      window.location.href = "{{ index }}?value=" + selectedValue;
+      sliderUsed = false;
+    }
+  }
+
+  slider.addEventListener("change", function() {
+    updateSliderValue();
+    setTimeout(handleConfirmButtonClick, 2000); 
+  });
+
+  console.log(slider.value)
 </script>
 
-
 <style>
-.nav-item {
-  margin-top: 10px;
-  margin-left: 10px; /
-}
+  .nav-item {
+    margin-top: 10px;
+    margin-left: 10px;
+  }
 
-#slider {
-  width: 80%;
-  margin-top: 20px;
-  margin-left: 20px;
-  background-color: red !important; 
-  background: red !important; 
-}
+  #slider {
+    width: 80%;
+    margin-top: 20px;
+    margin-left: 20px;
+    background-color: red !important;
+    background: red !important;
+  }
 
-p {
-  font-weight: bold;
-  font-size: 15px;
-  margin-top: 10px;
-  margin-left: 20px;
-}
+  p {
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 10px;
+    margin-left: 20px;
+  }
 
-span {
-  font-weight: bold;
-  font-size: 15px;
-  color: red; 
-}
+  span {
+    font-weight: bold;
+    font-size: 15px;
+    color: red;
+  }
+
+  .sidebar {
+    width: 20px; 
+    transition: width 0.3s; 
+    overflow: hidden; 
+  }
+
+  .sidebar-open {
+    width: 250px; 
+  }
+
+  #sidebarToggleBtn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 999;
+    background-color: white;
+    background: white;
+    width: 40px;
+    height: 40px;
+    margin-left: 15px;
+    border-color: red;
+  }
+
+  .sidebar-content {
+    display: none; 
+  }
+
+
+
+  .fa-bars {    
+    background-color: white;
+    background: white;
+    border-color: red;
+  }
 </style>

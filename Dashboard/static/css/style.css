@@ -20,7 +20,6 @@ body{
 .navbar {
     background-color: white;
     border-left: 20px solid #801010;; 
-
  }
 
 .navbar-brand {
@@ -28,8 +27,10 @@ body{
 }
 
 img {
+    margin-left: -25px;
     padding-top: -20px;
     padding-left: 30px;
+    margin-left: -25px;
     width: 125px;
     height: auto;
 }
@@ -83,83 +84,6 @@ navbar li {
 }
 
 
-.notification {
-    background-color: #000000;
-    color: white;
-    text-decoration: none;
-    padding: 5px 20px;
-    margin-right: 20px;
-    margin-left: 20px;
-    position: relative;
-    display: inline-block;
-    border-radius: 2px;
-    font-size: 20px;
-}
-
-.notification:hover {
-    background: #0b5ed7;
-    color: #fff;
-}
-
-.notification .badge {
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    padding: 5px 5px;
-    border-radius: 50%;
-    background: #0b5ed7;
-    color: white;
-}
-
-.notification-section .dropdown-toggle::after {
-    content: none;
-}
-
-.dropdown-toggle::after {
-    color: white;
-}
-
-.dropdown-item {
-    color: rgb(22, 21, 21);
-}
-
-.dropdown-menu > li > a:hover {
-    background-color: #0b5ed7 !important;
-    color: white;
-}
-
-#notifications-dropdown li {
-    max-width: 500px;
-    word-wrap: break-word;
-    display: inline-block;
-    white-space: normal;
-    text-align: center !important;
-}
-
-#notifications-dropdown.dropdown-menu {
-    width: 5rem;
-    height: 3rem;
-    background: rgb(53, 49, 49);
-    text-align: center !important;
-}
-
-#notifications-dropdown.dropdown-menu:hover {
-    background: #0b5ed7;
-}
-
-.btn {
-    background-color: #d31717;
-    margin-bottom: 5px;
-    padding: 5px;
-    margin-left: 15px;
-}
-
-.fa-solid {
-    display: inline-block;
-    margin-right: 20px;
-    margin-left: 20px;
-    font-size: 20px;
-}
 
 .navbar-nav {
     background-color: #e4d8d8 !important;
@@ -178,7 +102,7 @@ navbar li {
 
 /* Sidebar */
 .sidebar{
-	width: 250px;
+	width: 200px;
 	height: 100vh;
 	background: white;
 	padding: 100px 0;
@@ -266,11 +190,7 @@ navbar li {
 }
 
 
-#logo {
-    height: 20px;
-    width: auto;
-    margin-right:auto;
-}
+
 
 
 /* Footer */

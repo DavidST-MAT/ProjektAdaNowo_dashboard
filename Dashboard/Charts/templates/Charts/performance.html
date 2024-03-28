@@ -28,10 +28,10 @@
     </div>
   </div>
 
-  <div class="row" data-row-id="row3">
+  <div class="row" data-row-id="row2">
     <div class="col-8">
       <div class="border1">
-        <h1>Lab Values</h1>
+        <h1>Laboratory Values</h1>
         <canvas id="LabValues"></canvas>
       </div>
     </div>
@@ -47,13 +47,23 @@
 
 
   <div class="row" data-row-id="row3">
-    <div class="col-12">
+    <div class="col-8">
       <div class="border1">
-        <h1>Placeholder</h1>
-        <canvas id="LabValues"></canvas>
+        <h1>Economics</h1>
+        <canvas id="Economics"></canvas>
       </div>
     </div>
+ 
+
+    <div class="col-4">
+      <div class="border1">
+        <h1>Placeholder</h1>
+        <canvas id="Placeholder"></canvas>
+      </div>
+    </div>
+
   </div>
+
 
 </div>
 
@@ -643,6 +653,91 @@ var humidity_environment_chart = new Chart(ctx_live, {
 ////////////////////////////////////////////////////////////////////
 
 
+// create initial chart Econimics
+var economics = {{ energy_costs|safe }}
+var economics_time = {{ energy_costs_time|safe }}
+
+if (economics_time.length === 0) {
+    let time_now = new Date();
+    for (let i = 60; i >= 0; i--) {
+        let time = new Date(time_now - i * 60000);
+        economics_time.push(time.toLocaleTimeString());
+    }
+}
+
+if (economics.length === 0) {
+    for (let i = 60; i >= 0; i--) {
+        economics.push(0);
+    }
+}
+
+
+const options_economics = {
+  maintainAspectRatio: false,
+  responsive: true,
+  legend: {
+    display: true,
+  },
+  legend: {
+    display: false
+  },
+  scales: {
+    x: {
+      beginAtZero: true,
+      drawBorder: false,
+    },
+    y: {
+      beginAtZero: true,
+      type: 'linear',
+      grid: {
+        drawBorder: false,
+        color: (context) => {
+        if(context.tick.value === 0) {
+            return 'black'
+        }
+        } 
+      },
+      beginAtZero: false,
+      suggestedMin: 0,
+      suggestedMax: 0,
+      title: {
+        display: true,
+        text: '[EUR]', 
+        font: {
+          size: 12, 
+        },
+        position: 'bottom',
+      },
+    }
+  }
+};
+
+var ctx_live = document.getElementById("Economics");
+var economics_chart = new Chart(ctx_live, {
+  type: 'line',
+  data: {
+    labels: economics_time,
+    datasets: [{
+      data: economics,
+      borderWidth: 2,
+      radius: 0,
+      borderColor:'rgba(155, 99, 132, 1)',
+      label: 'Energy Costs',
+      tension: 0.25,
+      //fill: {
+      // target: 'origin',
+        //below: 'rgba(255, 99, 132, 0.2)',
+        //above: 'rgba(4, 216, 14, 0.2)'
+      //}, 
+    }]
+  },
+  options: options_economics,
+});
+
+
+////////////////////////////////////////////////////////////////////
+
+
 // logic to get new data for '1h' chart
 var getData1 = function() {
   
@@ -651,16 +746,18 @@ var getData1 = function() {
     url: "/Charts/updateChartOneMinute",
     success: function(data) {
       var _data_nonwoven_unevenness=data[0];
-      var _data_energy=data[1];
-      var _data_area_max=data[2];
-      var _data_area_min=data[3];
-      var _data_area_median=data[4];
-      var _data_tensile_cd_max=data[5];
-      var _data_tensile_cd_min=data[6];
-      var _data_tensile_cd_median=data[7];
-      var _data_tensile_md_max=data[8];
-      var _data_tensile_md_min=data[9];
-      var _data_tensile_md_median=data[10];
+      var _data_engery_consumption=data[1];
+      var _data_ambient_temperature=data[2];
+      var _data_area_max=data[3];
+      var _data_area_min=data[4];
+      var _data_area_median=data[5];
+      var _data_tensile_cd_max=data[6];
+      var _data_tensile_cd_min=data[7];
+      var _data_tensile_cd_median=data[8];
+      var _data_tensile_md_max=data[9];
+      var _data_tensile_md_min=data[10];
+      var _data_tensile_md_median=data[11];
+      var _data_humidty_environment=data[12];
 
       var now = new Date();
       var time = now.toLocaleTimeString();
@@ -675,14 +772,14 @@ var getData1 = function() {
 
       // Updating LinePowerConsumption
       energy_consumption_chart.data.labels.push(time);
-      energy_consumption_chart.data.datasets[0].data.push(_data_energy);
+      energy_consumption_chart.data.datasets[0].data.push(_data_engery_consumption);
       energy_consumption_chart.data.labels.shift();
       energy_consumption_chart.data.datasets[0].data.shift();
       energy_consumption_chart.update('none');
 
       // Updating AmbientTemperature
       ambient_temperature_chart.data.labels.push(time);
-      ambient_temperature_chart.data.datasets[0].data.push(_data_energy);
+      ambient_temperature_chart.data.datasets[0].data.push(_data_ambient_temperature);
       ambient_temperature_chart.data.labels.shift();
       ambient_temperature_chart.data.datasets[0].data.shift();
       ambient_temperature_chart.update('none');
@@ -715,6 +812,14 @@ var getData1 = function() {
       area_weight_chart.data.datasets[8].data.shift();
 
       area_weight_chart.update('none');
+
+
+      // Updating HumidityEnvironment
+      humidity_environment_chart.data.labels.push(time);
+      humidity_environment_chart.data.datasets[0].data.push(_data_humidty_environment);
+      humidity_environment_chart.data.labels.shift();
+      humidity_environment_chart.data.datasets[0].data.shift();
+      humidity_environment_chart.update('none');
 
     }
   });
