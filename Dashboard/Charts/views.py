@@ -292,6 +292,8 @@ def index(request):
 
     ### Economics ###
         
+    # Energy Costs
+        
     fibre_costs = 1.20 # € per kg
     energy_costs_x = 0.28 # € per kWh
     selling_price = 2.10 # € per sqm
@@ -330,7 +332,55 @@ def index(request):
 
 
 
-    print(energy_costs)
+
+    # Production income
+        
+    query_production_income = f"""from(bucket: "AgentValues")
+        |> range(start: {query_hours}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> aggregateWindow(every: 1m, fn: last)
+        |> yield(name: "last")"""
+
+    # Execute the Flux query and store the result in tables
+    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
+    production_income_time = []
+    production_width = []
+    production_speed = []
+
+
+    for table_production_income in tables_production_income:
+        for record_production_income in table_production_income.records:
+            pi_value = record_production_income.values["_value"]
+            pi_field = record_production_income.values["_field"]
+            pi_time = record_production_income.values["_time"]
+            print(pi_value, pi_field)
+
+            if pi_value == None: 
+                pi_value = 0
+
+            if pi_field == "ProductWidth":
+                production_width.append(pi_value)
+                pi_time_updated = pi_time + timedelta(hours=1)
+                pi_formatted_datetime = pi_time_updated.strftime("%H:%M:%S")
+                production_income_time.append(pi_formatted_datetime)
+            elif pi_field == "ProductionSpeed":
+                production_speed.append(pi_value)
+
+
+
+
+    if len(production_width) != len(production_speed):
+        print("Length of lists are not the same")
+    else:
+        production_income = [x * y * 60 * 2.10 for x, y in zip(production_width, production_speed)]
+
+
+    if production_income != [] and production_income[-1] == 0:
+        production_income[-1] = production_income[-2]
+
+
+    print(production_income, production_income_time)
 
 
 
@@ -348,7 +398,9 @@ def index(request):
         'humidity_environment': humidity_environment,
         'humidity_environment_time': humidity_environment_time,
         'energy_costs': energy_costs,
-        'energy_costs_time': energy_costs_time
+        'energy_costs_time': energy_costs_time,
+        'production_income': production_income,
+        'production_income_time': production_income_time
         }
 
     return render(request, 'Charts/performance.html', context)
@@ -498,9 +550,33 @@ def updateChartOneMinute(request):
                 updated_values.append(value)
 
 
+
+
+    ### Updating Energy Costs ###
+    query_energy = """from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
+        |> group(columns: ["_field"])
+        |> last()"""
+
+    tables = query_api.query(query_energy, org=influxdb_config.org)
+
+    if tables == []:
+        updated_values.append(0)
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                if value == None: 
+                    value = 0
+                else:
+                    value= value * 0.28
+                updated_values.append(value)
+
+
     
 
-    #print(updated_values)
+    print(updated_values)
     
     return JsonResponse(updated_values, safe=False)
 

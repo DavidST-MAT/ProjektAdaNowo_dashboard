@@ -57,8 +57,8 @@
 
     <div class="col-4">
       <div class="border1">
-        <h1>Placeholder</h1>
-        <canvas id="Placeholder"></canvas>
+        <h1>Production Income</h1>
+        <canvas id="ProductionIncome"></canvas>
       </div>
     </div>
 
@@ -738,6 +738,92 @@ var economics_chart = new Chart(ctx_live, {
 ////////////////////////////////////////////////////////////////////
 
 
+
+// create initial chart Production Income
+var production_income = {{ production_income|safe }}
+var production_income_time = {{ production_income_time|safe }}
+
+if (production_income_time.length === 0) {
+    let time_now = new Date();
+    for (let i = 60; i >= 0; i--) {
+        let time = new Date(time_now - i * 60000);
+        production_income_time.push(time.toLocaleTimeString());
+    }
+}
+
+if (production_income.length === 0) {
+    for (let i = 60; i >= 0; i--) {
+        production_income.push(0);
+    }
+}
+
+
+const options_production_income = {
+  maintainAspectRatio: false,
+  responsive: true,
+  legend: {
+    display: true,
+  },
+  legend: {
+    display: false
+  },
+  scales: {
+    x: {
+      beginAtZero: true,
+      drawBorder: false,
+    },
+    y: {
+      beginAtZero: true,
+      type: 'linear',
+      grid: {
+        drawBorder: false,
+        color: (context) => {
+        if(context.tick.value === 0) {
+            return 'black'
+        }
+        } 
+      },
+      beginAtZero: false,
+      suggestedMin: 0,
+      suggestedMax: 0,
+      title: {
+        display: true,
+        text: '[EUR]', 
+        font: {
+          size: 12, 
+        },
+        position: 'bottom',
+      },
+    }
+  }
+};
+
+var ctx_live = document.getElementById("ProductionIncome");
+var production_income_chart = new Chart(ctx_live, {
+  type: 'line',
+  data: {
+    labels: production_income_time,
+    datasets: [{
+      data: production_income,
+      borderWidth: 2,
+      radius: 0,
+      borderColor:'rgba(122, 22, 12, 1)',
+      label: 'Production Income',
+      tension: 0.25,
+      //fill: {
+      // target: 'origin',
+        //below: 'rgba(255, 99, 132, 0.2)',
+        //above: 'rgba(4, 216, 14, 0.2)'
+      //}, 
+    }]
+  },
+  options: options_production_income,
+});
+
+
+////////////////////////////////////////////////////////////////////
+
+
 // logic to get new data for '1h' chart
 var getData1 = function() {
   
@@ -758,6 +844,7 @@ var getData1 = function() {
       var _data_tensile_md_min=data[10];
       var _data_tensile_md_median=data[11];
       var _data_humidty_environment=data[12];
+      var _data_energy_costs=data[13];
 
       var now = new Date();
       var time = now.toLocaleTimeString();
@@ -820,6 +907,14 @@ var getData1 = function() {
       humidity_environment_chart.data.labels.shift();
       humidity_environment_chart.data.datasets[0].data.shift();
       humidity_environment_chart.update('none');
+
+
+      // Updating Energy Costs
+      economics_chart.data.labels.push(time);
+      economics_chart.data.datasets[0].data.push(_data_energy_costs);
+      economics_chart.data.labels.shift();
+      economics_chart.data.datasets[0].data.shift();
+      economics_chart.update('none');
 
     }
   });
