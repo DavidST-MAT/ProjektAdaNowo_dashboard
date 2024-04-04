@@ -68,6 +68,11 @@ def index(request):
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
 
 
+    ### Calculate Card Floor Eveness from NonwovenUnevenness ###
+
+    scaled_signal = [(x - 10.0) / 2.0 for x in nonwoven_uvenness]
+    card_floor_evenness = [x * 50.0 for x in scaled_signal]
+
 
     ############################################################################################################
 
@@ -331,7 +336,7 @@ def index(request):
         energy_costs[-1] = energy_costs[-2]
 
 
-
+  ############################################################################################################
 
     # Production income
         
@@ -384,6 +389,12 @@ def index(request):
 
 
 
+    ############################################################################################################
+
+
+
+
+
     context = {
         'nonwoven_uvenness': nonwoven_uvenness, 
         'nonwoven_uvenness_time': nonwoven_uvenness_time, 
@@ -400,7 +411,8 @@ def index(request):
         'energy_costs': energy_costs,
         'energy_costs_time': energy_costs_time,
         'production_income': production_income,
-        'production_income_time': production_income_time
+        'production_income_time': production_income_time,
+        'card_floor_evenness': card_floor_evenness
         }
 
     return render(request, 'Charts/performance.html', context)
@@ -575,8 +587,40 @@ def updateChartOneMinute(request):
 
 
     
+    ### Updating Production income ###
+        
+    query_production_income = f"""from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> last()"""
 
-    print(updated_values)
+    # Execute the Flux query and store the result in tables
+    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
+
+    if tables_production_income == []:
+        updated_values.append(0)
+    else:
+        for table_production_income in tables_production_income:
+            for record_production_income in table_production_income.records:
+                pi_value = record_production_income.values["_value"]
+                pi_field = record_production_income.values["_field"]
+
+                if pi_value == None: 
+                    pi_value = 0
+
+                if pi_field == "ProductWidth":
+                    production_width = pi_value
+                elif pi_field == "ProductionSpeed":
+                    production_speed = pi_value
+
+        production_income = production_width * production_speed * 60 * 2.10 
+        updated_values.append(production_income)
+
+
+
+
+    #print(updated_values)
     
     return JsonResponse(updated_values, safe=False)
 
