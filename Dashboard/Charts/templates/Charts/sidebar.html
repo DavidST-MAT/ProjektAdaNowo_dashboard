@@ -6,28 +6,24 @@
 
 
 <div class="wrapper d-flex">
-
   <button id="sidebarToggleBtn"><i class="fa fa-bars"></i></button>
-
   <div class="sidebar h-100">
     <input type="range" id="slider" name="slider" min="1" max="8" value="1">
     <p>Selected Time: <span id="sliderValue">1</span> h</p>
-
     <div class="nav flex-column mb-auto">
       <label class="nav-item">
         <input type="checkbox" class="canvas-checkbox" data-canvas-id="PerformanceMeasure" data-row-id="row1" checked>
         <span class="ms-2">Nonwoven Unevenness</span>
       </label>
-
       <label class="nav-item">
         <input type="checkbox" class="canvas-checkbox" data-canvas-id="EnergieConsumption" data-row-id="row2" checked>
-        <span class="ms-2">Line Power Consumption</span>
+        <span class="ms-2">Card Floor Evenness</span>
       </label>
-
       <label class="nav-item">
         <input type="checkbox" class="canvas-checkbox" data-canvas-id="LabValues" data-row-id="row3" checked>
-        <span class="ms-2">Laboratory Values</span>
+        <span class="ms-2">Ambient Temperature</span>
       </label>
+      
     </div>
   </div>
 </div>
@@ -38,18 +34,23 @@
     $('.canvas-checkbox').change(function () {
       var rowId = $(this).data('row-id');
       var rowElement = $('[data-row-id="' + rowId + '"]');
-
       if ($(this).prop('checked')) {
         rowElement.slideDown();
       } else {
         rowElement.slideUp();
       }
+      updateColumns();
     });
-
     $('#sidebarToggleBtn').click(function () {
       $('.sidebar').toggleClass('sidebar-open');
       $('.sidebar-content').toggle(); // Toggle visibility of sidebar content
     });
+    function updateColumns() {
+      var visibleCount = $('.canvas-checkbox:checked').length;
+      var colClass = visibleCount === 1 ? 'col-md-4' : 'col-md-3';
+      $('.container > .row > [data-row-id]').removeClass().addClass(colClass);
+    }
+    updateColumns();
   });
 
   var slider = document.getElementById("slider");
