@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse, QueryDict
 from influxdb_client import InfluxDBClient, Point
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 import datetime
 import pandas as pd
 from datetime import datetime, timedelta
@@ -18,6 +19,14 @@ floor_quality_weight = 50.0
 unevenness_signal_mean = 10.0
 unevenness_signal_std = 2.0
 
+aggregate_time = {
+    '1h': '1m',
+    '3h': '1m',
+    '6h': '1m',
+    '12h': '1m',
+    '30d': '1h'
+}
+
 
 
 # Influx Configuration
@@ -30,28 +39,19 @@ class InfluxDBConfig:
         self.org = os.getenv("INFLUXDB_ORG", "MAT")
 
 
+############################################################################################################
 
-def index(request):
+### NonwovenUnevenness ###
+def get_nonwoven_unevenness(selected_time, influxdb_config, query_api):
 
-    get_hours = request.GET.get('value')
-    if get_hours == None:
-        get_hours = 1
-    query_hours = f"-{get_hours}h"
+    query_time_modified = f"-{selected_time}"
 
-    influxdb_config = InfluxDBConfig()
-    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
-    query_api = client_influxdb.query_api()
-
-
-    ############################################################################################################
-
-    ### NonwovenUnevenness ###
     query_nonwoven_uvenness = f"""from(bucket: "AgentValues")
-        |> range(start: {query_hours}, stop: now())
+        |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
         |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: last)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
@@ -68,8 +68,12 @@ def index(request):
                 nu_value = 0.0
             nonwoven_uvenness.append(nu_value)
             nu_time_updated = nu_time + timedelta(hours=2)
-            nu_formatted_datetime = nu_time_updated.strftime("%H:%M:%S")
+            if aggregate_time[selected_time] == "1h":
+                nu_formatted_datetime = nu_time_updated.strftime("%Y-%m-%d")
+            else:
+                nu_formatted_datetime = nu_time_updated.strftime("%H:%M:%S")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
+            print(nu_time)
 
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == 0:
@@ -77,11 +81,45 @@ def index(request):
     if nonwoven_uvenness != [] and nonwoven_uvenness[0] == 0:
         nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
+    return nonwoven_uvenness, nonwoven_uvenness_time
 
-    ############################################################################################################
 
+
+
+
+def handle_time_range(request):
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
+    query_api = client_influxdb.query_api()
+
+    if request.method == "GET":
+        selected_time = request.GET.get("timeRange")
+        query_data, query_time = get_nonwoven_unevenness(selected_time, influxdb_config, query_api)
+
+        return JsonResponse({"status": "success", 'timeRange': [query_data, query_time]})
+    else:
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+
+
+def index(request):
+
+    query_hours = request.GET.get('value')
+    if query_hours == None:
+        query_hours = '-1h'
+    else:
+        query_hours  = f"-{query_hours}h"
+
+    get_hour = '1h'
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
+    query_api = client_influxdb.query_api()
+
+
+    ### Nonwoven Uvenness ###
+    nonwoven_uvenness, nonwoven_uvenness_time = get_nonwoven_unevenness(get_hour, influxdb_config, query_api)
+    
     ### Calculate Card Floor Eveness from NonwovenUnevenness ###
-
     scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std for x in nonwoven_uvenness]
     card_floor_evenness = [x * floor_quality_weight for x in scaled_signal]
 
@@ -544,7 +582,7 @@ def updateChartOneMinute(request):
 
     ###########################################################################################################
 
-    ### Updating Energy Costs ###
+    ### Updating Energy Costs and Line Power Consumption ###
     query_energy = """from(bucket: "AgentValues")
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
@@ -554,16 +592,15 @@ def updateChartOneMinute(request):
     tables = query_api.query(query_energy, org=influxdb_config.org)
 
     if tables == []:
-        updated_values.append(0)
+        updated_values_dict["LinePowerConsumption"] = 0.0
+        updated_values_dict["EnergyCosts"] = 0.0
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                if value == None: 
-                    value = 0
-                else:
-                    value= value * 0.28
-                updated_values.append(value)
+                ec_value = value * 0.28
+                updated_values_dict["LinePowerConsumption"] = value
+                updated_values_dict["EnergyCosts"] = ec_value
 
 
     
@@ -596,27 +633,6 @@ def updateChartOneMinute(request):
         updated_values.append(production_income)
 
 
-    ### Updating Line Power Consumption ###
-    query_energy = """from(bucket: "AgentValues")
-        |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
-        |> last()"""
-
-    tables = query_api.query(query_energy, org=influxdb_config.org)
-
-    if tables == []:
-        updated_values.append(0)
-    else:
-        for table in tables:
-            for record in table.records:
-                value = record.values["_value"]
-                updated_values.append(value)
-
-
-
-
-    #print(updated_values)
     
     return JsonResponse(updated_values_dict, safe=False)
 

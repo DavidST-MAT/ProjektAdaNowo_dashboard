@@ -7,13 +7,27 @@
   <div class="row">
     <div class="col-md-4" data-row-id="row1">
       <div class="border1">
-        <h1>Nonwoven Unevenness</h1>
+        <h1>Nonwoven Unevenness          
+          <select id="dropdownNonwoven">
+            <option value="1h">1h</option>
+            <option value="3h">3h</option>
+            <option value="6h">6h</option>
+            <option value="12h">12h</option>
+            <option value="30d">30d</option>
+          </select>
+        </h1>
         <canvas id="NonwovenUnevenness"></canvas>
       </div>
     </div>
     <div class="col-md-4" data-row-id="row2">
       <div class="border1">
-        <h1>Card Floor Evenness</h1>
+        <h1>Card Floor Evenness 
+          <select id="dropdownNonwoven">
+            <option value="1h">1h</option>
+            <option value="3h">3h</option>
+            <option value="30d">30d</option>
+          </select>
+        </h1>
         <canvas id="CardFloorEvenness"></canvas>
       </div>
     </div>
@@ -68,6 +82,73 @@
 
 
 <script>
+
+var time_select = {
+  '1h': 1,
+  '3h': 3,
+  '6h': 6,
+  '12h': 12
+  }
+
+
+document.getElementById("dropdownNonwoven").addEventListener("change", function() {
+    sendDataToBackend();
+});
+
+
+
+function populate_empty_chart(selectedValue) {
+  for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
+    nonwoven_uvenness.push(0);
+  }
+
+  let time_now = new Date();
+  for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
+    let time = new Date(time_now - i * 60000);
+    nonwoven_uvenness_time.push(time.toLocaleTimeString());
+  }
+
+
+}
+
+
+
+
+function sendDataToBackend() {
+    var selectedValue = document.getElementById("dropdownNonwoven").value;
+
+    var data = {
+        timeRange: selectedValue
+    };
+    console.log(selectedValue)
+
+    $.ajax({
+            type: "GET",
+            url: '/Adanowo/update/', // Hier die URL deines Django-Backends einfügen
+            data: data,
+            dataType: "json",
+            success: function(response) {
+                console.log('Antwort vom Server:', response);
+                nonwoven_uvenness = response["timeRange"][0]
+                nonwoven_uvenness_time = response["timeRange"][1]
+
+                if (nonwoven_uvenness.length === 0) {
+                  populate_empty_chart(selectedValue)
+                }
+
+                nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
+                nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
+                nonwoven_unevenness_chart.update();
+
+            },
+            error: function(xhr, status, error) {
+                console.error('Fehler beim Senden der Anfrage:', error);
+            }
+        });
+}
+
+
+
 
 function getValueFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -881,9 +962,10 @@ var getData1 = function() {
       var _card_floor_evenness=data["CardFloorEvenness"];
       var _ambient_temperature=data["AmbientTemperature"];
       var _relative_humidity_environment=data["RelativeHumidityEnvironment"];
+      var _line_power_consumption=data["LinePowerConsumption"];
+      var _energy_costs=data["EnergyCosts"];
  
       
-
    
       var _data_engery_consumption=data[1];
       var _data_ambient_temperature=data[2];
@@ -960,15 +1042,12 @@ var getData1 = function() {
       humidity_environment_chart.update('none');
 
 
-
-
-
       // Updating Energy Costs
-      //economics_chart.data.labels.push(time);
-      //economics_chart.data.datasets[0].data.push(_data_energy_costs);
-      //economics_chart.data.labels.shift();
-      //economics_chart.data.datasets[0].data.shift();
-      //economics_chart.update('none');
+      economics_chart.data.labels.push(time);
+      economics_chart.data.datasets[0].data.push(_energy_costs);
+      economics_chart.data.labels.shift();
+      economics_chart.data.datasets[0].data.shift();
+      economics_chart.update('none');
 
 
       // Updating Production Income
@@ -981,7 +1060,7 @@ var getData1 = function() {
 
       // Updating LinePowerConsumption
       energy_consumption_chart.data.labels.push(time);
-      energy_consumption_chart.data.datasets[0].data.push(_data_engery_consumption);
+      energy_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
       energy_consumption_chart.data.labels.shift();
       energy_consumption_chart.data.datasets[0].data.shift();
       energy_consumption_chart.update('none');
