@@ -19,13 +19,26 @@ floor_quality_weight = 50.0
 unevenness_signal_mean = 10.0
 unevenness_signal_std = 2.0
 
+# Time selection
 aggregate_time = {
     '1h': '1m',
     '3h': '1m',
     '6h': '1m',
     '12h': '1m',
+    '1d': '10m',
+    '7d': '1h',
     '30d': '1h'
 }
+
+time_select_empty_table = {
+  '1h': 1,
+  '3h': 3,
+  '6h': 6,
+  '12h': 12,
+  '1d': 24,
+  '7d': 168,
+  '30d': 720
+  }
 
 
 
@@ -69,7 +82,7 @@ def get_nonwoven_unevenness(selected_time, influxdb_config, query_api):
             nonwoven_uvenness.append(nu_value)
             nu_time_updated = nu_time + timedelta(hours=2)
             if aggregate_time[selected_time] == "1h":
-                nu_formatted_datetime = nu_time_updated.strftime("%Y-%m-%d")
+                nu_formatted_datetime = nu_time_updated.strftime("%d-%m %H:%M")
             else:
                 nu_formatted_datetime = nu_time_updated.strftime("%H:%M:%S")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
@@ -81,12 +94,83 @@ def get_nonwoven_unevenness(selected_time, influxdb_config, query_api):
     if nonwoven_uvenness != [] and nonwoven_uvenness[0] == 0:
         nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
+    if nonwoven_uvenness == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            nonwoven_uvenness.append(0)
+
+
+    if nonwoven_uvenness_time == []:
+        time_now = datetime.now()
+        nonwoven_uvenness_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                nonwoven_uvenness_time.append(time.strftime("%Y-%m-%d %H:%M"))
+            else:
+                nonwoven_uvenness_time.append(time.strftime("%H:%M:%S"))
+
     return nonwoven_uvenness, nonwoven_uvenness_time
 
 
+############################################################################################################
+
+### AmbientTemperature ###
+def get_ambient_temperature(selected_time, influxdb_config, query_api):
+
+    query_time_modified = f"-{selected_time}"
+
+    query_ambient_temperature = f"""from(bucket: "AgentValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "AmbientTemperature")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+        |> yield(name: "last")"""
+
+    tables_ambient_temperature = query_api.query(query_ambient_temperature, org=influxdb_config.org)
+    ambient_temperature = []
+    ambient_temperature_time = []
 
 
+    for table_ambient_temperature in tables_ambient_temperature:
+        for record_ambient_temperature in table_ambient_temperature.records:
+            at_value = record_ambient_temperature.values["_value"]
+            at_time = record_ambient_temperature.values["_time"]
+            if at_value == None: 
+                at_value = 0.0
+            ambient_temperature.append(at_value)
+            at_time_updated = at_time + timedelta(hours=2)
+            at_formatted_datetime = at_time_updated.strftime("%H:%M:%S")
+            ambient_temperature_time.append(at_formatted_datetime)
 
+    if ambient_temperature != [] and ambient_temperature[-1] == 0:
+        ambient_temperature[-1] = ambient_temperature[-2]
+    if ambient_temperature != [] and ambient_temperature[0] == 0:
+        ambient_temperature[0] = ambient_temperature[1]
+
+    if ambient_temperature == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            ambient_temperature.append(0)
+
+
+    if ambient_temperature_time == []:
+        time_now = datetime.now()
+        ambient_temperature_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                ambient_temperature_time.append(time.strftime("%Y-%m-%d %H:%M"))
+            else:
+                ambient_temperature_time.append(time.strftime("%H:%M:%S"))
+
+    return ambient_temperature, ambient_temperature_time
+
+
+############################################################################################################
+
+# Handle time selection via Axios
 def handle_time_range(request):
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
@@ -94,7 +178,13 @@ def handle_time_range(request):
 
     if request.method == "GET":
         selected_time = request.GET.get("timeRange")
-        query_data, query_time = get_nonwoven_unevenness(selected_time, influxdb_config, query_api)
+        selected_header = request.GET.get("header")
+        print(selected_header)
+
+        if selected_header == "NonwovenUnevennes": 
+            query_data, query_time = get_nonwoven_unevenness(selected_time, influxdb_config, query_api)
+        elif selected_header == "AmbientTemperature":
+            query_data, query_time = get_ambient_temperature(selected_time, influxdb_config, query_api) 
 
         return JsonResponse({"status": "success", 'timeRange': [query_data, query_time]})
     else:
@@ -123,41 +213,11 @@ def index(request):
     scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std for x in nonwoven_uvenness]
     card_floor_evenness = [x * floor_quality_weight for x in scaled_signal]
 
-
-    ############################################################################################################
-
     ### Ambient Temperatur ###
-    query_ambient_temperature = f"""from(bucket: "AgentValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
-        |> filter(fn: (r) => r["_field"] == "AmbientTemperature")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: last)
-        |> yield(name: "last")"""
-
-    tables_ambient_temperature = query_api.query(query_ambient_temperature, org=influxdb_config.org)
-    ambient_temperature = []
-    ambient_temperature_time = []
-
-
-    for table_ambient_temperature in tables_ambient_temperature:
-        for record_ambient_temperature in table_ambient_temperature.records:
-            at_value = record_ambient_temperature.values["_value"]
-            at_time = record_ambient_temperature.values["_time"]
-            if at_value == None: 
-                at_value = 0.0
-            ambient_temperature.append(at_value)
-            at_time_updated = at_time + timedelta(hours=2)
-            at_formatted_datetime = at_time_updated.strftime("%H:%M:%S")
-            ambient_temperature_time.append(at_formatted_datetime)
-
-    if ambient_temperature != [] and ambient_temperature[-1] == 0:
-        ambient_temperature[-1] = ambient_temperature[-2]
-    if ambient_temperature != [] and ambient_temperature[0] == 0:
-        ambient_temperature[0] = ambient_temperature[1]
+    ambient_temperature, ambient_temperature_time = get_ambient_temperature(get_hour, influxdb_config, query_api)
 
     
-    ##############################################################################################################
+
 
     ### Laboratory Values ###
     area_weights = []
@@ -448,6 +508,7 @@ def index(request):
 def updateChartOneMinute(request):
     updated_values_dict = {}
     updated_values = []
+    
 
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)

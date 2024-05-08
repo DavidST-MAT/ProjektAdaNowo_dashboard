@@ -13,6 +13,8 @@
             <option value="3h">3h</option>
             <option value="6h">6h</option>
             <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
         </h1>
@@ -33,7 +35,17 @@
     </div>
     <div class="col-md-4" data-row-id="row3">
       <div class="border1">
-        <h1>Ambient Temperature</h1>
+        <h1>Ambient Temperature
+            <select id="dropdownAmbientTemperature">
+            <option value="1h">1h</option>
+            <option value="3h">3h</option>
+            <option value="6h">6h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="7d">7d</option>
+            <option value="30d">30d</option>
+          </select>
+        </h1>
         <canvas id="AmbientTemperature"></canvas>
       </div>
     </div>
@@ -87,12 +99,21 @@ var time_select = {
   '1h': 1,
   '3h': 3,
   '6h': 6,
-  '12h': 12
+  '12h': 12,
+  '1d': 24,
+  '7d': 168,
+  '30d': 720
   }
 
 
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
-    sendDataToBackend();
+    sendDataToBackend("NonwovenUnevennes", this.value);   
+});
+
+document.getElementById("dropdownAmbientTemperature").addEventListener("change", function() {
+    var headerOfChart = "AmbientTemperature";
+    let dropdown_time = this.value
+    sendDataToBackend(headerOfChart, dropdown_time);  
 });
 
 
@@ -114,31 +135,37 @@ function populate_empty_chart(selectedValue) {
 
 
 
-function sendDataToBackend() {
-    var selectedValue = document.getElementById("dropdownNonwoven").value;
+function sendDataToBackend(headerOfChart, dropdown_time) {
 
     var data = {
-        timeRange: selectedValue
+        timeRange: dropdown_time,
+        header: headerOfChart
     };
-    console.log(selectedValue)
 
     $.ajax({
             type: "GET",
-            url: '/Adanowo/update/', // Hier die URL deines Django-Backends einfügen
+            url: '/Adanowo/update/',
             data: data,
             dataType: "json",
             success: function(response) {
                 console.log('Antwort vom Server:', response);
-                nonwoven_uvenness = response["timeRange"][0]
-                nonwoven_uvenness_time = response["timeRange"][1]
 
-                if (nonwoven_uvenness.length === 0) {
-                  populate_empty_chart(selectedValue)
+                if (data["header"] === "NonwovenUnevennes") {
+                  nonwoven_uvenness = response["timeRange"][0]
+                  nonwoven_uvenness_time = response["timeRange"][1]
+                  nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
+                  nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
+                  nonwoven_unevenness_chart.update();
+                }
+                else if (data["header"] === "AmbientTemperature") {
+                  ambient_temperature = response["timeRange"][0]
+                  ambient_temperature_time = response["timeRange"][1]                
+                  ambient_temperature_chart.data.labels = ambient_temperature_time
+                  ambient_temperature_chart.data.datasets[0].data = ambient_temperature;
+                  ambient_temperature_chart.update();
                 }
 
-                nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
-                nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
-                nonwoven_unevenness_chart.update();
+
 
             },
             error: function(xhr, status, error) {
@@ -952,7 +979,7 @@ var energy_consumption_chart = new Chart(ctx_live, {
 
 /// updating Charts ///
 var getData1 = function() {
-  
+
   $.ajax({
     type: "GET",
     url: "/Charts/updateChartOneMinute",
@@ -1071,7 +1098,23 @@ var getData1 = function() {
   });
 };
 
-var updateCanvas = setInterval(getData1, 60000);
+updateCanvas = setInterval(getData1, 60000);
+
+document.getElementById("dropdownNonwoven").addEventListener("change", function() {
+  clearInterval(updateCanvas);
+  let selectedValue = this.value;
+  console.log(selectedValue);
+  if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
+    updateCanvas = setInterval(getData1, 60000);
+  }
+  else if (selectedValue === "1d") {
+    updateCanvas = setInterval(getData1, 600000);
+  }
+  else if (selectedValue === "7d" || selectedValue === "30d") {
+    updateCanvas = setInterval(getData1, 3600000);
+  }
+});
+
 
 window.addEventListener('beforeunload', function() {
     clearInterval(updateCanvas);
