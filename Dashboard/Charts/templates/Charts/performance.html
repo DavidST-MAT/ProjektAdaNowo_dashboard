@@ -978,7 +978,7 @@ var energy_consumption_chart = new Chart(ctx_live, {
 
 
 /// updating Charts ///
-var getData1 = function() {
+var updating_nonenwoven_unevenness = function() {
 
   $.ajax({
     type: "GET",
@@ -986,29 +986,13 @@ var getData1 = function() {
     success: function(data) {
   
       var _nonwoven_unevenness=data["NonwovenUnevenness"];
-      var _card_floor_evenness=data["CardFloorEvenness"];
-      var _ambient_temperature=data["AmbientTemperature"];
-      var _relative_humidity_environment=data["RelativeHumidityEnvironment"];
-      var _line_power_consumption=data["LinePowerConsumption"];
-      var _energy_costs=data["EnergyCosts"];
+      //var _card_floor_evenness=data["CardFloorEvenness"];
+      //var _ambient_temperature=data["AmbientTemperature"];
+      //var _relative_humidity_environment=data["RelativeHumidityEnvironment"];
+      //var _line_power_consumption=data["LinePowerConsumption"];
+      //var _energy_costs=data["EnergyCosts"];
  
-      
-   
-      var _data_engery_consumption=data[1];
-      var _data_ambient_temperature=data[2];
-      var _data_area_max=data[3];
-      var _data_area_min=data[4];
-      var _data_area_median=data[5];
-      var _data_tensile_cd_max=data[6];
-      var _data_tensile_cd_min=data[7];
-      var _data_tensile_cd_median=data[8];
-      var _data_tensile_md_max=data[9];
-      var _data_tensile_md_min=data[10];
-      var _data_tensile_md_median=data[11];
-      var _data_humidty_environment=data[12];
-      var _data_energy_costs=data[13];
-      var _data_production_income=data[14];
-      var _data_card_floor_evenness=data[15];
+    
 
       var now = new Date();
       var time = now.toLocaleTimeString();
@@ -1020,7 +1004,7 @@ var getData1 = function() {
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
 
-      // Card Floor Evenness
+      /*// Card Floor Evenness
       card_floor_evenness_chart.data.labels.push(time);
       card_floor_evenness_chart.data.datasets[0].data.push(_card_floor_evenness);
       card_floor_evenness_chart.data.labels.shift();
@@ -1086,39 +1070,100 @@ var getData1 = function() {
 
 
       // Updating LinePowerConsumption
-      energy_consumption_chart.data.labels.push(time);
-      energy_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
-      energy_consumption_chart.data.labels.shift();
-      energy_consumption_chart.data.datasets[0].data.shift();
-      energy_consumption_chart.update('none');
-
+      //energy_consumption_chart.data.labels.push(time);
+      //energy_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
+      //energy_consumption_chart.data.labels.shift();
+      //energy_consumption_chart.data.datasets[0].data.shift();
+      //energy_consumption_chart.update('none');
+      */
 
 
     }
   });
 };
 
-updateCanvas = setInterval(getData1, 60000);
+/// updating Charts ///
+var updating_ambient_temperature = function() {
+
+  $.ajax({
+    type: "GET",
+    url: "/Charts/update_ambient_temperature_chart",
+    success: function(data) {
+  
+      var _ambient_temperature=data["AmbientTemperature"];
+  
+      var now = new Date();
+      var time = now.toLocaleTimeString();
+
+      // Updating AmbientTemperature
+      ambient_temperature_chart.data.labels.push(time);
+      ambient_temperature_chart.data.datasets[0].data.push(_ambient_temperature);
+      ambient_temperature_chart.data.labels.shift();
+      ambient_temperature_chart.data.datasets[0].data.shift();
+      ambient_temperature_chart.update('none');
+
+    }
+  });
+};
+
+
+
+update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
+update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
+
+
+
 
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
-  clearInterval(updateCanvas);
+
+  clearInterval(update_nonenwoven_unevenness);
+
   let selectedValue = this.value;
+
   console.log(selectedValue);
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    updateCanvas = setInterval(getData1, 60000);
+    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
   }
   else if (selectedValue === "1d") {
-    updateCanvas = setInterval(getData1, 600000);
+    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 600000);
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    updateCanvas = setInterval(getData1, 3600000);
+    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 3600000);
   }
 });
+
+
+document.getElementById("dropdownAmbientTemperature").addEventListener("change", function() {
+
+  clearInterval(update_ambient_temperature);
+
+  let selectedValue = this.value;
+
+  if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
+    update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
+  }
+  else if (selectedValue === "1d") {
+    update_ambient_temperature = setInterval(updating_ambient_temperature, 600000);
+  }
+  else if (selectedValue === "7d" || selectedValue === "30d") {
+    update_ambient_temperature = setInterval(updating_ambient_temperature, 3600000);
+  }
+});
+
+
+
+
+
 
 
 window.addEventListener('beforeunload', function() {
-    clearInterval(updateCanvas);
+    clearInterval(updating_nonenwoven_unevenness);
+    clearInterval(update_ambient_temperature);
 });
+
+
+
+
 
 </script>
 

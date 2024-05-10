@@ -170,7 +170,7 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
 
 ############################################################################################################
 
-# Handle time selection via Axios
+# Handle time selection via Axios\Ajax
 def handle_time_range(request):
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org) 
@@ -699,5 +699,29 @@ def updateChartOneMinute(request):
 
 
 
+# Function for updating Ambient Temperature
+def update_ambient_temperature_chart(request):
+    updated_values_dict = {}
+  
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
+    query_api = client_influxdb.query_api()
 
+    ### Updating Ambient Temperature ###
+    query_energy = """from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "AmbientTemperature" and r["Iteration"] == "-1")
+        |> group(columns: ["_field"])
+        |> last()"""
 
+    tables = query_api.query(query_energy, org=influxdb_config.org)
+
+    if tables == []:
+        updated_values_dict["AmbientTemperature"] = 0.0
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                updated_values_dict["AmbientTemperature"] = value
+
+    return JsonResponse(updated_values_dict, safe=False)
