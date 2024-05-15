@@ -86,7 +86,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             else:
                 nu_formatted_datetime = nu_time_updated.strftime("%H:%M:%S")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
-            print(nu_time)
 
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == 0:
@@ -175,6 +174,128 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
 
 ############################################################################################################
 
+### Laboratory Values ###
+def get_laboratory_values(selected_time, influxdb_config, query_api):
+    query_time_modified = f"-{selected_time}"
+
+    area_weights = []
+    aggregation_fns = ["min", "max", "mean"]
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_area_weight = f'''
+        from(bucket: "LabValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
+        |> yield(name: "min")
+        '''
+
+        # Execute the Flux query and store the result in tables
+        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
+        area_weight = []
+        area_weight_time = []
+        
+
+        for table_area_weight in tables_area_weight:
+            #print(table_area_weight)
+            for record_area_weight in table_area_weight.records:
+                aw_value = record_area_weight.values["_value"]
+                aw_time = record_area_weight.values["_time"]
+                if aw_value == None: 
+                    aw_value = 0
+                area_weight.append(aw_value)
+                aw_updated_time = aw_time + timedelta(hours=2)
+                aw_formatted_datetime = aw_updated_time.strftime("%H:%M:%S")
+                area_weight_time.append(aw_formatted_datetime)
+
+        area_weights.append(area_weight)
+
+    if area_weights == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            area_weights.append(0)
+
+    if area_weight_time == []:
+        time_now = datetime.now()
+        area_weight_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                area_weight_time.append(time.strftime("%Y-%m-%d %H:%M"))
+            else:
+                area_weight_time.append(time.strftime("%H:%M:%S"))
+
+
+    tensile_force_md_all = []
+    aggregation_fns = ["min", "max", "mean"]
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_tables_tensile_md = f'''
+        from(bucket: "LabValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
+        |> yield(name: "min")
+        '''
+
+        # Execute the Flux query and store the result in tables
+        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
+        tensile_force_md = []
+  
+        
+
+        for table_tensile_force_md in tables_tensile_force_md:
+            #print(table_tensile_force_md)
+            for record_tensile_force_md in table_tensile_force_md.records:
+                tf_md_value = record_tensile_force_md.values["_value"]
+                if tf_md_value == None: 
+                    tf_md_value = 0
+                tensile_force_md.append(tf_md_value)
+
+
+        tensile_force_md_all.append(tensile_force_md)
+
+
+    tensile_force_cd_all = []
+    aggregation_fns = ["min", "max", "mean"]
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_tables_tensile_cd = f'''
+        from(bucket: "LabValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
+        |> yield(name: "min")
+        '''
+
+        # Execute the Flux query and store the result in tables
+        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
+        tensile_force_cd = []
+  
+        
+
+        for table_tensile_force_cd in tables_tensile_force_cd:
+            print(table_tensile_force_cd)
+            for record_tensile_force_cd in table_tensile_force_cd.records:
+                tf_cd_value = record_tensile_force_cd.values["_value"]
+                if tf_cd_value == None: 
+                    tf_cd_value = 0
+                tensile_force_cd.append(tf_cd_value)
+
+
+        tensile_force_cd_all.append(tensile_force_cd)
+
+    return [area_weights, tensile_force_md_all, tensile_force_cd_all], area_weight_time
+
+
+############################################################################################################
+
 ### Humidty Ennvironment ###
 def get_humidity_environment(selected_time, influxdb_config, query_api):
 
@@ -185,7 +306,7 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "RelativeHumidityEnvironment")
         |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: last)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
@@ -232,6 +353,154 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
 
 ############################################################################################################
 
+### Economics ###
+def get_economics(selected_time, influxdb_config, query_api):
+    query_time_modified = f"-{selected_time}"
+
+    # Material Costs
+    query_material_costs = f"""from(bucket: "AgentValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+        |> yield(name: "last")"""
+
+    tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
+    card_delivery_weight_per_area = []
+    card_delivery_speed = []
+
+    for table_material_costs in tables_material_costs:
+        for record_material_costs in table_material_costs.records:
+            mc_value = record_material_costs.values["_value"]
+            mc_field = record_material_costs.values["_field"]
+
+            if mc_value == None: 
+                mc_value = 0.0
+
+            if mc_field == "CardDeliveryWeightPerArea":
+                card_delivery_weight_per_area.append(mc_value)
+            elif mc_field == "CardDeliverySpeed":
+                card_delivery_speed.append(mc_value)
+
+    if card_delivery_speed != [] and card_delivery_speed[-1] == 0:
+        card_delivery_speed[-1] = card_delivery_speed[-2]
+    if card_delivery_speed != [] and card_delivery_speed[0] == 0:
+        card_delivery_speed[0] = card_delivery_speed[1]
+
+
+    if len(card_delivery_weight_per_area) != len(card_delivery_speed):
+        print("Length of lists are not the same")
+    else:
+        material_costs = [x * y * 6/100 * fibre_costs for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
+
+    if material_costs == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            material_costs.append(0)
+
+
+    ###
+    # Energy Costs 
+    query_energy_costs = f"""from(bucket: "AgentValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+        |> yield(name: "last")"""
+
+    tables_energy_costs = query_api.query(query_energy_costs, org=influxdb_config.org)
+
+    energy_costs = []
+    energy_costs_time = []
+
+    for table_energy_costs in tables_energy_costs:
+        for record_energy_costs in table_energy_costs.records:
+            pc_value = record_energy_costs.values["_value"]
+            pc_time = record_energy_costs.values["_time"]
+            if pc_value == None: 
+                ec_value = 0.0
+            else: 
+                ec_value = pc_value * 0.28
+            energy_costs.append(ec_value)
+            pc_time_updated = pc_time + timedelta(hours=2)
+            pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
+            energy_costs_time.append(pc_formatted_datetime)
+
+    if energy_costs != [] and energy_costs[-1] == 0:
+        energy_costs[-1] = energy_costs[-2]
+    if energy_costs != [] and energy_costs[0] == 0:
+        energy_costs[0] = energy_costs[1]
+
+    if energy_costs == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            energy_costs.append(0)
+
+    if energy_costs_time == []:
+        time_now = datetime.now()
+        energy_costs_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                energy_costs_time.append(time.strftime("%Y-%m-%d %H:%M"))
+            else:
+                energy_costs_time.append(time.strftime("%H:%M:%S"))
+
+    ###
+    # Production income
+    query_production_income = f"""from(bucket: "AgentValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+        |> yield(name: "last")"""
+
+    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
+    production_width = []
+    production_speed = []
+    production_income = []
+
+    for table_production_income in tables_production_income:
+        for record_production_income in table_production_income.records:
+            pi_value = record_production_income.values["_value"]
+            pi_field = record_production_income.values["_field"]
+
+            if pi_value == None: 
+                pi_value = 0
+
+            if pi_field == "ProductWidth":
+                production_width.append(pi_value)
+            elif pi_field == "ProductionSpeed":
+                production_speed.append(pi_value)
+    
+    print(production_width, production_speed)
+    #print(len(production_width), len(production_speed))
+    if len(production_width) != len(production_speed):
+        print(len(production_width), len(production_speed))
+        print("Length of lists are not the same")
+    else:
+        production_income = [x * y * 60 * selling_price for x, y in zip(production_width, production_speed)]
+
+        if production_income != [] and production_income[-1] == 0:
+            production_income[-1] = production_income[-2]
+        if production_income != [] and production_income[0] == 0:
+            production_income[0] = production_income[1]
+
+
+    if production_income == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            production_income.append(0)
+    #print(production_income)
+
+
+    ###
+    #Contribution Margin 
+    contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
+
+    return [energy_costs, material_costs, contribution_margin, production_income], energy_costs_time
+
+############################################################################################################
+
 ### Line Power Consumption ### Economics ###
 def get_line_power_consumption(chart, selected_time, influxdb_config, query_api):
 
@@ -242,7 +511,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: last)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
     tables_energy_costs = query_api.query(query_energy_costs, org=influxdb_config.org)
@@ -281,7 +550,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                 if aggregate_time[selected_time] == "1h":
                     line_power_consumption_time.append(time.strftime("%Y-%m-%d %H:%M"))
                 else:
-                    line_power_consumption_time.append(time.strftime("%H:%M"))
+                    line_power_consumption_time.append(time.strftime("%H:%M:%S"))
 
         return line_power_consumption, line_power_consumption_time
 
@@ -308,8 +577,12 @@ def handle_time_range(request):
             query_data, query_time = get_nonwoven_unevenness("CardFloorEvenness", selected_time, influxdb_config, query_api)
         elif selected_header == "AmbientTemperature":
             query_data, query_time = get_ambient_temperature(selected_time, influxdb_config, query_api)
+        elif selected_header == "LaboratoryValues":
+            query_data, query_time = get_laboratory_values(selected_time, influxdb_config, query_api)
         elif selected_header == "HumidityEnvironment":
             query_data, query_time = get_humidity_environment(selected_time, influxdb_config, query_api)
+        elif selected_header == "Economics":
+            query_data, query_time = get_economics(selected_time, influxdb_config, query_api)
         elif selected_header == "LinePowerConsumption":
             query_data, query_time = get_line_power_consumption("LinePowerConsumption", selected_time, influxdb_config, query_api)    
 
@@ -344,207 +617,20 @@ def index(request):
     ### Ambient Temperatur ###
     ambient_temperature, ambient_temperature_time = get_ambient_temperature(get_hour, influxdb_config, query_api)
 
-     ### Humidty Environment ###
+    ### Laboratory Values ###
+    laboratory_values, laboratory_values_time = get_laboratory_values(get_hour, influxdb_config, query_api)
+
+    ### Humidty Environment ###
     humidity_environment, humidity_environment_time = get_ambient_temperature(get_hour, influxdb_config, query_api)
-    
+
+    ### Economics ###
+    economics, economics_time = get_economics(get_hour, influxdb_config, query_api)
+
     ### Line Power Consumption ##
     line_power_consumption, line_power_consumption_time = get_line_power_consumption("LinePowerConsumption", get_hour, influxdb_config, query_api)
 
 
-    ### Laboratory Values ###
-    area_weights = []
-    aggregation_fns = ["min", "max", "mean"]
-
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_area_weight = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
-        area_weight = []
-        area_weight_time = []
-        
-
-        for table_area_weight in tables_area_weight:
-            #print(table_area_weight)
-            for record_area_weight in table_area_weight.records:
-                aw_value = record_area_weight.values["_value"]
-                aw_time = record_area_weight.values["_time"]
-                if aw_value == None: 
-                    aw_value = 0
-                area_weight.append(aw_value)
-                aw_updated_time = aw_time + timedelta(hours=2)
-                aw_formatted_datetime = aw_updated_time.strftime("%H:%M:%S")
-                area_weight_time.append(aw_formatted_datetime)
-
-        area_weights.append(area_weight)
-
-
-
-
-
-    tensile_force_md_all = []
-    aggregation_fns = ["min", "max", "mean"]
-
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_tables_tensile_md = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
-        tensile_force_md = []
-  
-        
-
-        for table_tensile_force_md in tables_tensile_force_md:
-            #print(table_tensile_force_md)
-            for record_tensile_force_md in table_tensile_force_md.records:
-                tf_md_value = record_tensile_force_md.values["_value"]
-                if tf_md_value == None: 
-                    tf_md_value = 0
-                tensile_force_md.append(tf_md_value)
-
-
-        tensile_force_md_all.append(tensile_force_md)
-
-
-
-
-    tensile_force_cd_all = []
-    aggregation_fns = ["min", "max", "mean"]
-
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_tables_tensile_cd = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: 1m, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
-        tensile_force_cd = []
-  
-        
-
-        for table_tensile_force_cd in tables_tensile_force_cd:
-            print(table_tensile_force_cd)
-            for record_tensile_force_cd in table_tensile_force_cd.records:
-                tf_cd_value = record_tensile_force_cd.values["_value"]
-                if tf_cd_value == None: 
-                    tf_cd_value = 0
-                tensile_force_cd.append(tf_cd_value)
-
-
-        tensile_force_cd_all.append(tensile_force_cd)
-
-
-    ############################################################################################################
-
-   
-
-
-
-    ############################################################################################################
-
-    ### Economics ###
-
-    # Material Costs
-    query_material_costs = f"""from(bucket: "AgentValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
-        |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
-        |> aggregateWindow(every: 1m, fn: last)
-        |> yield(name: "last")"""
-
-    tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
-    card_delivery_weight_per_area = []
-    card_delivery_speed = []
-
-    for table_material_costs in tables_material_costs:
-        for record_material_costs in table_material_costs.records:
-            mc_value = record_material_costs.values["_value"]
-            mc_field = record_material_costs.values["_field"]
-
-            if mc_value == None: 
-                mc_value = 0.0
-
-            if mc_field == "CardDeliveryWeightPerArea":
-                card_delivery_weight_per_area.append(mc_value)
-            elif mc_field == "CardDeliverySpeed":
-                card_delivery_speed.append(mc_value)
-
-    if len(card_delivery_weight_per_area) != len(card_delivery_speed):
-        print("Length of lists are not the same")
-    else:
-        material_costs = [x * y * 6/100 * fibre_costs for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
-
-
-    ###
-    # Energy Costs and Line Power Consumption
-
-    energy_costs = []
-
-
-
-    ###
-    # Production income
-    query_production_income = f"""from(bucket: "AgentValues")
-        |> range(start: {query_hours}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
-        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
-        |> aggregateWindow(every: 1m, fn: last)
-        |> yield(name: "last")"""
-
-    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
-    production_width = []
-    production_speed = []
-
-    for table_production_income in tables_production_income:
-        for record_production_income in table_production_income.records:
-            pi_value = record_production_income.values["_value"]
-            pi_field = record_production_income.values["_field"]
-
-            if pi_value == None: 
-                pi_value = 0
-
-            if pi_field == "ProductWidth":
-                production_width.append(pi_value)
-            elif pi_field == "ProductionSpeed":
-                production_speed.append(pi_value)
-
-    if len(production_width) != len(production_speed):
-        print("Length of lists are not the same")
-    else:
-        production_income = [x * y * 60 * selling_price for x, y in zip(production_width, production_speed)]
-
-    if production_income != [] and production_income[-1] == 0:
-        production_income[-1] = production_income[-2]
-
-
-    ###
-    #Contribution Margin 
-    contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
-
-
-    ############################################################################################################
+    ###########################################################################################################
 
     context = {
         'nonwoven_uvenness': nonwoven_uvenness, 
@@ -552,19 +638,20 @@ def index(request):
         'card_floor_evenness': card_floor_evenness,
         'card_floor_evenness_time': card_floor_evenness_time,
         'ambient_temperature': ambient_temperature,
-        'ambient_temperature_time': ambient_temperature_time,  
-        'area_weights': area_weights, 
-        'area_weight_time': area_weight_time, 
-        'tensile_force_md_all': tensile_force_md_all, 
-        'tensile_force_cd_all': tensile_force_cd_all,
+        'ambient_temperature_time': ambient_temperature_time,
+        'laboratory_values_time': laboratory_values_time,   
+        'area_weights': laboratory_values[0], 
+        'tensile_force_md_all': laboratory_values[1], 
+        'tensile_force_cd_all': laboratory_values[2],
         'humidity_environment': humidity_environment,
         'humidity_environment_time': humidity_environment_time,
-        'material_costs': material_costs,
-        'energy_costs': energy_costs,
+        'energy_costs_time': economics_time,
+        'energy_costs': economics[0],
+        'material_costs': economics[1],
+        'production_income': economics[2],
+        'contribution_margin': economics[3],
         'line_power_consumption': line_power_consumption, 
-        'line_power_consumption_time': line_power_consumption_time,
-        'production_income': production_income,
-        'contribution_margin': contribution_margin,
+        'line_power_consumption_time': line_power_consumption_time
         }
 
     return render(request, 'Charts/performance.html', context)
@@ -797,6 +884,12 @@ def update_ambient_temperature_chart(request):
 
 ############################################################################################################
 
+# function for updating laboratory values
+def update_laboratory_values_chart(request):
+    pass
+
+############################################################################################################
+
 # function for updating humidty environment
 def update_humidity_environment_chart(request):
     updated_values_dict = {}
@@ -820,6 +913,131 @@ def update_humidity_environment_chart(request):
             for record in table.records:
                 value = record.values["_value"]
                 updated_values_dict["HumidityEnvironment"] = value
+
+
+    return JsonResponse(updated_values_dict, safe=False)
+
+
+############################################################################################################
+
+# function for updating economics
+def update_economics_chart(request):
+    updated_values_dict = {}
+  
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
+    query_api = client_influxdb.query_api()
+
+    ### Updating Energy Costs ###
+    query_energy = """from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
+        |> group(columns: ["_field"])
+        |> last()"""
+
+    tables = query_api.query(query_energy, org=influxdb_config.org)
+
+    if tables == []:
+        updated_values_dict["EnergyCosts"] = 0.0
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                ec_value = value * 0.28
+                updated_values_dict["EnergyCosts"] = ec_value
+
+
+    ### updating material costs
+    query_material_costs = f"""from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
+        |> group(columns: ["_field"])
+        |> last()"""
+
+    tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
+
+    if tables_material_costs == []:
+        updated_values_dict["MaterialCosts"] = 0.0
+
+    else:
+        for table_material_costs in tables_material_costs:
+            for record_material_costs in table_material_costs.records:
+                mc_value = record_material_costs.values["_value"]
+                mc_field = record_material_costs.values["_field"]
+
+                if mc_value == None: 
+                    mc_value = 0.0
+
+                if mc_field == "CardDeliveryWeightPerArea":
+                    card_delivery_weight_per_area = mc_value
+                elif mc_field == "CardDeliverySpeed":
+                    card_delivery_speed = mc_value
+
+        updated_values_dict["MaterialCosts"]  = card_delivery_speed * card_delivery_weight_per_area * 6/100 * fibre_costs
+
+
+
+    ### Updating Production income ###
+    query_production_income = f"""from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> last()"""
+
+    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
+
+    if tables_production_income == []:
+        updated_values_dict["ProductionIncome"] = 0.0
+    else:
+        for table_production_income in tables_production_income:
+            for record_production_income in table_production_income.records:
+                pi_value = record_production_income.values["_value"]
+                pi_field = record_production_income.values["_field"]
+
+                if pi_value == None: 
+                    pi_value = 0
+
+                if pi_field == "ProductWidth":
+                    production_width = pi_value
+                elif pi_field == "ProductionSpeed":
+                    production_speed = pi_value
+
+        updated_values_dict["ProductionIncome"] = production_width * production_speed * 60 * 2.10 
+
+
+    updated_values_dict["ContributionMargin"] = updated_values_dict["ProductionIncome"] - updated_values_dict["EnergyCosts"] - updated_values_dict["MaterialCosts"] 
+    
+    return JsonResponse(updated_values_dict, safe=False)
+ 
+
+############################################################################################################
+
+# function for line power consumption
+def update_line_power_consumption_chart(request):
+    updated_values_dict = {}
+  
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
+    query_api = client_influxdb.query_api()
+
+    ### Updating Energy Costs and Line Power Consumption ###
+    query_energy = """from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
+        |> group(columns: ["_field"])
+        |> last()"""
+
+    tables = query_api.query(query_energy, org=influxdb_config.org)
+
+    if tables == []:
+        updated_values_dict["LinePowerConsumption"] = 0.0
+
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                updated_values_dict["LinePowerConsumption"] = value
 
 
     return JsonResponse(updated_values_dict, safe=False)

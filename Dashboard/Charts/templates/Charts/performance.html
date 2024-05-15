@@ -58,7 +58,17 @@
   <div class="row">
     <div class="col-8">
       <div class="border1">
-        <h1>Laboratory Values</h1>
+        <h1>Laboratory Values
+          <select id="dropdownLaboratoryValues">
+            <option value="1h">1h</option>
+            <option value="3h">3h</option>
+            <option value="6h">6h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="7d">7d</option>
+            <option value="30d">30d</option>
+          </select>
+        </h1>
         <canvas id="LabValues"></canvas>
       </div>
     </div>
@@ -86,7 +96,17 @@
   <div class="row">
     <div class="col-8">
       <div class="border1">
-        <h1>Economics</h1>
+        <h1>Economics
+          <select id="dropdownEconomics">
+            <option value="1h">1h</option>
+            <option value="3h">3h</option>
+            <option value="6h">6h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="7d">7d</option>
+            <option value="30d">30d</option>
+          </select>
+        </h1>
         <canvas id="Economics"></canvas>
       </div>
     </div>
@@ -103,6 +123,7 @@
             <option value="1d">1d</option>
             <option value="7d">7d</option>
             <option value="30d">30d</option>
+          </select>
         </h1>
         <canvas id="LinePowerConsumption"></canvas>
       </div>
@@ -142,8 +163,16 @@ document.getElementById("dropdownAmbientTemperature").addEventListener("change",
     sendDataToBackend("AmbientTemperature", this.value);  
 });
 
+document.getElementById("dropdownLaboratoryValues").addEventListener("change", function() {
+    sendDataToBackend("LaboratoryValues", this.value);  
+});
+
 document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
     sendDataToBackend("HumidityEnvironment", this.value);  
+});
+
+document.getElementById("dropdownEconomics").addEventListener("change", function() {
+    sendDataToBackend("Economics", this.value);  
 });
 
 document.getElementById("dropdownLinePowerConsumption").addEventListener("change", function() {
@@ -205,12 +234,43 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
                   ambient_temperature_chart.data.datasets[0].data = ambient_temperature;
                   ambient_temperature_chart.update();
                 }
+                else if (data["header"] === "LaboratoryValues") {
+                  area_weights = response["timeRange"][0][0]
+                  console.log(response["timeRange"][1])
+                  tensile_force_md_all = response["timeRange"][0][1]
+                  tensile_force_cd_all = response["timeRange"][0][2]
+                  laboratory_values_time = response["timeRange"][1]                
+                  laboratory_values_chart.data.labels = laboratory_values_time
+                  laboratory_values_chart.data.datasets[0].data[1] = area_weights[0];
+                  laboratory_values_chart.data.datasets[1].data[1] = area_weights[1];
+                  laboratory_values_chart.data.datasets[2].data[1] = area_weights[2];
+                  laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
+                  laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
+                  laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
+                  laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
+                  laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
+                  laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
+                  laboratory_values_chart.update();
+                }
                 else if (data["header"] === "HumidityEnvironment") {
                   humidity_environment = response["timeRange"][0]
                   humidity_environment_time = response["timeRange"][1]                
                   humidity_environment_chart.data.labels = humidity_environment_time
                   humidity_environment_chart.data.datasets[0].data = humidity_environment;
                   humidity_environment_chart.update();
+                }
+                else if (data["header"] === "Economics") {
+                  economics = response["timeRange"][0][0]
+                  material_costs = response["timeRange"][0][1]
+                  contribution_margin = response["timeRange"][0][2]
+                  production_income = response["timeRange"][0][3]
+                  economics_time = response["timeRange"][1]                
+                  economics_chart.data.labels = economics_time
+                  economics_chart.data.datasets[0].data = economics;
+                  economics_chart.data.datasets[1].data = material_costs;
+                  economics_chart.data.datasets[2].data = contribution_margin;
+                  economics_chart.data.datasets[3].data = production_income;
+                  economics_chart.update();
                 }
                 else if (data["header"] === "LinePowerConsumption") {
                   line_power_consumption = response["timeRange"][0]
@@ -499,68 +559,68 @@ var ambient_temperature_chart = new Chart(ctx_live, {
 
 
 // create initial chart LaborWerte
-var data_area_time_ = {{ area_weight_time|safe }}
-var data_area_ = {{ area_weights|safe }}
-var data_tensile_force_md_ = {{ tensile_force_md_all|safe }}
-var data_tensile_force_cd_ = {{ tensile_force_cd_all|safe }}
+var laboratory_values_time = {{ laboratory_values_time|safe }} 
+var area_weights = {{ area_weights|safe }}
+var tensile_force_md_all = {{ tensile_force_md_all|safe }}
+var tensile_force_cd_all = {{ tensile_force_cd_all|safe }}
 
-if (data_area_time_.length === 0) {
+if (laboratory_values_time.length === 0) {
     let time_now = new Date();
     for (let i = 60; i >= 0; i--) {
         let time = new Date(time_now - i * 60000);
-        data_area_time_.push(time.toLocaleTimeString());
+        laboratory_values_time.push(time.toLocaleTimeString());
     }
 }
 
-if (data_area_[0].length === 0) {
+if (area_weights[0].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_area_[0].push(0);
+        area_weights[0].push(0);
     }
 }
-if (data_area_[1].length === 0) {
+if (area_weights[1].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_area_[1].push(0);
+        area_weights[1].push(0);
     }
 }
-if (data_area_[2].length === 0) {
+if (area_weights[2].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_area_[2].push(0);
-    }
-}
-
-if (data_tensile_force_cd_[0].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        data_tensile_force_cd_[0].push(0);
+        area_weights[2].push(0);
     }
 }
 
-if (data_tensile_force_cd_[1].length === 0) {
+if (tensile_force_md_all[0].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_tensile_force_cd_[1].push(0);
+        tensile_force_md_all[0].push(0);
     }
 }
 
-if (data_tensile_force_cd_[2].length === 0) {
+if (tensile_force_md_all[1].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_tensile_force_cd_[2].push(0);
+        tensile_force_md_all[1].push(0);
     }
 }
 
-if (data_tensile_force_md_[0].length === 0) {
+if (tensile_force_md_all[2].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_tensile_force_md_[0].push(0);
+        tensile_force_md_all[2].push(0);
     }
 }
 
-if (data_tensile_force_md_[1].length === 0) {
+if (tensile_force_cd_all[0].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_tensile_force_md_[1].push(0);
+        tensile_force_cd_all[0].push(0);
     }
 }
 
-if (data_tensile_force_md_[2].length === 0) {
+if (tensile_force_cd_all[1].length === 0) {
     for (let i = 60; i >= 0; i--) {
-        data_tensile_force_md_[2].push(0);
+        tensile_force_cd_all[1].push(0);
+    }
+}
+
+if (tensile_force_cd_all[2].length === 0) {
+    for (let i = 60; i >= 0; i--) {
+        tensile_force_cd_all[2].push(0);
     }
 }
 
@@ -629,13 +689,13 @@ const options5 = {
 };
 
 var ctx_live = document.getElementById("LabValues");
-var area_weight_chart = new Chart(ctx_live, {
+var laboratory_values_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: data_area_time_,
+    labels: laboratory_values_time,
 datasets: [
   {
-    data: data_area_[0],
+    data: area_weights[0],
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(255, 99, 132, 1)',
@@ -643,7 +703,7 @@ datasets: [
     tension: 0.25,
   },
   {
-    data: data_area_[1],
+    data: area_weights[1],
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(4, 216, 14, 1)',
@@ -651,7 +711,7 @@ datasets: [
     tension: 0.25,
   },
   {
-    data: data_area_[2],
+    data: area_weights[2],
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(0, 0, 255, 1)',
@@ -659,7 +719,7 @@ datasets: [
     tension: 0.25,
   },
       {
-        data: data_tensile_force_md_[0],
+        data: tensile_force_md_all[0],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(128, 0, 0, 1)', // Darker red for min
@@ -668,7 +728,7 @@ datasets: [
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
       {
-        data: data_tensile_force_md_[1],
+        data: tensile_force_md_all[1],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(100, 50, 0, 1)', // Darker orange for max
@@ -677,7 +737,7 @@ datasets: [
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
       {
-        data: data_tensile_force_md_[2],
+        data: tensile_force_md_all[2],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(128, 0, 0, 1)', // Darker red for median
@@ -688,7 +748,7 @@ datasets: [
 
 
             {
-        data: data_tensile_force_cd_[0],
+        data: tensile_force_cd_all[0],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for min
@@ -697,7 +757,7 @@ datasets: [
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
       {
-        data: data_tensile_force_cd_[1],
+        data: tensile_force_cd_all[1],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 180, 100, 1)', // Lighter orange for max
@@ -706,7 +766,7 @@ datasets: [
         yAxisID: 'y2', // Use the left y-axis for this dataset
       },
       {
-        data: data_tensile_force_cd_[2],
+        data: tensile_force_cd_all[2],
         borderWidth: 2,
         radius: 0,
         borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for median
@@ -810,9 +870,9 @@ var humidity_environment_chart = new Chart(ctx_live, {
 ////////////////////////////////////////////////////////////////////
 
 
-// create initial chart Econimics
-var economics = {{ energy_costs|safe }}
-var economics_time = {{ line_power_consumption_time|safe }}
+// create initial chart Economics
+var energy_costs = {{ energy_costs|safe }}
+var economics_time = {{ energy_costs_time|safe }}
 var material_costs = {{ material_costs|safe }}
 var contribution_margin = {{ contribution_margin|safe }}
 var production_income = {{ production_income|safe }}
@@ -825,7 +885,7 @@ if (economics_time.length === 0) {
     }
 }
 
-if (economics.length === 0) {
+if (energy_costs.length === 0) {
     for (let i = 60; i >= 0; i--) {
         economics.push(0);
     }
@@ -891,7 +951,7 @@ var economics_chart = new Chart(ctx_live, {
   data: {
     labels: economics_time,
     datasets: [{
-      data: economics,
+      data: energy_costs,
       borderWidth: 2,
       radius: 0,
       borderColor:'rgba(155, 99, 132, 1)',
@@ -1086,26 +1146,7 @@ var updating_nonenwoven_unevenness = function() {
 
       area_weight_chart.update('none');
 
-
-
-      // Updating Energy Costs
-      economics_chart.data.labels.push(time);
-      economics_chart.data.datasets[0].data.push(_energy_costs);
-      economics_chart.data.labels.shift();
-      economics_chart.data.datasets[0].data.shift();
-      economics_chart.update('none');
-
-
-      // Updating Production Income
-      //production_income_chart.data.labels.push(time);
-      //production_income_chart.data.datasets[0].data.push(_data_production_income);
-      //production_income_chart.data.labels.shift();
-      //production_income_chart.data.datasets[0].data.shift();
-      //production_income_chart.update('none');
-
-
       */
-
 
     }
   });
@@ -1184,13 +1225,74 @@ var updating_humidity_environment = function() {
   });
 };
 
+/// updating economics ///
+var updating_economics = function() {
+
+  $.ajax({
+    type: "GET",
+    url: "/Charts/update_economics_chart",
+    success: function(data) {
+  
+      var _energy_costs=data["Economics"];
+      var _material_costs=data["MaterialCosts"];
+      var _contribution_margin=data["ContributionMargin"];
+      var _production_income=data["ProductionIncome"];
+       
+  
+      var now = new Date();
+      var time = now.toLocaleTimeString();
+
+      // Updating AmbientTemperature
+      economics_chart.data.labels.push(time);
+      economics_chart.data.datasets[0].data.push(_energy_costs);
+      economics_chart.data.datasets[1].data.push(_material_costs);
+      economics_chart.data.datasets[2].data.push(_contribution_margin);
+      economics_chart.data.datasets[3].data.push(_production_income);
+      economics_chart.data.labels.shift();
+      economics_chart.data.datasets[0].data.shift();
+      economics_chart.update('none');
+
+    }
+  });
+
+
+}
+
+/// updating line power consumption///
+var updating_line_power_consumption = function() {
+
+  $.ajax({
+    type: "GET",
+    url: "/Charts/update_line_power_consumption_chart",
+    success: function(data) {
+  
+      var _line_power_consumption=data["LinePowerConsumption"];
+  
+      var now = new Date();
+      var time = now.toLocaleTimeString();
+
+      // Updating AmbientTemperature
+      line_power_consumption_chart.data.labels.push(time);
+      line_power_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
+      line_power_consumption_chart.data.labels.shift();
+      line_power_consumption_chart.data.datasets[0].data.shift();
+      line_power_consumption_chart.update('none');
+
+    }
+  });
+};
+
 
 
 // Start the updating functions
 update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
 update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
 update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
+update_laboratory_values = setInterval(updating_laboratory_values, 60000);
 update_humidity_environment = setInterval(updating_humidity_environment, 60000);
+update_economics = setInterval(updating_economics, 60000);
+update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
+
 
 
 
@@ -1246,6 +1348,23 @@ document.getElementById("dropdownAmbientTemperature").addEventListener("change",
   }
 });
 
+// updating laboratory values
+document.getElementById("dropdownLaboratoryValues").addEventListener("change", function() {
+  clearInterval(update_laboratory_values);
+
+  let selectedValue = this.value;
+
+  if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
+    update_laboratory_values = setInterval(updating_laboratory_values, 60000);
+  }
+  else if (selectedValue === "1d") {
+    update_laboratory_values = setInterval(updating_laboratory_values, 600000);
+  }
+  else if (selectedValue === "7d" || selectedValue === "30d") {
+    update_laboratory_values = setInterval(updating_laboratory_values, 3600000);
+  }
+});
+
 // Updating humidtiy environment
 document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
   clearInterval(update_humidity_environment);
@@ -1263,17 +1382,51 @@ document.getElementById("dropdownHumidityEnvironment").addEventListener("change"
   }
 });
 
+// Updating economics
+document.getElementById("dropdownEconomics").addEventListener("change", function() {
+  clearInterval(update_economics);
 
+  let selectedValue = this.value;
 
+  if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
+    update_economics = setInterval(updating_economics, 60000);
+  }
+  else if (selectedValue === "1d") {
+    update_economics = setInterval(updating_economics, 600000);
+  }
+  else if (selectedValue === "7d" || selectedValue === "30d") {
+    update_economics = setInterval(updating_economics, 3600000);
+  }
+});
+
+// Updating line power consumption
+document.getElementById("dropdownLinePowerConsumption").addEventListener("change", function() {
+  clearInterval(update_line_power_consumption);
+
+  let selectedValue = this.value;
+
+  if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
+    update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
+  }
+  else if (selectedValue === "1d") {
+    update_line_power_consumption = setInterval(updating_line_power_consumption, 600000);
+  }
+  else if (selectedValue === "7d" || selectedValue === "30d") {
+    update_line_power_consumption = setInterval(updating_line_power_consumption, 3600000);
+  }
+});
 
 
 
 
 window.addEventListener('beforeunload', function() {
-    clearInterval(updating_nonenwoven_unevenness);
-    clearInterval(updating_nonenwoven_unevenness);
+    clearInterval(update_nonenwoven_unevenness);
+    clearInterval(update_nonenwoven_unevenness);
     clearInterval(update_ambient_temperature);
+    clearInterval(update_laboratory_values);
     clearInterval(update_humidity_environment);
+    clearInterval(update_economics);
+    clearInterval(update_line_power_consumption);
 });
 
 
