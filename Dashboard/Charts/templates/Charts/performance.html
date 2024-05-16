@@ -241,15 +241,15 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
                   tensile_force_cd_all = response["timeRange"][0][2]
                   laboratory_values_time = response["timeRange"][1]                
                   laboratory_values_chart.data.labels = laboratory_values_time
-                  laboratory_values_chart.data.datasets[0].data[1] = area_weights[0];
-                  laboratory_values_chart.data.datasets[1].data[1] = area_weights[1];
-                  laboratory_values_chart.data.datasets[2].data[1] = area_weights[2];
-                  laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
-                  laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
-                  laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
-                  laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
-                  laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
-                  laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
+                  laboratory_values_chart.data.datasets[0].data = area_weights;
+                  laboratory_values_chart.data.datasets[1].data = tensile_force_md_all
+                  laboratory_values_chart.data.datasets[2].data = tensile_force_cd_all
+                  //laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
+                  //laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
+                  //laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
+                  //laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
+                  //laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
+                  //laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
                   laboratory_values_chart.update();
                 }
                 else if (data["header"] === "HumidityEnvironment") {
@@ -572,57 +572,26 @@ if (laboratory_values_time.length === 0) {
     }
 }
 
-if (area_weights[0].length === 0) {
+if (area_weights.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        area_weights[0].push(0);
-    }
-}
-if (area_weights[1].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        area_weights[1].push(0);
-    }
-}
-if (area_weights[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        area_weights[2].push(0);
+        area_weights.push(0);
     }
 }
 
-if (tensile_force_md_all[0].length === 0) {
+
+if (tensile_force_md_all.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        tensile_force_md_all[0].push(0);
+        tensile_force_md_all.push(0);
     }
 }
 
-if (tensile_force_md_all[1].length === 0) {
+
+if (tensile_force_cd_all.length === 0) {
     for (let i = 60; i >= 0; i--) {
-        tensile_force_md_all[1].push(0);
+        tensile_force_cd_all.push(0);
     }
 }
 
-if (tensile_force_md_all[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_md_all[2].push(0);
-    }
-}
-
-if (tensile_force_cd_all[0].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_cd_all[0].push(0);
-    }
-}
-
-if (tensile_force_cd_all[1].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_cd_all[1].push(0);
-    }
-}
-
-if (tensile_force_cd_all[2].length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_cd_all[2].push(0);
-    }
-}
 
 
 const options5 = {
@@ -695,86 +664,31 @@ var laboratory_values_chart = new Chart(ctx_live, {
     labels: laboratory_values_time,
 datasets: [
   {
-    data: area_weights[0],
-    borderWidth: 2,
-    radius: 0,
-    borderColor: 'rgba(255, 99, 132, 1)',
-    label: 'AreaWeight min',
-    tension: 0.25,
-  },
-  {
-    data: area_weights[1],
-    borderWidth: 2,
-    radius: 0,
-    borderColor: 'rgba(4, 216, 14, 1)',
-    label: 'AreaWeight max',
-    tension: 0.25,
-  },
-  {
-    data: area_weights[2],
+    data: area_weights,
     borderWidth: 2,
     radius: 0,
     borderColor: 'rgba(0, 0, 255, 1)',
-    label: 'AreaWeight median',
+    label: 'Area Weight Median',
     tension: 0.25,
   },
-      {
-        data: tensile_force_md_all[0],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(128, 0, 0, 1)', // Darker red for min
-        label: 'TensileStrengthMD min',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-      {
-        data: tensile_force_md_all[1],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(100, 50, 0, 1)', // Darker orange for max
-        label: 'TensileStrengthMD max',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-      {
-        data: tensile_force_md_all[2],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(128, 0, 0, 1)', // Darker red for median
-        label: 'TensileStrengthMD median',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-
-
-            {
-        data: tensile_force_cd_all[0],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for min
-        label: 'TensileStrengthCD min',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-      {
-        data: tensile_force_cd_all[1],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(255, 180, 100, 1)', // Lighter orange for max
-        label: 'TensileStrengthCD max',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-      {
-        data: tensile_force_cd_all[2],
-        borderWidth: 2,
-        radius: 0,
-        borderColor: 'rgba(255, 128, 128, 1)', // Lighter red for median
-        label: 'TensileStrengthCD median',
-        tension: 0.25,
-        yAxisID: 'y2', // Use the left y-axis for this dataset
-      },
-
+  {
+    data: tensile_force_cd_all,
+    borderWidth: 2,
+    radius: 0,
+    borderColor: 'rgba(255, 180, 100, 1)', 
+    label: 'Tensile Strength CD Median',
+    tension: 0.25,
+    yAxisID: 'y2', 
+  },
+  {
+    data: tensile_force_cd_all,
+    borderWidth: 2,
+    radius: 0,
+    borderColor: 'rgba(255, 128, 128, 1)', 
+    label: 'Tensile Strength CD Median',
+    tension: 0.25,
+    yAxisID: 'y2', 
+  },
 
 ]
   },
@@ -1111,43 +1025,6 @@ var updating_nonenwoven_unevenness = function() {
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
 
-      /*// Card Floor Evenness
-      card_floor_evenness_chart.data.labels.push(time);
-      card_floor_evenness_chart.data.datasets[0].data.push(_card_floor_evenness);
-      card_floor_evenness_chart.data.labels.shift();
-      card_floor_evenness_chart.data.datasets[0].data.shift();
-      card_floor_evenness_chart.update('none');
-
-
-      // Updating AreaWeight
-      area_weight_chart.data.labels.push(time);
-      area_weight_chart.data.datasets[0].data.push(_data_area_min);
-      area_weight_chart.data.datasets[1].data.push(_data_area_max);
-      area_weight_chart.data.datasets[2].data.push(_data_area_median);
-
-      area_weight_chart.data.datasets[3].data.push(_data_tensile_cd_min);
-      area_weight_chart.data.datasets[4].data.push(_data_tensile_cd_max);
-      area_weight_chart.data.datasets[5].data.push(_data_tensile_cd_median);
-
-      area_weight_chart.data.datasets[6].data.push(_data_tensile_md_min);
-      area_weight_chart.data.datasets[7].data.push(_data_tensile_md_max);
-      area_weight_chart.data.datasets[8].data.push(_data_tensile_md_median);
-
-      area_weight_chart.data.labels.shift();
-      area_weight_chart.data.datasets[0].data.shift();
-      area_weight_chart.data.datasets[1].data.shift();
-      area_weight_chart.data.datasets[2].data.shift();
-      area_weight_chart.data.datasets[3].data.shift();
-      area_weight_chart.data.datasets[4].data.shift();
-      area_weight_chart.data.datasets[5].data.shift();
-      area_weight_chart.data.datasets[6].data.shift();
-      area_weight_chart.data.datasets[7].data.shift();
-      area_weight_chart.data.datasets[8].data.shift();
-
-      area_weight_chart.update('none');
-
-      */
-
     }
   });
 };
@@ -1190,7 +1067,7 @@ var updating_ambient_temperature = function() {
       var now = new Date();
       var time = now.toLocaleTimeString();
 
-      // Updating AmbientTemperature
+
       ambient_temperature_chart.data.labels.push(time);
       ambient_temperature_chart.data.datasets[0].data.push(_ambient_temperature);
       ambient_temperature_chart.data.labels.shift();
@@ -1200,6 +1077,60 @@ var updating_ambient_temperature = function() {
     }
   });
 };
+
+
+/// updating laboratory values ///
+var updating_laboratory_values = function() {
+    $.ajax({
+    type: "GET",
+    url: "/Charts/update_laboratory_values_chart",
+    success: function(data) {
+
+      //var _area_weight_min=data["AreaWeightMin"];
+      var _area_weight_med=data["AreaWeightMed"];
+      //var _area_weight_max=data["AreaWeightMax"];
+
+      //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
+      var _tensile_strength_med_cd = data["TensileStrengthMedCD"]
+      //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
+
+      //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
+      var _tensile_strength_med_md = data["TensileStrengthMedMD"]
+      //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
+
+
+      var now = new Date();
+      var time = now.toLocaleTimeString();
+
+
+      laboratory_values_chart.data.labels.push(time);
+      //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
+      laboratory_values_chart.data.datasets[0].data.push(_area_weight_med);
+      //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
+
+      //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
+      laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_cd);
+      //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
+
+      //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
+      laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_md);
+      //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
+
+      laboratory_values_chart.data.labels.shift();
+      laboratory_values_chart.data.datasets[0].data.shift();
+      laboratory_values_chart.data.datasets[1].data.shift();
+      laboratory_values_chart.data.datasets[2].data.shift();
+      //laboratory_values_chart.data.datasets[3].data.shift();
+      //laboratory_values_chart.data.datasets[4].data.shift();
+      //laboratory_values_chart.data.datasets[5].data.shift();
+      //laboratory_values_chart.data.datasets[6].data.shift();
+      //laboratory_values_chart.data.datasets[7].data.shift();
+      //laboratory_values_chart.data.datasets[8].data.shift();
+      laboratory_values_chart.update('none');
+
+    }
+  });
+}
 
 /// updating Humidty Environment ///
 var updating_humidity_environment = function() {
@@ -1233,7 +1164,7 @@ var updating_economics = function() {
     url: "/Charts/update_economics_chart",
     success: function(data) {
   
-      var _energy_costs=data["Economics"];
+      var _energy_costs=data["EnergyCosts"];
       var _material_costs=data["MaterialCosts"];
       var _contribution_margin=data["ContributionMargin"];
       var _production_income=data["ProductionIncome"];
@@ -1248,8 +1179,13 @@ var updating_economics = function() {
       economics_chart.data.datasets[1].data.push(_material_costs);
       economics_chart.data.datasets[2].data.push(_contribution_margin);
       economics_chart.data.datasets[3].data.push(_production_income);
+
       economics_chart.data.labels.shift();
       economics_chart.data.datasets[0].data.shift();
+      economics_chart.data.datasets[1].data.shift();
+      economics_chart.data.datasets[2].data.shift();
+      economics_chart.data.datasets[3].data.shift();
+
       economics_chart.update('none');
 
     }
@@ -1428,8 +1364,6 @@ window.addEventListener('beforeunload', function() {
     clearInterval(update_economics);
     clearInterval(update_line_power_consumption);
 });
-
-
 
 
 

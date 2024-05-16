@@ -80,7 +80,7 @@ navbar li {
 #time {
     color: rgb(32, 31, 31);
     font-weight: bold;
-    font-size: 15px;
+    font-size: 25px;
 }
 
 
@@ -171,25 +171,31 @@ navbar li {
 .border1 {
     border-left: 1px solid black;
     border-right: 1px solid black;
-    border-top: 10px solid black;
+    border-top: 15px solid black;
     border: 1px solid rgba(168, 8, 8, 0.875);
     height: 350px;
     padding-bottom: 50px;
     background-color: #eaeaec;
-   
-    /* padding-left: 1px;
-    padding-right: 1px;
-    padding-top: 10px; */
 }
+
 
 .border1 h1 {
     color: white;
-    font-size: 17px;
-    text-align: left;
     background-color: #801010;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 5px; 
 }
 
-
+.border1 h1 select {
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    background-color: #801010;
+    margin-left: auto; 
+}
 
 
 

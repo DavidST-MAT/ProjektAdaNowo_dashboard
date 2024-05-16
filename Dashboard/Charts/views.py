@@ -179,7 +179,8 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
     query_time_modified = f"-{selected_time}"
 
     area_weights = []
-    aggregation_fns = ["min", "max", "mean"]
+    #aggregation_fns = ["min", "max", "mean"]
+    aggregation_fns = ["mean"]
 
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_area_weight = f'''
@@ -210,11 +211,11 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                 aw_formatted_datetime = aw_updated_time.strftime("%H:%M:%S")
                 area_weight_time.append(aw_formatted_datetime)
 
-        area_weights.append(area_weight)
+        #area_weights.append(area_weight)
 
-    if area_weights == []:
+    if area_weight == []:
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            area_weights.append(0)
+            area_weight.append(0)
 
     if area_weight_time == []:
         time_now = datetime.now()
@@ -228,9 +229,8 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                 area_weight_time.append(time.strftime("%H:%M:%S"))
 
 
+    # tensile md
     tensile_force_md_all = []
-    aggregation_fns = ["min", "max", "mean"]
-
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_md = f'''
         from(bucket: "LabValues")
@@ -257,12 +257,10 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                 tensile_force_md.append(tf_md_value)
 
 
-        tensile_force_md_all.append(tensile_force_md)
+        #tensile_force_md_all.append(tensile_force_md)
 
 
     tensile_force_cd_all = []
-    aggregation_fns = ["min", "max", "mean"]
-
     for index, aggregation_fn in enumerate(aggregation_fns):
         query_tables_tensile_cd = f'''
         from(bucket: "LabValues")
@@ -281,7 +279,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         
 
         for table_tensile_force_cd in tables_tensile_force_cd:
-            print(table_tensile_force_cd)
             for record_tensile_force_cd in table_tensile_force_cd.records:
                 tf_cd_value = record_tensile_force_cd.values["_value"]
                 if tf_cd_value == None: 
@@ -289,9 +286,9 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                 tensile_force_cd.append(tf_cd_value)
 
 
-        tensile_force_cd_all.append(tensile_force_cd)
+        #tensile_force_cd_all.append(tensile_force_cd)
 
-    return [area_weights, tensile_force_md_all, tensile_force_cd_all], area_weight_time
+    return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
 
 
 ############################################################################################################
@@ -473,10 +470,8 @@ def get_economics(selected_time, influxdb_config, query_api):
             elif pi_field == "ProductionSpeed":
                 production_speed.append(pi_value)
     
-    print(production_width, production_speed)
     #print(len(production_width), len(production_speed))
     if len(production_width) != len(production_speed):
-        print(len(production_width), len(production_speed))
         print("Length of lists are not the same")
     else:
         production_income = [x * y * 60 * selling_price for x, y in zip(production_width, production_speed)]
@@ -569,7 +564,6 @@ def handle_time_range(request):
     if request.method == "GET":
         selected_time = request.GET.get("timeRange")
         selected_header = request.GET.get("header")
-        print(selected_header)
 
         if selected_header == "NonwovenUnevennes": 
             query_data, query_time = get_nonwoven_unevenness("NonwovenUnevennes",selected_time, influxdb_config, query_api)
@@ -586,13 +580,13 @@ def handle_time_range(request):
         elif selected_header == "LinePowerConsumption":
             query_data, query_time = get_line_power_consumption("LinePowerConsumption", selected_time, influxdb_config, query_api)    
 
-            
 
         return JsonResponse({"status": "success", 'timeRange': [query_data, query_time]})
     else:
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
 
+###########################################################################################################
 # main function
 def index(request):
 
@@ -630,8 +624,6 @@ def index(request):
     line_power_consumption, line_power_consumption_time = get_line_power_consumption("LinePowerConsumption", get_hour, influxdb_config, query_api)
 
 
-    ###########################################################################################################
-
     context = {
         'nonwoven_uvenness': nonwoven_uvenness, 
         'nonwoven_uvenness_time': nonwoven_uvenness_time,
@@ -661,12 +653,11 @@ def index(request):
 
 
 
-# Function for updating the Charts 
+# Function for updating nonwoven unevenness 
 def update_nonwoven_unevenness_chart(request):
     updated_values_dict = {}
     updated_values = []
     
-
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
     query_api = client_influxdb.query_api()
@@ -690,70 +681,6 @@ def update_nonwoven_unevenness_chart(request):
             for record in table.records:
                 value = record.values["_value"]
                 updated_values_dict["NonwovenUnevenness"] = value
-
-
-
-
-
-    ###########################################################################################################
-
-    ### Updating AreaWeight ###
-    query_area = """from(bucket: "LabValues")
-        |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3" or r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5" or r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
-        |> group(columns: ["_field"])
-        |> last()"""
-    
-    tables = query_api.query(query_area, org=influxdb_config.org)
-    lab_values = []
-    
-    if tables == []:
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        updated_values.append(0)
-        
-    else:
-        for table in tables:
-            for record in table.records:
-                value = record.values["_value"]
-                lab_values.append(value)
-
-
-        area_weight = lab_values[:3]
-        tensile_cd = lab_values[3:6]
-        tensile_md = lab_values[6:]
-
-        max_area = max(area_weight)
-        min_area = min(area_weight)
-        median_area = median(area_weight)
-
-        max_tensile_cd = max(tensile_cd)
-        min_tensile_cd = min(tensile_cd)
-        median_tensile_cd = median(tensile_cd)
-
-        max_tensile_md = max(tensile_md)
-        min_tensile_md = min(tensile_md)
-        median_tensile_md = median(tensile_md)
-
-        updated_values.append(max_area)
-        updated_values.append(min_area)
-        updated_values.append(median_area)
-        updated_values.append(max_tensile_cd)
-        updated_values.append(min_tensile_cd)
-        updated_values.append(median_tensile_cd)
-        updated_values.append(max_tensile_md)
-        updated_values.append(min_tensile_md)
-        updated_values.append(median_tensile_md)
-
-
-    ###########################################################################################################
 
 
 
@@ -886,7 +813,54 @@ def update_ambient_temperature_chart(request):
 
 # function for updating laboratory values
 def update_laboratory_values_chart(request):
-    pass
+    updated_values_dict = {}
+  
+    influxdb_config = InfluxDBConfig()
+    client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
+    query_api = client_influxdb.query_api()
+
+    ### Updating AreaWeight ###
+    query_area = """from(bucket: "LabValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3" or r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5" or r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
+        |> group(columns: ["_field"])
+        |> last()"""
+    
+    tables = query_api.query(query_area, org=influxdb_config.org)
+    lab_values = []
+    
+    if tables == []:
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        lab_values.append(0)
+        
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                lab_values.append(value)
+
+    updated_values_dict["AreaWeightMin"] = min(lab_values[:3])
+    updated_values_dict["AreaWeightMed"] = median(lab_values[:3])
+    updated_values_dict["AreaWeightMax"] = max(lab_values[:3])
+
+    updated_values_dict["TensileStrengthMinCD"] = min(lab_values[3:6])
+    updated_values_dict["TensileStrengthMedCD"] = median(lab_values[3:6])
+    updated_values_dict["TensileStrengthMaxCD"] = max(lab_values[3:6])
+
+    updated_values_dict["TensileStrengthMinMD"] = min(lab_values[6:])
+    updated_values_dict["TensileStrengthMedMD"] = median(lab_values[6:])
+    updated_values_dict["TensileStrengthMaxMD"] = max(lab_values[6:])
+
+    return JsonResponse(updated_values_dict, safe=False)
+
 
 ############################################################################################################
 
