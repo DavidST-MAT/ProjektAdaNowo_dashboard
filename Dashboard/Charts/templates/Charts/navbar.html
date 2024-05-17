@@ -3,33 +3,24 @@
     <div class="container-fluid">
         <div class="d-flex">
             <a class="navbar-brand me-2 mb-1 d-flex" href="#">
-            <img src="{% static 'images/LogoAdaNowoV2.png' %}" width="125" height="50" alt="">
+                <img src="{% static 'images/LogoAdaNowoV2.png' %}" width="125" height="50" alt="">
             </a>
-            {% comment %} <form class="input-group w-auto my-auto d-none d-sm-flex">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" id="searchInput">
-            <button class="btn btn-outline-success my-2 my-sm-0" type="button" id="searchBtn" style="color: #eaeaec;">Search</button>
-            </form> {% endcomment %}
-
-        
         </div>
-    
-        {% comment %} <li class="navbar-text" id="date"> {% endcomment %}
-            <div id="time"></div>
-            <script>
-                const timeDisplay = document.getElementById("time");
 
-                function updateTime() {
-                    var now = new Date();
-                    var time = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-                    timeDisplay.innerHTML = time;
-                }
-                updateTime();
-                setInterval(updateTime, 1000);
-            </script>
-        {% comment %} </li> {% endcomment %}
-    
-        
+        <div class="header" id="time"></div>
+
         <img src="{% static 'images/logoMAT.png' %}" width="15" height="20" alt="" id="MAT">
-
     </div>
 </nav>
+
+<script>
+    const timeDisplay = document.getElementById("time");
+
+    function updateTime() {
+        var now = new Date();
+        var time = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        timeDisplay.innerHTML = "AdaNowo Dashboard " + time;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+</script>
