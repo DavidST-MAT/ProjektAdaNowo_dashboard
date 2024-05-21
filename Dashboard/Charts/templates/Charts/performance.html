@@ -139,6 +139,7 @@
 
 <script>
 
+
 var time_select = {
   '1h': 1,
   '3h': 3,
@@ -322,6 +323,24 @@ if (nonwoven_uvenness.length === 0) {
 
 
 const options_nonwoven_uvenness = {
+
+  plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
+
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -1366,7 +1385,7 @@ window.addEventListener('beforeunload', function() {
 });
 
 
-
+line_power_consumption_chart.register(zoomPlugin);
 </script>
 
 {% endblock %}
