@@ -45,7 +45,7 @@ img {
 
 
 #time {
-    color: #801010;
+    color: #000000;
     font-weight: bold;
     font-size: 25px;
 }
@@ -152,15 +152,19 @@ img {
     color: white;
     background-color: #801010;
     font-size: 20px;
+    text-align: center; /* Textausrichtung */
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-left: 5px; 
+    letter-spacing: 1px; /* Abstand zwischen den Buchstaben */
 }
+
+
 
 .border1 h1 select {
     color: white;
-    font-size: 16px; /* Neue Schriftgröße */
+    font-size: 15px; /* Neue Schriftgröße */
     text-align: center;
     background-color: #801010;
     margin-left: auto;
@@ -178,3 +182,13 @@ img {
     background: #eaeaec;
     text-align: center;
 }
+
+
+.small-button {
+    font-size: 15px; /* Verkleinert die Schriftgröße und das Icon */
+    margin-left: 5px;
+    background-color: #801010;
+    color: white;
+}
+
+

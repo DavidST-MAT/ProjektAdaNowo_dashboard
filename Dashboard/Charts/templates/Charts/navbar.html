@@ -7,7 +7,10 @@
             </a>
         </div>
 
-        <div class="header" id="time"></div>
+        <div class="header">AdaNowo Dashboard
+            <span id="time"></span>
+        </div>
+        
 
         <img src="{% static 'images/logoMAT.png' %}" width="15" height="20" alt="" id="MAT">
     </div>
@@ -19,8 +22,32 @@
     function updateTime() {
         var now = new Date();
         var time = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-        timeDisplay.innerHTML = "AdaNowo Dashboard " + time;
+        timeDisplay.innerHTML = " " + time;
     }
     updateTime();
     setInterval(updateTime, 1000);
 </script>
+
+<style>
+.header {
+    font-size: 25px; /* Größe der Schrift */
+    font-family: 'Arial', sans-serif; /* Schriftart */
+    font-weight: bold; /* Schriftstärke */
+    color: #333; /* Textfarbe */
+    text-align: center; /* Textausrichtung */
+    text-transform: uppercase; /* Text in Großbuchstaben */
+    letter-spacing: 1px; /* Abstand zwischen den Buchstaben */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Textschatten für einen leichten 3D-Effekt */
+    margin: 20px 0; /* Außenabstand oben und unten */
+}
+
+#time {
+    font-size: 12px; /* Anpassung der Schriftgröße für die Zeit */
+    font-family: 'Arial', sans-serif; /* Schriftart */
+    font-weight: bold; /* Schriftstärke */
+    color: #333; /* Textfarbe */
+    text-align: center; /* Textausrichtung */
+    text-transform: uppercase; /* Text in Großbuchstaben */
+    letter-spacing: 1px; /* Abstand zwischen den Buchstaben */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Textschatten für einen leichten 3D-Effekt */
+}</style>

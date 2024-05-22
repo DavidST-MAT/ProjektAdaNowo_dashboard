@@ -17,8 +17,13 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('Nonwoven')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
+
         <canvas id="NonwovenUnevenness"></canvas>
+
       </div>
     </div>
     <div class="col-md-4" data-row-id="row2">
@@ -33,6 +38,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('CardFloorEvenness')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="CardFloorEvenness"></canvas>
       </div>
@@ -49,6 +57,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('AmbientTemperature')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="AmbientTemperature"></canvas>
       </div>
@@ -68,6 +79,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('LaboratoryValues')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="LabValues"></canvas>
       </div>
@@ -85,6 +99,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('HumidityEnvironment')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="HumidityEnvironment"></canvas>
       </div>
@@ -106,6 +123,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('Economics')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="Economics"></canvas>
       </div>
@@ -124,6 +144,9 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
+          <button onclick="resetZoomChart('LinePowerConsumption')" class="small-button">
+              <i class="fa-solid fa-rotate-left"></i>
+          </button>
         </h1>
         <canvas id="LinePowerConsumption"></canvas>
       </div>
@@ -425,6 +448,22 @@ if (card_floor_evenness.length === 0) {
 
 
 const options_card_floor_evenness = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -512,6 +551,22 @@ if (ambient_temperature.length === 0) {
 
 
 const options3 = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -614,6 +669,22 @@ if (tensile_force_cd_all.length === 0) {
 
 
 const options5 = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -738,6 +809,22 @@ if (humidity_environment.length === 0) {
 
 
 const options4 = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -838,6 +925,22 @@ if (contribution_margin.length === 0) {
 
 
 const options_economics = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -952,6 +1055,22 @@ if (line_power_consumption.length === 0) {
 
 
 const options_line_power_consumption = {
+    plugins: {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(255,0,0,0.3)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        },
+        mode: 'x'
+      },
+    }
+  },
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -1386,6 +1505,31 @@ window.addEventListener('beforeunload', function() {
 
 
 line_power_consumption_chart.register(zoomPlugin);
+
+function resetZoomChart(chartZoom) {
+  if (chartZoom === "Nonwoven") {
+    nonwoven_unevenness_chart.resetZoom();
+  }
+  else if (chartZoom === "CardFloorEvenness") {
+    card_floor_evenness_chart.resetZoom();
+  }
+  else if (chartZoom === "AmbientTemperature") {
+    ambient_temperature_chart.resetZoom();
+  }
+  else if (chartZoom === "LaboratoryValues") {
+    laboratory_values_chart.resetZoom();
+  }
+  else if (chartZoom === "HumidityEnvironment") {
+    humidity_environment_chart.resetZoom();
+  }
+  else if (chartZoom === "Economics") {
+    economics_chart.resetZoom();
+  }
+  else if (chartZoom === "LinePowerConsumption") {
+    line_power_consumption_chart.resetZoom();
+  }
+}
+
 </script>
 
 {% endblock %}
