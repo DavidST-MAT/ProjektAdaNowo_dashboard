@@ -105,7 +105,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
-                nonwoven_uvenness_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                nonwoven_uvenness_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 nonwoven_uvenness_time.append(time.strftime("%H:%M:%S"))
 
@@ -145,7 +145,10 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
                 at_value = 0.0
             ambient_temperature.append(at_value)
             at_time_updated = at_time + timedelta(hours=2)
-            at_formatted_datetime = at_time_updated.strftime("%H:%M:%S")
+            if aggregate_time[selected_time] == "1h":
+                at_formatted_datetime = at_time_updated.strftime("%d-%m %H:%M")
+            else:
+                at_formatted_datetime = at_time_updated.strftime("%H:%M:%S")
             ambient_temperature_time.append(at_formatted_datetime)
 
     if ambient_temperature != [] and ambient_temperature[-1] == 0:
@@ -165,7 +168,7 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
-                ambient_temperature_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                ambient_temperature_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 ambient_temperature_time.append(time.strftime("%H:%M:%S"))
 
@@ -224,7 +227,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
-                area_weight_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                area_weight_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 area_weight_time.append(time.strftime("%H:%M:%S"))
 
@@ -321,6 +324,10 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
             humidity_environment.append(he_value)
             he_time_updated = he_time + timedelta(hours=2)
             he_formatted_datetime = he_time_updated.strftime("%H:%M:%S")
+            if aggregate_time[selected_time] == "1h":
+                he_formatted_datetime = he_time_updated.strftime("%d-%m %H:%M")
+            else:
+                he_formatted_datetime = he_time_updated.strftime("%H:%M:%S")
             humidity_environment_time.append(he_formatted_datetime)
 
 
@@ -342,7 +349,7 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
-                humidity_environment_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                humidity_environment_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 humidity_environment_time.append(time.strftime("%H:%M:%S"))
 
@@ -420,7 +427,10 @@ def get_economics(selected_time, influxdb_config, query_api):
                 ec_value = pc_value * 0.28
             energy_costs.append(ec_value)
             pc_time_updated = pc_time + timedelta(hours=2)
-            pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
+            if aggregate_time[selected_time] == "1h":
+                pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
+            else:
+                pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
             energy_costs_time.append(pc_formatted_datetime)
 
     if energy_costs != [] and energy_costs[-1] == 0:
@@ -439,7 +449,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
-                energy_costs_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                energy_costs_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 energy_costs_time.append(time.strftime("%H:%M:%S"))
 
@@ -521,7 +531,10 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                 pc_value = 0.0
             line_power_consumption.append(pc_value)
             pc_time_updated = pc_time + timedelta(hours=2)
-            pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
+            if aggregate_time[selected_time] == "1h":
+                pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
+            else:
+                pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
             line_power_consumption_time.append(pc_formatted_datetime)
 
     if line_power_consumption != [] and line_power_consumption[-1] == 0:
@@ -543,7 +556,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
             for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
                 time = time_now - timedelta(minutes=i)
                 if aggregate_time[selected_time] == "1h":
-                    line_power_consumption_time.append(time.strftime("%Y-%m-%d %H:%M"))
+                    line_power_consumption_time.append(time.strftime("%d-%m %H:%M"))
                 else:
                     line_power_consumption_time.append(time.strftime("%H:%M:%S"))
 

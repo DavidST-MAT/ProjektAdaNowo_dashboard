@@ -304,8 +304,6 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
                   line_power_consumption_chart.update();
                 }
 
-
-
             },
             error: function(xhr, status, error) {
                 console.error('Fehler beim Senden der Anfrage:', error);
@@ -535,19 +533,6 @@ var card_floor_evenness_chart = new Chart(ctx_live, {
 var ambient_temperature = {{ ambient_temperature|safe }}
 var ambient_temperature_time = {{ ambient_temperature_time|safe }}
 
-if (ambient_temperature_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        ambient_temperature_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (ambient_temperature.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        ambient_temperature.push(0);
-    }
-}
 
 
 const options3 = {
@@ -618,11 +603,11 @@ var ambient_temperature_chart = new Chart(ctx_live, {
       borderColor: 'rgba(255, 0, 0, 1)',
       label: 'Temperature',
       tension: 0.25,
-      //fill: {
-      // target: 'origin',
-        //below: 'rgba(255, 99, 132, 0.2)',
-        //above: 'rgba(4, 216, 14, 0.2)'
-      //}, 
+      fill: {
+       target: 'origin',
+       below: 'rgba(255, 0, 0, 0.1)',
+       above: 'rgba(255, 0, 0, 0.1)'
+      }, 
     }]
   },
   options: options3,
@@ -777,7 +762,7 @@ datasets: [
     borderColor: 'rgba(255, 128, 128, 1)', 
     label: 'Tensile Strength CD Median',
     tension: 0.25,
-    yAxisID: 'y2', 
+    yAxisID: 'y2',
   },
 
 ]
@@ -876,11 +861,11 @@ var humidity_environment_chart = new Chart(ctx_live, {
       borderColor:'rgba(255, 99, 132, 1)',
       label: 'Humidity',
       tension: 0.25,
-      //fill: {
-      // target: 'origin',
-        //below: 'rgba(255, 99, 132, 0.2)',
-        //above: 'rgba(4, 216, 14, 0.2)'
-      //}, 
+      fill: {
+        target: 'origin',
+        below: 'rgba(255, 99, 132, 0.1)',
+        above: 'rgba(255, 99, 132, 0.1)'
+      }, 
     }]
   },
   options: options4,
@@ -1122,11 +1107,11 @@ var line_power_consumption_chart = new Chart(ctx_live, {
       borderColor:'rgba(122, 22, 12, 1)',
       label: 'Energy Consumption',
       tension: 0.25,
-      //fill: {
-      // target: 'origin',
-        //below: 'rgba(255, 99, 132, 0.2)',
-        //above: 'rgba(4, 216, 14, 0.2)'
-      //}, 
+      fill: {
+        target: 'origin',
+        below: 'rgba(122, 22, 12, 0.1)',
+        above: 'rgba(122, 22, 12, 0.1)'
+      }, 
     }]
   },
   options: options_line_power_consumption,
