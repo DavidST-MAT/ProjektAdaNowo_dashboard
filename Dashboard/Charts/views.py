@@ -664,17 +664,13 @@ def index(request):
 
 
 
-
-
 # Function for updating nonwoven unevenness 
 def update_nonwoven_unevenness_chart(request):
     updated_values_dict = {}
-    updated_values = []
-    
+
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
     query_api = client_influxdb.query_api()
-
 
     ############################################################################################################
 
@@ -695,63 +691,6 @@ def update_nonwoven_unevenness_chart(request):
                 value = record.values["_value"]
                 updated_values_dict["NonwovenUnevenness"] = value
 
-
-
-
-    ###########################################################################################################
-
-    ### Updating Energy Costs and Line Power Consumption ###
-    query_energy = """from(bucket: "AgentValues")
-        |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
-        |> last()"""
-
-    tables = query_api.query(query_energy, org=influxdb_config.org)
-
-    if tables == []:
-        updated_values_dict["LinePowerConsumption"] = 0.0
-        updated_values_dict["EnergyCosts"] = 0.0
-    else:
-        for table in tables:
-            for record in table.records:
-                value = record.values["_value"]
-                ec_value = value * 0.28
-                updated_values_dict["LinePowerConsumption"] = value
-                updated_values_dict["EnergyCosts"] = ec_value
-
-
-    
-    ### Updating Production income ###
-    query_production_income = f"""from(bucket: "AgentValues")
-        |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
-        |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
-        |> last()"""
-
-    tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
-
-    if tables_production_income == []:
-        updated_values.append(0)
-    else:
-        for table_production_income in tables_production_income:
-            for record_production_income in table_production_income.records:
-                pi_value = record_production_income.values["_value"]
-                pi_field = record_production_income.values["_field"]
-
-                if pi_value == None: 
-                    pi_value = 0
-
-                if pi_field == "ProductWidth":
-                    production_width = pi_value
-                elif pi_field == "ProductionSpeed":
-                    production_speed = pi_value
-
-        production_income = production_width * production_speed * 60 * 2.10 
-        updated_values.append(production_income)
-
-
-    
     return JsonResponse(updated_values_dict, safe=False)
 
 
@@ -760,8 +699,6 @@ def update_nonwoven_unevenness_chart(request):
 # function for updating card floor evenness
 def update_card_floor_evenness_chart(request):
     updated_values_dict = {}
-
-    
 
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
@@ -785,7 +722,7 @@ def update_card_floor_evenness_chart(request):
                 updated_values_dict["NonwovenUnevenness"] = value
 
 
-    scaled_signal= (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
+    scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
     card_floor_evenness = scaled_signal * floor_quality_weight
     updated_values_dict["CardFloorEvenness"] = card_floor_evenness
 

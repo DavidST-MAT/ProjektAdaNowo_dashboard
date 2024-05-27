@@ -5,6 +5,7 @@
 <div class="container-fluid" style="background: #ffffff">
 
   <div class="row">
+
     <div class="col-md-4" data-row-id="row1">
       <div class="border1">
         <h1>Nonwoven Unevenness          
@@ -21,11 +22,10 @@
               <i class="fa-solid fa-rotate-left"></i>
           </button>
         </h1>
-
         <canvas id="NonwovenUnevenness"></canvas>
-
       </div>
     </div>
+
     <div class="col-md-4" data-row-id="row2">
       <div class="border1">
         <h1>Card Floor Evenness 
@@ -45,6 +45,7 @@
         <canvas id="CardFloorEvenness"></canvas>
       </div>
     </div>
+
     <div class="col-md-4" data-row-id="row3">
       <div class="border1">
         <h1>Ambient Temperature
@@ -64,9 +65,11 @@
         <canvas id="AmbientTemperature"></canvas>
       </div>
     </div>
+
   </div>
 
   <div class="row">
+
     <div class="col-8">
       <div class="border1">
         <h1>Laboratory Values
@@ -111,6 +114,7 @@
 
 
   <div class="row">
+
     <div class="col-8">
       <div class="border1">
         <h1>Economics
@@ -131,7 +135,6 @@
       </div>
     </div>
  
-
     <div class="col-4">
       <div class="border1">
         <h1>Line Power Consumption
@@ -154,14 +157,10 @@
 
   </div>
 
-
 </div>
 
 
-
-
 <script>
-
 
 var time_select = {
   '1h': 1,
@@ -172,8 +171,6 @@ var time_select = {
   '7d': 168,
   '30d': 720
   }
-
-
 
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
     sendDataToBackend("NonwovenUnevennes", this.value);   
@@ -209,16 +206,12 @@ function populate_empty_chart(selectedValue) {
   for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
     nonwoven_uvenness.push(0);
   }
-
   let time_now = new Date();
   for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
     let time = new Date(time_now - i * 60000);
     nonwoven_uvenness_time.push(time.toLocaleTimeString());
   }
-
-
 }
-
 
 
 // sending chart name and time selection to backend and get new data
@@ -260,7 +253,6 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
                 }
                 else if (data["header"] === "LaboratoryValues") {
                   area_weights = response["timeRange"][0][0]
-                  console.log(response["timeRange"][1])
                   tensile_force_md_all = response["timeRange"][0][1]
                   tensile_force_cd_all = response["timeRange"][0][2]
                   laboratory_values_time = response["timeRange"][1]                
@@ -312,14 +304,13 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
 }
 
 
-
 // ?
-function getValueFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const value = urlParams.get('value');
-    return value !== null ? value : '1';
-}
-const sliderValue = getValueFromURL();
+//function getValueFromURL() {
+//    const urlParams = new URLSearchParams(window.location.search);
+//    const value = urlParams.get('value');
+//    return value !== null ? value : '1';
+//}
+//const sliderValue = getValueFromURL();
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -328,23 +319,21 @@ const sliderValue = getValueFromURL();
 var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
 var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
 
-if (nonwoven_uvenness_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        nonwoven_uvenness_time.push(time.toLocaleTimeString());
-    }
-}
+//if (nonwoven_uvenness_time.length === 0) {
+//    let time_now = new Date();
+//    for (let i = 60; i >= 0; i--) {
+//        let time = new Date(time_now - i * 60000);
+//        nonwoven_uvenness_time.push(time.toLocaleTimeString());
+//    }
+//}
 
-if (nonwoven_uvenness.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        nonwoven_uvenness.push(0);
-    }
-}
-
+//if (nonwoven_uvenness.length === 0) {
+//    for (let i = 60; i >= 0; i--) {
+//        nonwoven_uvenness.push(0);
+//    }
+//}
 
 const options_nonwoven_uvenness = {
-
   plugins: {
     zoom: {
       zoom: {
@@ -367,9 +356,6 @@ const options_nonwoven_uvenness = {
   legend: {
     display: true,
   },
-  legend: {
-    display: false
-  },
   scales: {
     x: {
       beginAtZero: true,
@@ -381,9 +367,9 @@ const options_nonwoven_uvenness = {
       grid: {
         drawBorder: false,
         color: (context) => {
-        if(context.tick.value === 0) {
-            return 'black'
-        }
+          if(context.tick.value === 0) {
+              return 'black'
+          }
         } 
       },
       beginAtZero: false,
@@ -425,28 +411,12 @@ var nonwoven_unevenness_chart = new Chart(ctx_live, {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 // create initial chart Energieverbrauch
 var card_floor_evenness = {{ card_floor_evenness|safe }}
 var card_floor_evenness_time = {{ nonwoven_uvenness_time|safe }}
 
-if (card_floor_evenness_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        card_floor_evenness_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (card_floor_evenness.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        card_floor_evenness.push(0);
-    }
-}
-
-
 const options_card_floor_evenness = {
-    plugins: {
+  plugins: {
     zoom: {
       zoom: {
         wheel: {
@@ -462,13 +432,11 @@ const options_card_floor_evenness = {
       },
     }
   },
+
   maintainAspectRatio: false,
   responsive: true,
   legend: {
     display: true,
-  },
-  legend: {
-    display: false
   },
   scales: {
     x: {
@@ -524,19 +492,14 @@ var card_floor_evenness_chart = new Chart(ctx_live, {
 });
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
 // create initial chart Ambient Temperature
 var ambient_temperature = {{ ambient_temperature|safe }}
 var ambient_temperature_time = {{ ambient_temperature_time|safe }}
 
-
-
 const options3 = {
-    plugins: {
+  plugins: {
     zoom: {
       zoom: {
         wheel: {
@@ -616,45 +579,14 @@ var ambient_temperature_chart = new Chart(ctx_live, {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 // create initial chart LaborWerte
 var laboratory_values_time = {{ laboratory_values_time|safe }} 
 var area_weights = {{ area_weights|safe }}
 var tensile_force_md_all = {{ tensile_force_md_all|safe }}
 var tensile_force_cd_all = {{ tensile_force_cd_all|safe }}
 
-if (laboratory_values_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        laboratory_values_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (area_weights.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        area_weights.push(0);
-    }
-}
-
-
-if (tensile_force_md_all.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_md_all.push(0);
-    }
-}
-
-
-if (tensile_force_cd_all.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        tensile_force_cd_all.push(0);
-    }
-}
-
-
-
 const options5 = {
-    plugins: {
+  plugins: {
     zoom: {
       zoom: {
         wheel: {
@@ -670,6 +602,7 @@ const options5 = {
       },
     }
   },
+
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -737,35 +670,34 @@ var laboratory_values_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
     labels: laboratory_values_time,
-datasets: [
-  {
-    data: area_weights,
-    borderWidth: 2,
-    radius: 0,
-    borderColor: 'rgba(0, 0, 255, 1)',
-    label: 'Area Weight Median',
-    tension: 0.25,
-  },
-  {
-    data: tensile_force_cd_all,
-    borderWidth: 2,
-    radius: 0,
-    borderColor: 'rgba(255, 180, 100, 1)', 
-    label: 'Tensile Strength CD Median',
-    tension: 0.25,
-    yAxisID: 'y2', 
-  },
-  {
-    data: tensile_force_cd_all,
-    borderWidth: 2,
-    radius: 0,
-    borderColor: 'rgba(255, 128, 128, 1)', 
-    label: 'Tensile Strength CD Median',
-    tension: 0.25,
-    yAxisID: 'y2',
-  },
-
-]
+    datasets: [
+    {
+      data: area_weights,
+      borderWidth: 2,
+      radius: 0,
+      borderColor: 'rgba(0, 0, 255, 1)',
+      label: 'Area Weight Median',
+      tension: 0.25,
+    },
+    {
+      data: tensile_force_cd_all,
+      borderWidth: 2,
+      radius: 0,
+      borderColor: 'rgba(255, 180, 100, 1)', 
+      label: 'Tensile Strength CD Median',
+      tension: 0.25,
+      yAxisID: 'y2', 
+    },
+    {
+      data: tensile_force_cd_all,
+      borderWidth: 2,
+      radius: 0,
+      borderColor: 'rgba(255, 128, 128, 1)', 
+      label: 'Tensile Strength CD Median',
+      tension: 0.25,
+      yAxisID: 'y2',
+    },
+    ]
   },
   options: options5,
 });
@@ -773,28 +705,12 @@ datasets: [
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 // create initial chart Ambient Temperature
 var humidity_environment = {{ humidity_environment|safe }}
 var humidity_environment_time = {{ humidity_environment_time|safe }}
 
-if (humidity_environment_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        humidity_environment_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (humidity_environment.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        humidity_environment.push(0);
-    }
-}
-
-
 const options4 = {
-    plugins: {
+  plugins: {
     zoom: {
       zoom: {
         wheel: {
@@ -810,6 +726,7 @@ const options4 = {
       },
     }
   },
+
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -874,40 +791,12 @@ var humidity_environment_chart = new Chart(ctx_live, {
 
 ////////////////////////////////////////////////////////////////////
 
-
 // create initial chart Economics
 var energy_costs = {{ energy_costs|safe }}
 var economics_time = {{ energy_costs_time|safe }}
 var material_costs = {{ material_costs|safe }}
 var contribution_margin = {{ contribution_margin|safe }}
 var production_income = {{ production_income|safe }}
-
-if (economics_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        economics_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (energy_costs.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        economics.push(0);
-    }
-}
-
-if (material_costs.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        material_costs.push(0);
-    }
-}
-
-if (contribution_margin.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        contribution_margin.push(0);
-    }
-}
-
 
 const options_economics = {
     plugins: {
@@ -1008,9 +897,7 @@ var economics_chart = new Chart(ctx_live, {
       label: 'Production Income',
       tension: 0.25,
     }
-    ]
-    
-    
+    ]  
   },
   options: options_economics,
 });
@@ -1018,29 +905,12 @@ var economics_chart = new Chart(ctx_live, {
 
 ////////////////////////////////////////////////////////////////////
 
-
-
 // create initial chart Line Power Consumption
 var line_power_consumption = {{ line_power_consumption|safe }}
 var line_power_consumption_time = {{ line_power_consumption_time|safe }}
 
-if (line_power_consumption_time.length === 0) {
-    let time_now = new Date();
-    for (let i = 60; i >= 0; i--) {
-        let time = new Date(time_now - i * 60000);
-        line_power_consumption_time.push(time.toLocaleTimeString());
-    }
-}
-
-if (line_power_consumption.length === 0) {
-    for (let i = 60; i >= 0; i--) {
-        line_power_consumption.push(0);
-    }
-}
-
-
 const options_line_power_consumption = {
-    plugins: {
+  plugins: {
     zoom: {
       zoom: {
         wheel: {
@@ -1056,6 +926,7 @@ const options_line_power_consumption = {
       },
     }
   },
+
   maintainAspectRatio: false,
   responsive: true,
   legend: {
@@ -1118,15 +989,7 @@ var line_power_consumption_chart = new Chart(ctx_live, {
 });
 
 
-
-
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////
-
 
 /// updating Nonwoven Environment ///
 var updating_nonenwoven_unevenness = function() {
@@ -1135,11 +998,21 @@ var updating_nonenwoven_unevenness = function() {
     type: "GET",
     url: "/Charts/update_nonwoven_unevenness_chart",
     success: function(data) {
-  
+
       var _nonwoven_unevenness=data["NonwovenUnevenness"];
 
       var now = new Date();
-      var time = now.toLocaleTimeString();
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
 
       // Updating NonwovenUvenness
       nonwoven_unevenness_chart.data.labels.push(time);
@@ -1147,7 +1020,6 @@ var updating_nonenwoven_unevenness = function() {
       nonwoven_unevenness_chart.data.labels.shift();
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
-
     }
   });
 };
@@ -1163,7 +1035,18 @@ var updating_card_floor_evenness = function() {
       var _card_floor_evenness=data["CardFloorEvenness"];
   
       var now = new Date();
-      var time = now.toLocaleTimeString();
+
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(card_floor_evenness_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
 
       // Updating AmbientTemperature
       card_floor_evenness_chart.data.labels.push(time);
@@ -1171,7 +1054,6 @@ var updating_card_floor_evenness = function() {
       card_floor_evenness_chart.data.labels.shift();
       card_floor_evenness_chart.data.datasets[0].data.shift();
       card_floor_evenness_chart.update('none');
-
     }
   });
 };
@@ -1188,15 +1070,23 @@ var updating_ambient_temperature = function() {
       var _ambient_temperature=data["AmbientTemperature"];
   
       var now = new Date();
-      var time = now.toLocaleTimeString();
 
+      if (/^\d{2}:\d{2}:\d{2}$/.test(ambient_temperature_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
 
       ambient_temperature_chart.data.labels.push(time);
       ambient_temperature_chart.data.datasets[0].data.push(_ambient_temperature);
       ambient_temperature_chart.data.labels.shift();
       ambient_temperature_chart.data.datasets[0].data.shift();
       ambient_temperature_chart.update('none');
-
     }
   });
 };
@@ -1205,52 +1095,61 @@ var updating_ambient_temperature = function() {
 /// updating laboratory values ///
 var updating_laboratory_values = function() {
     $.ajax({
-    type: "GET",
-    url: "/Charts/update_laboratory_values_chart",
-    success: function(data) {
+      type: "GET",
+      url: "/Charts/update_laboratory_values_chart",
+      success: function(data) {
 
-      //var _area_weight_min=data["AreaWeightMin"];
-      var _area_weight_med=data["AreaWeightMed"];
-      //var _area_weight_max=data["AreaWeightMax"];
+        //var _area_weight_min=data["AreaWeightMin"];
+        var _area_weight_med=data["AreaWeightMed"];
+        //var _area_weight_max=data["AreaWeightMax"];
 
-      //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
-      var _tensile_strength_med_cd = data["TensileStrengthMedCD"]
-      //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
+        //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
+        var _tensile_strength_med_cd = data["TensileStrengthMedCD"]
+        //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
 
-      //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
-      var _tensile_strength_med_md = data["TensileStrengthMedMD"]
-      //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
-
-
-      var now = new Date();
-      var time = now.toLocaleTimeString();
+        //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
+        var _tensile_strength_med_md = data["TensileStrengthMedMD"]
+        //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
 
 
-      laboratory_values_chart.data.labels.push(time);
-      //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
-      laboratory_values_chart.data.datasets[0].data.push(_area_weight_med);
-      //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
+        var now = new Date();
 
-      //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
-      laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_cd);
-      //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
+        if (/^\d{2}:\d{2}:\d{2}$/.test(laboratory_values_chart.data.labels[0])) {
+          var time = now.toLocaleTimeString();
+        }
+        else {
+          var day = String(now.getDate()).padStart(2, '0'); 
+          var month = String(now.getMonth() + 1).padStart(2, '0'); 
+          var hour = String(now.getHours()).padStart(2, '0'); 
+          var minute = String(now.getMinutes()).padStart(2, '0'); 
+          var time = `${day}-${month} ${hour}:${minute}`;
+        }
 
-      //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
-      laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_md);
-      //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
 
-      laboratory_values_chart.data.labels.shift();
-      laboratory_values_chart.data.datasets[0].data.shift();
-      laboratory_values_chart.data.datasets[1].data.shift();
-      laboratory_values_chart.data.datasets[2].data.shift();
-      //laboratory_values_chart.data.datasets[3].data.shift();
-      //laboratory_values_chart.data.datasets[4].data.shift();
-      //laboratory_values_chart.data.datasets[5].data.shift();
-      //laboratory_values_chart.data.datasets[6].data.shift();
-      //laboratory_values_chart.data.datasets[7].data.shift();
-      //laboratory_values_chart.data.datasets[8].data.shift();
-      laboratory_values_chart.update('none');
+        laboratory_values_chart.data.labels.push(time);
+        //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
+        laboratory_values_chart.data.datasets[0].data.push(_area_weight_med);
+        //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
 
+        //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
+        laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_cd);
+        //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
+
+        //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
+        laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_md);
+        //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
+
+        laboratory_values_chart.data.labels.shift();
+        laboratory_values_chart.data.datasets[0].data.shift();
+        laboratory_values_chart.data.datasets[1].data.shift();
+        laboratory_values_chart.data.datasets[2].data.shift();
+        //laboratory_values_chart.data.datasets[3].data.shift();
+        //laboratory_values_chart.data.datasets[4].data.shift();
+        //laboratory_values_chart.data.datasets[5].data.shift();
+        //laboratory_values_chart.data.datasets[6].data.shift();
+        //laboratory_values_chart.data.datasets[7].data.shift();
+        //laboratory_values_chart.data.datasets[8].data.shift();
+        laboratory_values_chart.update('none');
     }
   });
 }
@@ -1266,7 +1165,17 @@ var updating_humidity_environment = function() {
       var _humidity_environment=data["HumidityEnvironment"];
   
       var now = new Date();
-      var time = now.toLocaleTimeString();
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(humidity_environment_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
 
       // Updating AmbientTemperature
       humidity_environment_chart.data.labels.push(time);
@@ -1292,9 +1201,19 @@ var updating_economics = function() {
       var _contribution_margin=data["ContributionMargin"];
       var _production_income=data["ProductionIncome"];
        
-  
       var now = new Date();
-      var time = now.toLocaleTimeString();
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(economics_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
+
 
       // Updating AmbientTemperature
       economics_chart.data.labels.push(time);
@@ -1328,7 +1247,17 @@ var updating_line_power_consumption = function() {
       var _line_power_consumption=data["LinePowerConsumption"];
   
       var now = new Date();
-      var time = now.toLocaleTimeString();
+
+      if (/^\d{2}:\d{2}:\d{2}$/.test(line_power_consumption_chart.data.labels[0])) {
+        var time = now.toLocaleTimeString();
+      }
+      else {
+        var day = String(now.getDate()).padStart(2, '0'); 
+        var month = String(now.getMonth() + 1).padStart(2, '0'); 
+        var hour = String(now.getHours()).padStart(2, '0'); 
+        var minute = String(now.getMinutes()).padStart(2, '0'); 
+        var time = `${day}-${month} ${hour}:${minute}`;
+      }
 
       // Updating AmbientTemperature
       line_power_consumption_chart.data.labels.push(time);
@@ -1342,7 +1271,6 @@ var updating_line_power_consumption = function() {
 };
 
 
-
 // Start the updating functions
 update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
 update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
@@ -1351,8 +1279,6 @@ update_laboratory_values = setInterval(updating_laboratory_values, 60000);
 update_humidity_environment = setInterval(updating_humidity_environment, 60000);
 update_economics = setInterval(updating_economics, 60000);
 update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
-
-
 
 
 // Set new updating interval for selecting different time
@@ -1476,8 +1402,6 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
 });
 
 
-
-
 window.addEventListener('beforeunload', function() {
     clearInterval(update_nonenwoven_unevenness);
     clearInterval(update_nonenwoven_unevenness);
@@ -1489,7 +1413,6 @@ window.addEventListener('beforeunload', function() {
 });
 
 
-line_power_consumption_chart.register(zoomPlugin);
 
 function resetZoomChart(chartZoom) {
   if (chartZoom === "Nonwoven") {
