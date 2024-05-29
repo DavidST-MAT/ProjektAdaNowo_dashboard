@@ -304,34 +304,11 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
 }
 
 
-// ?
-//function getValueFromURL() {
-//    const urlParams = new URLSearchParams(window.location.search);
-//    const value = urlParams.get('value');
-//    return value !== null ? value : '1';
-//}
-//const sliderValue = getValueFromURL();
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /// create initial chart nonwoven_unevenness ///
 var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
 var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
-
-//if (nonwoven_uvenness_time.length === 0) {
-//    let time_now = new Date();
-//    for (let i = 60; i >= 0; i--) {
-//        let time = new Date(time_now - i * 60000);
-//        nonwoven_uvenness_time.push(time.toLocaleTimeString());
-//    }
-//}
-
-//if (nonwoven_uvenness.length === 0) {
-//    for (let i = 60; i >= 0; i--) {
-//        nonwoven_uvenness.push(0);
-//    }
-//}
 
 const options_nonwoven_uvenness = {
   plugins: {
@@ -394,7 +371,7 @@ var nonwoven_unevenness_chart = new Chart(ctx_live, {
     datasets: [{
       data: nonwoven_uvenness,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(54, 162, 235, 1)',
       label: 'Nonwoven Unevenness',
       tension: 0.25,
@@ -477,7 +454,7 @@ var card_floor_evenness_chart = new Chart(ctx_live, {
     datasets: [{
       data: card_floor_evenness,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(0, 128, 0, 1)',
       label: 'Card Floor Evenness',
       tension: 0.25,
@@ -562,7 +539,7 @@ var ambient_temperature_chart = new Chart(ctx_live, {
     datasets: [{
       data: ambient_temperature,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(255, 0, 0, 1)',
       label: 'Temperature',
       tension: 0.25,
@@ -774,7 +751,7 @@ var humidity_environment_chart = new Chart(ctx_live, {
     datasets: [{
       data: humidity_environment,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor:'rgba(255, 99, 132, 1)',
       label: 'Humidity',
       tension: 0.25,
@@ -974,7 +951,7 @@ var line_power_consumption_chart = new Chart(ctx_live, {
     datasets: [{
       data: line_power_consumption,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor:'rgba(122, 22, 12, 1)',
       label: 'Energy Consumption',
       tension: 0.25,
@@ -1000,29 +977,33 @@ var updating_nonenwoven_unevenness = function() {
     success: function(data) {
 
       var _nonwoven_unevenness=data["NonwovenUnevenness"];
+      var _nonwoven_unevenness_time=data["NonwovenUnevennessTime"];
 
-      var now = new Date();
+      var date = new Date(_nonwoven_unevenness_time);
 
-      if (/^\d{2}:\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+      if (/^\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString(2, '0'); // Months are 0-based
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      // Updating NonwovenUvenness
       nonwoven_unevenness_chart.data.labels.push(time);
       nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
+
       nonwoven_unevenness_chart.data.labels.shift();
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
     }
   });
 };
+
 
 /// updating Card Floor Evenness ///
 var updating_card_floor_evenness = function() {
@@ -1273,12 +1254,12 @@ var updating_line_power_consumption = function() {
 
 // Start the updating functions
 update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
-update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
-update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
-update_laboratory_values = setInterval(updating_laboratory_values, 60000);
-update_humidity_environment = setInterval(updating_humidity_environment, 60000);
-update_economics = setInterval(updating_economics, 60000);
-update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
+//update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
+//update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
+//update_laboratory_values = setInterval(updating_laboratory_values, 60000);
+//update_humidity_environment = setInterval(updating_humidity_environment, 60000);
+//update_economics = setInterval(updating_economics, 60000);
+//update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
 
 
 // Set new updating interval for selecting different time

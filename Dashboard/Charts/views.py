@@ -84,9 +84,11 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 nu_formatted_datetime = nu_time_updated.strftime("%d-%m %H:%M")
             else:
-                nu_formatted_datetime = nu_time_updated.strftime("%H:%M:%S")
+                nu_formatted_datetime = nu_time_updated.strftime("%H:%M")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
 
+    nonwoven_uvenness.pop()
+    nonwoven_uvenness_time.pop()
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == 0:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
@@ -94,7 +96,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
     if nonwoven_uvenness == []:
-        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+        for i in range(time_select_empty_table[selected_time] * 59, -1, -1):
             nonwoven_uvenness.append(0)
 
 
@@ -102,12 +104,12 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         time_now = datetime.now()
         nonwoven_uvenness_time = []
 
-        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+        for i in range(time_select_empty_table[selected_time] * 59, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
                 nonwoven_uvenness_time.append(time.strftime("%d-%m %H:%M"))
             else:
-                nonwoven_uvenness_time.append(time.strftime("%H:%M:%S"))
+                nonwoven_uvenness_time.append(time.strftime("%H:%M"))
 
     if chart == "NonwovenUnevennes":
         return nonwoven_uvenness, nonwoven_uvenness_time
@@ -628,7 +630,7 @@ def index(request):
     laboratory_values, laboratory_values_time = get_laboratory_values(get_hour, influxdb_config, query_api)
 
     ### Humidty Environment ###
-    humidity_environment, humidity_environment_time = get_ambient_temperature(get_hour, influxdb_config, query_api)
+    humidity_environment, humidity_environment_time = get_humidity_environment(get_hour, influxdb_config, query_api)
 
     ### Economics ###
     economics, economics_time = get_economics(get_hour, influxdb_config, query_api)
@@ -689,7 +691,14 @@ def update_nonwoven_unevenness_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
+                #time_delta_format = time_delta.strftime("%H:%M")
+                print(time)
                 updated_values_dict["NonwovenUnevenness"] = value
+                updated_values_dict["NonwovenUnevennessTime"] = time
+
+
 
     return JsonResponse(updated_values_dict, safe=False)
 
