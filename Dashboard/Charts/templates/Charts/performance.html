@@ -994,7 +994,7 @@ var updating_nonenwoven_unevenness = function() {
         var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      nonwoven_unevenness_chart.data.labels.push(time);
+      nonwoven_unevenness_chart.data.labels.push(_nonwoven_unevenness_time);
       nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
 
       nonwoven_unevenness_chart.data.labels.shift();

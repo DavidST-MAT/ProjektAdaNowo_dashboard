@@ -87,8 +87,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
                 nu_formatted_datetime = nu_time_updated.strftime("%H:%M")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
 
-    nonwoven_uvenness.pop()
-    nonwoven_uvenness_time.pop()
+
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == 0:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
@@ -96,7 +95,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
     if nonwoven_uvenness == []:
-        for i in range(time_select_empty_table[selected_time] * 59, -1, -1):
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             nonwoven_uvenness.append(0)
 
 
@@ -104,12 +103,15 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         time_now = datetime.now()
         nonwoven_uvenness_time = []
 
-        for i in range(time_select_empty_table[selected_time] * 59, -1, -1):
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
                 nonwoven_uvenness_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 nonwoven_uvenness_time.append(time.strftime("%H:%M"))
+    
+    nonwoven_uvenness.pop()
+    nonwoven_uvenness_time.pop()
 
     if chart == "NonwovenUnevennes":
         return nonwoven_uvenness, nonwoven_uvenness_time
@@ -686,7 +688,11 @@ def update_nonwoven_unevenness_chart(request):
     tables = query_api.query(query_performance, org=influxdb_config.org)
 
     if tables == []:
-        updated_values_dict["NonwovenUnevenness"] = 0.0
+        #updated_values_dict["NonwovenUnevenness"] = None
+        now = datetime.now()
+        time_delta_format = now.strftime("%H:%M")
+        print(time_delta_format)
+        updated_values_dict["NonwovenUnevennessTime"] = time_delta_format
     else:
         for table in tables:
             for record in table.records:
