@@ -969,8 +969,8 @@ var line_power_consumption_chart = new Chart(ctx_live, {
 ////////////////////////////////////////////////////////////////////
 
 /// updating Nonwoven Environment ///
-var updating_nonenwoven_unevenness = function() {
-
+var timeoutIdNonwoven;
+function updating_nonenwoven_unevenness(timeOut) {
   $.ajax({
     type: "GET",
     url: "/Charts/update_nonwoven_unevenness_chart",
@@ -978,7 +978,6 @@ var updating_nonenwoven_unevenness = function() {
 
       var _nonwoven_unevenness=data["NonwovenUnevenness"];
       var _nonwoven_unevenness_time=data["NonwovenUnevennessTime"];
-
       var date = new Date(_nonwoven_unevenness_time);
 
       if (/^\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
@@ -988,89 +987,114 @@ var updating_nonenwoven_unevenness = function() {
       }
       else {
         var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString(2, '0'); // Months are 0-based
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
         var hours = date.getUTCHours().toString().padStart(2, '0');
         var minutes = date.getUTCMinutes().toString().padStart(2, '0');
         var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      nonwoven_unevenness_chart.data.labels.push(_nonwoven_unevenness_time);
+      nonwoven_unevenness_chart.data.labels.push(time);
       nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
 
       nonwoven_unevenness_chart.data.labels.shift();
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
+
+      console.log("Nonwoven: ", _nonwoven_unevenness, time)
     }
   });
+  clearTimeout(timeoutIdNonwoven);
+  timeoutIdNonwoven = setTimeout(function() {
+    updating_nonenwoven_unevenness(timeOut); 
+  }, timeOut);
 };
 
 
 /// updating Card Floor Evenness ///
-var updating_card_floor_evenness = function() {
-
+var timeoutIdCardFloor;
+function updating_card_floor_evenness(timeOut) {
   $.ajax({
     type: "GET",
     url: "/Charts/update_card_floor_evenness_chart",
     success: function(data) {
   
       var _card_floor_evenness=data["CardFloorEvenness"];
-  
-      var now = new Date();
+      var _card_floor_evenness_time=data["CardFloorEvennessTime"];
+      
+      var date = new Date(_card_floor_evenness_time);
 
-
-      if (/^\d{2}:\d{2}:\d{2}$/.test(card_floor_evenness_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+      if (/^\d{2}:\d{2}$/.test(card_floor_evenness_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      // Updating AmbientTemperature
       card_floor_evenness_chart.data.labels.push(time);
       card_floor_evenness_chart.data.datasets[0].data.push(_card_floor_evenness);
       card_floor_evenness_chart.data.labels.shift();
       card_floor_evenness_chart.data.datasets[0].data.shift();
       card_floor_evenness_chart.update('none');
+
+      console.log("Card Floor: ", _card_floor_evenness, time)
     }
   });
+
+  clearTimeout(timeoutIdCardFloor);
+  timeoutIdCardFloor = setTimeout(function() {
+    updating_card_floor_evenness(timeOut); 
+  }, timeOut);
 };
 
 
 /// updating Ambient Temperature ///
-var updating_ambient_temperature = function() {
-
+var timeoutIdAmbientTemp;
+function updating_ambient_temperature(timeOut) {
   $.ajax({
     type: "GET",
     url: "/Charts/update_ambient_temperature_chart",
     success: function(data) {
   
       var _ambient_temperature=data["AmbientTemperature"];
+      var _ambient_temperature_time=data["AmbientTemperatureTime"];
+      var date = new Date(_ambient_temperature_time);
   
-      var now = new Date();
-
-      if (/^\d{2}:\d{2}:\d{2}$/.test(ambient_temperature_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+      if (/^\d{2}:\d{2}$/.test(ambient_temperature_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
       ambient_temperature_chart.data.labels.push(time);
       ambient_temperature_chart.data.datasets[0].data.push(_ambient_temperature);
+
       ambient_temperature_chart.data.labels.shift();
       ambient_temperature_chart.data.datasets[0].data.shift();
       ambient_temperature_chart.update('none');
+      console.log("Ambient Temp: ", _ambient_temperature, time)
+
     }
   });
+  clearTimeout(timeoutIdAmbientTemp);
+  timeoutIdAmbientTemp = setTimeout(function() {
+    updating_ambient_temperature(timeOut); 
+  }, timeOut)
 };
+
+
 
 
 /// updating laboratory values ///
@@ -1253,66 +1277,80 @@ var updating_line_power_consumption = function() {
 
 
 // Start the updating functions
-update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
-//update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
-//update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
-//update_laboratory_values = setInterval(updating_laboratory_values, 60000);
-//update_humidity_environment = setInterval(updating_humidity_environment, 60000);
-//update_economics = setInterval(updating_economics, 60000);
-//update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
+timeoutIdNonwoven = setTimeout(function() {
+  updating_nonenwoven_unevenness(60000);
+}, 60000);
 
+timeoutIdCardFloor = setTimeout(function() {
+  updating_card_floor_evenness(60000);
+}, 60000);
+
+timeoutIdAmbientTemp = setTimeout(function() {
+  updating_ambient_temperature(60000);
+}, 60000);
+
+  
 
 // Set new updating interval for selecting different time
 // Updating nonwoven unevenness
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
-  clearInterval(update_nonenwoven_unevenness);
-
   let selectedValue = this.value;
+  var delayNonwoven;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 60000);
+    delayNonwoven = 60000;
   }
   else if (selectedValue === "1d") {
-    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 600000);
+    delayNonwoven = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_nonenwoven_unevenness = setInterval(updating_nonenwoven_unevenness, 3600000);
+    delayNonwoven = 3600000; 
   }
+  clearTimeout(timeoutIdNonwoven);
+  updating_nonenwoven_unevenness(delayNonwoven);
 });
+
 
 // Updating card floor evenness
 document.getElementById("dropdownCardFloorEveness").addEventListener("change", function() {
-  clearInterval(update_card_floor_evenness);
-
   let selectedValue = this.value;
+  var delayCardFloor;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_card_floor_evenness = setInterval(updating_card_floor_evenness, 60000);
+    delayCardFloor = 60000;
   }
   else if (selectedValue === "1d") {
-    update_card_floor_evenness = setInterval(updating_card_floor_evenness, 600000);
+    delayCardFloor = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_card_floor_evenness = setInterval(updating_card_floor_evenness, 3600000);
+    delayCardFloor = 3600000;
   }
+
+  clearTimeout(timeoutIdCardFloor);
+  updating_card_floor_evenness(delayCardFloor);
 });
+
+
 
 // Updating ambient temperature
 document.getElementById("dropdownAmbientTemperature").addEventListener("change", function() {
-  clearInterval(update_ambient_temperature);
-
   let selectedValue = this.value;
+  var delayAmbientTemp;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_ambient_temperature = setInterval(updating_ambient_temperature, 60000);
+    delayAmbientTemp = 60000;
   }
   else if (selectedValue === "1d") {
-    update_ambient_temperature = setInterval(updating_ambient_temperature, 600000);
+    delayAmbientTemp = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_ambient_temperature = setInterval(updating_ambient_temperature, 3600000);
+    delayAmbientTemp = 3600000;
   }
+  clearTimeout(timeoutIdAmbientTemp);
+  updating_ambient_temperature(delayAmbientTemp);
 });
+
+
 
 // updating laboratory values
 document.getElementById("dropdownLaboratoryValues").addEventListener("change", function() {

@@ -70,6 +70,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
     # Execute the Flux query and store the result in tables
     tables_nonwoven_uvenness = query_api.query(query_nonwoven_uvenness, org=influxdb_config.org)
     nonwoven_uvenness = []
+    nonwoven_uvenness2 = []
     nonwoven_uvenness_time = []
 
 
@@ -77,9 +78,12 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         for record_nonwoven_uvenness in table_nonwoven_uvenness.records:
             nu_value = record_nonwoven_uvenness.values["_value"]
             nu_time = record_nonwoven_uvenness.values["_time"]
-            if nu_value == None: 
-                nu_value = 0.0
             nonwoven_uvenness.append(nu_value)
+            nonwoven_uvenness2.append(nu_value)
+
+            #if nu_value == None:
+            #    nonwoven_uvenness.append(0)
+
             nu_time_updated = nu_time + timedelta(hours=2)
             if aggregate_time[selected_time] == "1h":
                 nu_formatted_datetime = nu_time_updated.strftime("%d-%m %H:%M")
@@ -96,7 +100,8 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if nonwoven_uvenness == []:
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            nonwoven_uvenness.append(0)
+            nonwoven_uvenness.append("NaN")
+            nonwoven_uvenness2.append(None)
 
 
     if nonwoven_uvenness_time == []:
@@ -110,14 +115,16 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             else:
                 nonwoven_uvenness_time.append(time.strftime("%H:%M"))
     
-    nonwoven_uvenness.pop()
-    nonwoven_uvenness_time.pop()
+    #nonwoven_uvenness.pop()
+    #nonwoven_uvenness_time.pop()
 
     if chart == "NonwovenUnevennes":
+        nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
+        print(nonwoven_uvenness)
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
-        scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std for x in nonwoven_uvenness]
-        card_floor_evenness = [x * floor_quality_weight for x in scaled_signal]
+        scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
+        card_floor_evenness = [x * floor_quality_weight if x != "NaN" else "NaN" for x in scaled_signal]
         return card_floor_evenness, nonwoven_uvenness_time
 
 
@@ -145,8 +152,10 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
         for record_ambient_temperature in table_ambient_temperature.records:
             at_value = record_ambient_temperature.values["_value"]
             at_time = record_ambient_temperature.values["_time"]
-            if at_value == None: 
-                at_value = 0.0
+
+            # if at_value == None: 
+            #     at_value = 0.0
+
             ambient_temperature.append(at_value)
             at_time_updated = at_time + timedelta(hours=2)
             if aggregate_time[selected_time] == "1h":
@@ -162,19 +171,21 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
 
     if ambient_temperature == []:
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            ambient_temperature.append(0)
+            ambient_temperature.append("NaN")
 
 
     if ambient_temperature_time == []:
         time_now = datetime.now()
-        ambient_temperature_time = []
+        ambient_temperature_time = [] # ?
 
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             time = time_now - timedelta(minutes=i)
             if aggregate_time[selected_time] == "1h":
                 ambient_temperature_time.append(time.strftime("%d-%m %H:%M"))
             else:
-                ambient_temperature_time.append(time.strftime("%H:%M:%S"))
+                ambient_temperature_time.append(time.strftime("%H:%M"))
+
+    ambient_temperature = [x if x is not None else "NaN" for x in ambient_temperature]
 
     return ambient_temperature, ambient_temperature_time
 
@@ -688,19 +699,15 @@ def update_nonwoven_unevenness_chart(request):
     tables = query_api.query(query_performance, org=influxdb_config.org)
 
     if tables == []:
-        #updated_values_dict["NonwovenUnevenness"] = None
         now = datetime.now()
-        time_delta_format = now.strftime("%H:%M")
-        print(time_delta_format)
-        updated_values_dict["NonwovenUnevennessTime"] = time_delta_format
+        now += timedelta(hours=2)
+        updated_values_dict["NonwovenUnevennessTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
                 time = record.values["_time"]
                 time += timedelta(hours=2)
-                #time_delta_format = time_delta.strftime("%H:%M")
-                print(time)
                 updated_values_dict["NonwovenUnevenness"] = value
                 updated_values_dict["NonwovenUnevennessTime"] = time
 
@@ -729,17 +736,21 @@ def update_card_floor_evenness_chart(request):
     tables = query_api.query(query_performance, org=influxdb_config.org)
 
     if tables == []:
-        updated_values_dict["NonwovenUnevenness"] = 0.0
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["CardFloorEvennessTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
                 updated_values_dict["NonwovenUnevenness"] = value
+                updated_values_dict["CardFloorEvennessTimeTime"] = time
 
-
-    scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
-    card_floor_evenness = scaled_signal * floor_quality_weight
-    updated_values_dict["CardFloorEvenness"] = card_floor_evenness
+                scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
+                card_floor_evenness = scaled_signal * floor_quality_weight
+                updated_values_dict["CardFloorEvenness"] = card_floor_evenness
 
     return JsonResponse(updated_values_dict, safe=False)
 
@@ -764,12 +775,17 @@ def update_ambient_temperature_chart(request):
     tables = query_api.query(query_energy, org=influxdb_config.org)
 
     if tables == []:
-        updated_values_dict["AmbientTemperature"] = 0.0
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["AmbientTemperatureTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
                 updated_values_dict["AmbientTemperature"] = value
+                updated_values_dict["AmbientTemperatureTime"] = time
 
     return JsonResponse(updated_values_dict, safe=False)
 
