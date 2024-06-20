@@ -120,7 +120,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
-        print(nonwoven_uvenness)
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
@@ -226,7 +225,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                     aw_value = 0
                 area_weight.append(aw_value)
                 aw_updated_time = aw_time + timedelta(hours=2)
-                aw_formatted_datetime = aw_updated_time.strftime("%H:%M:%S")
+                aw_formatted_datetime = aw_updated_time.strftime("%H:%M")
                 area_weight_time.append(aw_formatted_datetime)
 
         #area_weights.append(area_weight)
@@ -244,7 +243,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 area_weight_time.append(time.strftime("%d-%m %H:%M"))
             else:
-                area_weight_time.append(time.strftime("%H:%M:%S"))
+                area_weight_time.append(time.strftime("%H:%M"))
 
 
     # tensile md
@@ -334,15 +333,17 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
         for record_humidity_environment in table_humidity_environment.records:
             he_value = record_humidity_environment.values["_value"]
             he_time = record_humidity_environment.values["_time"]
-            if he_value == None: 
-                he_value = 0.0
+
+            #if he_value == None: 
+            #    he_value = 0.0
+
             humidity_environment.append(he_value)
+
             he_time_updated = he_time + timedelta(hours=2)
-            he_formatted_datetime = he_time_updated.strftime("%H:%M:%S")
             if aggregate_time[selected_time] == "1h":
                 he_formatted_datetime = he_time_updated.strftime("%d-%m %H:%M")
             else:
-                he_formatted_datetime = he_time_updated.strftime("%H:%M:%S")
+                he_formatted_datetime = he_time_updated.strftime("%H:%M")
             humidity_environment_time.append(he_formatted_datetime)
 
 
@@ -354,7 +355,7 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
 
     if humidity_environment == []:
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            humidity_environment.append(0)
+            humidity_environment.append("NaN")
 
 
     if humidity_environment_time == []:
@@ -366,7 +367,7 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 humidity_environment_time.append(time.strftime("%d-%m %H:%M"))
             else:
-                humidity_environment_time.append(time.strftime("%H:%M:%S"))
+                humidity_environment_time.append(time.strftime("%H:%M"))
 
     return humidity_environment, humidity_environment_time
 
@@ -445,7 +446,7 @@ def get_economics(selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
             else:
-                pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
+                pc_formatted_datetime = pc_time_updated.strftime("%H:%M")
             energy_costs_time.append(pc_formatted_datetime)
 
     if energy_costs != [] and energy_costs[-1] == 0:
@@ -466,7 +467,7 @@ def get_economics(selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 energy_costs_time.append(time.strftime("%d-%m %H:%M"))
             else:
-                energy_costs_time.append(time.strftime("%H:%M:%S"))
+                energy_costs_time.append(time.strftime("%H:%M"))
 
     ###
     # Production income
@@ -549,7 +550,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
             if aggregate_time[selected_time] == "1h":
                 pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
             else:
-                pc_formatted_datetime = pc_time_updated.strftime("%H:%M:%S")
+                pc_formatted_datetime = pc_time_updated.strftime("%H:%M")
             line_power_consumption_time.append(pc_formatted_datetime)
 
     if line_power_consumption != [] and line_power_consumption[-1] == 0:
@@ -573,7 +574,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                 if aggregate_time[selected_time] == "1h":
                     line_power_consumption_time.append(time.strftime("%d-%m %H:%M"))
                 else:
-                    line_power_consumption_time.append(time.strftime("%H:%M:%S"))
+                    line_power_consumption_time.append(time.strftime("%H:%M"))
 
         return line_power_consumption, line_power_consumption_time
 
@@ -712,7 +713,6 @@ def update_nonwoven_unevenness_chart(request):
                 updated_values_dict["NonwovenUnevennessTime"] = time
 
 
-
     return JsonResponse(updated_values_dict, safe=False)
 
 
@@ -725,7 +725,6 @@ def update_card_floor_evenness_chart(request):
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
     query_api = client_influxdb.query_api()
-
 
     query_performance = """from(bucket: "AgentValues")
     |> range(start: -1m, stop: now())
@@ -862,12 +861,17 @@ def update_humidity_environment_chart(request):
     tables = query_api.query(query_energy, org=influxdb_config.org)
 
     if tables == []:
-        updated_values_dict["HumidityEnvironment"] = 0.0
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["HumidityEnvironmentTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
                 updated_values_dict["HumidityEnvironment"] = value
+                updated_values_dict["HumidityEnvironmentTime"] = time
 
 
     return JsonResponse(updated_values_dict, safe=False)
@@ -987,12 +991,18 @@ def update_line_power_consumption_chart(request):
 
     if tables == []:
         updated_values_dict["LinePowerConsumption"] = 0.0
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["LinePowerConsumptionTime"] = now
 
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
                 updated_values_dict["LinePowerConsumption"] = value
+                updated_values_dict["LinePowerConsumptionTime"] = time
 
-
+        
     return JsonResponse(updated_values_dict, safe=False)

@@ -651,32 +651,37 @@ var laboratory_values_chart = new Chart(ctx_live, {
     {
       data: area_weights,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(0, 0, 255, 1)',
       label: 'Area Weight Median',
       tension: 0.25,
+      showLine: false 
     },
     {
+      radius: 2,
       data: tensile_force_cd_all,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(255, 180, 100, 1)', 
       label: 'Tensile Strength CD Median',
       tension: 0.25,
-      yAxisID: 'y2', 
+      yAxisID: 'y2',
+      showLine: false 
     },
     {
+      radius: 2,
       data: tensile_force_cd_all,
       borderWidth: 2,
-      radius: 0,
+      radius: 2,
       borderColor: 'rgba(255, 128, 128, 1)', 
       label: 'Tensile Strength CD Median',
       tension: 0.25,
       yAxisID: 'y2',
+      showLine: false
     },
     ]
   },
-  options: options5,
+  options: options5
 });
 
 
@@ -1160,37 +1165,44 @@ var updating_laboratory_values = function() {
 }
 
 /// updating Humidty Environment ///
-var updating_humidity_environment = function() {
-
+var timeoutIdHumidity;
+function updating_humidity_environment(timeOut) {
   $.ajax({
     type: "GET",
     url: "/Charts/update_humidity_environment_chart",
     success: function(data) {
   
       var _humidity_environment=data["HumidityEnvironment"];
+      var _humidity_environment_time=data["HumidityEnvironmentTime"];
+      var date = new Date(_humidity_environment_time);
   
-      var now = new Date();
-
-      if (/^\d{2}:\d{2}:\d{2}$/.test(humidity_environment_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+      if (/^\d{2}:\d{2}/.test(humidity_environment_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
       // Updating AmbientTemperature
+      console.log(humidity_environment_chart.data.datasets[0].data)
+      console.log(humidity_environment_chart.data.labels)
       humidity_environment_chart.data.labels.push(time);
       humidity_environment_chart.data.datasets[0].data.push(_humidity_environment);
       humidity_environment_chart.data.labels.shift();
       humidity_environment_chart.data.datasets[0].data.shift();
       humidity_environment_chart.update('none');
-
     }
   });
+  clearTimeout(timeoutIdHumidity);
+  timeoutIdHumidity = setTimeout(function() {
+    updating_humidity_environment(timeOut); 
+  }, timeOut)
 };
 
 /// updating economics ///
@@ -1208,7 +1220,7 @@ var updating_economics = function() {
        
       var now = new Date();
 
-      if (/^\d{2}:\d{2}:\d{2}$/.test(economics_chart.data.labels[0])) {
+      if (/^\d{2}:\d{2}/.test(economics_chart.data.labels[0])) {
         var time = now.toLocaleTimeString();
       }
       else {
@@ -1242,37 +1254,42 @@ var updating_economics = function() {
 }
 
 /// updating line power consumption///
-var updating_line_power_consumption = function() {
-
+var timeoutIdLinePower;
+function updating_line_power_consumption(timeOut) {
   $.ajax({
     type: "GET",
     url: "/Charts/update_line_power_consumption_chart",
     success: function(data) {
   
       var _line_power_consumption=data["LinePowerConsumption"];
+      var _line_power_consumption_time=data["LinePowerConsumptionTime"];
   
-      var now = new Date();
+      var date = new Date(_line_power_consumption_time);
 
-      if (/^\d{2}:\d{2}:\d{2}$/.test(line_power_consumption_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+      if (/^\d{2}:\d{2}/.test(line_power_consumption_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      // Updating AmbientTemperature
       line_power_consumption_chart.data.labels.push(time);
       line_power_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
       line_power_consumption_chart.data.labels.shift();
       line_power_consumption_chart.data.datasets[0].data.shift();
       line_power_consumption_chart.update('none');
-
     }
   });
+  clearTimeout(timeoutIdLinePower);
+  timeoutIdLinePower = setTimeout(function() {
+    updating_line_power_consumption(timeOut); 
+  }, timeOut);
 };
 
 
@@ -1289,6 +1306,13 @@ timeoutIdAmbientTemp = setTimeout(function() {
   updating_ambient_temperature(60000);
 }, 60000);
 
+timeoutIdHumidity = setTimeout(function() {
+  updating_humidity_environment(60000);
+}, 60000);
+
+timeoutIdLinePower = setTimeout(function() {
+  updating_line_power_consumption(60000);
+}, 60000);
   
 
 // Set new updating interval for selecting different time
@@ -1371,19 +1395,20 @@ document.getElementById("dropdownLaboratoryValues").addEventListener("change", f
 
 // Updating humidtiy environment
 document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
-  clearInterval(update_humidity_environment);
-
+  var delayHumidity;
   let selectedValue = this.value;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_humidity_environment = setInterval(updating_humidity_environment, 60000);
+    delayHumidity = 60000;
   }
   else if (selectedValue === "1d") {
-    update_humidity_environment = setInterval(updating_humidity_environment, 600000);
+    delayHumidity = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_humidity_environment = setInterval(updating_humidity_environment, 3600000);
+    delayHumidity = 3600000;
   }
+  clearTimeout(timeoutIdHumidity);
+  updating_card_floor_evenness(delayHumidity);
 });
 
 // Updating economics
@@ -1405,31 +1430,22 @@ document.getElementById("dropdownEconomics").addEventListener("change", function
 
 // Updating line power consumption
 document.getElementById("dropdownLinePowerConsumption").addEventListener("change", function() {
-  clearInterval(update_line_power_consumption);
-
+  var delayLinePower;
   let selectedValue = this.value;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_line_power_consumption = setInterval(updating_line_power_consumption, 60000);
+    delayLinePower = 60000;
   }
   else if (selectedValue === "1d") {
-    update_line_power_consumption = setInterval(updating_line_power_consumption, 600000);
+    delayLinePower = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_line_power_consumption = setInterval(updating_line_power_consumption, 3600000);
+    delayLinePower = 3600000; 
   }
+  clearTimeout(timeoutIdLinePower);
+  updating_nonenwoven_unevenness(delayLinePower);
 });
 
-
-window.addEventListener('beforeunload', function() {
-    clearInterval(update_nonenwoven_unevenness);
-    clearInterval(update_nonenwoven_unevenness);
-    clearInterval(update_ambient_temperature);
-    clearInterval(update_laboratory_values);
-    clearInterval(update_humidity_environment);
-    clearInterval(update_economics);
-    clearInterval(update_line_power_consumption);
-});
 
 
 
