@@ -368,6 +368,8 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
                 humidity_environment_time.append(time.strftime("%d-%m %H:%M"))
             else:
                 humidity_environment_time.append(time.strftime("%H:%M"))
+    
+    humidity_environment = [x if x is not None else "NaN" for x in humidity_environment]
 
     return humidity_environment, humidity_environment_time
 
@@ -388,19 +390,33 @@ def get_economics(selected_time, influxdb_config, query_api):
     tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
     card_delivery_weight_per_area = []
     card_delivery_speed = []
+    test = []
+    counter = 0
 
     for table_material_costs in tables_material_costs:
-        for record_material_costs in table_material_costs.records:
-            mc_value = record_material_costs.values["_value"]
-            mc_field = record_material_costs.values["_field"]
 
-            if mc_value == None: 
-                mc_value = 0.0
+        print(tables_material_costs)
+        # for record_material_costs in table_material_costs.records:
+        #     mc_value = record_material_costs.values["_value"]
+        #     mc_field = record_material_costs.values["_field"]
 
-            if mc_field == "CardDeliveryWeightPerArea":
-                card_delivery_weight_per_area.append(mc_value)
-            elif mc_field == "CardDeliverySpeed":
-                card_delivery_speed.append(mc_value)
+        #     print(mc_field, mc_value, counter)
+        #     if mc_value == None: 
+        #         mc_value = 0.0
+        #     test.append(mc_value)
+        #     if mc_field == "CardDeliveryWeightPerArea":
+        #         card_delivery_weight_per_area.append(mc_value)
+        #     elif mc_field == "CardDeliverySpeed":
+        #         card_delivery_speed.append(mc_value)
+        #     counter += 1
+
+                
+
+    ####################################################
+    #print("test: ", len(test))
+    print("cardD: ", len(card_delivery_speed))
+    print("card: ", len(card_delivery_weight_per_area))
+
 
     if card_delivery_speed != [] and card_delivery_speed[-1] == 0:
         card_delivery_speed[-1] = card_delivery_speed[-2]
@@ -449,6 +465,10 @@ def get_economics(selected_time, influxdb_config, query_api):
                 pc_formatted_datetime = pc_time_updated.strftime("%H:%M")
             energy_costs_time.append(pc_formatted_datetime)
 
+    #########################################
+    print("energy: ", len(energy_costs_time))
+
+
     if energy_costs != [] and energy_costs[-1] == 0:
         energy_costs[-1] = energy_costs[-2]
     if energy_costs != [] and energy_costs[0] == 0:
@@ -495,6 +515,10 @@ def get_economics(selected_time, influxdb_config, query_api):
                 production_width.append(pi_value)
             elif pi_field == "ProductionSpeed":
                 production_speed.append(pi_value)
+
+    print("production_width: ", len(production_width))
+    print("production_speed: ", len(production_speed))
+
     
     #print(len(production_width), len(production_speed))
     if len(production_width) != len(production_speed):
@@ -517,7 +541,7 @@ def get_economics(selected_time, influxdb_config, query_api):
     ###
     #Contribution Margin 
     contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
-
+    #print(len(material_costs))
     return [energy_costs, material_costs, contribution_margin, production_income], energy_costs_time
 
 ############################################################################################################
@@ -898,6 +922,9 @@ def update_economics_chart(request):
 
     if tables == []:
         updated_values_dict["EnergyCosts"] = 0.0
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["EconomicsTime"] = now
     else:
         for table in tables:
             for record in table.records:

@@ -201,17 +201,6 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
 });
 
 
-/// ?
-function populate_empty_chart(selectedValue) {
-  for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
-    nonwoven_uvenness.push(0);
-  }
-  let time_now = new Date();
-  for (let i = time_select[selectedValue] * 60; i >= 0; i--) {
-    let time = new Date(time_now - i * 60000);
-    nonwoven_uvenness_time.push(time.toLocaleTimeString());
-  }
-}
 
 
 // sending chart name and time selection to backend and get new data
@@ -287,6 +276,11 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
                   economics_chart.data.datasets[2].data = contribution_margin;
                   economics_chart.data.datasets[3].data = production_income;
                   economics_chart.update();
+
+                  console.log(`Energy: ${economics}`, economics.length);
+                  console.log(`Material: ${material_costs}`, material_costs.length);
+                  console.log(`Contribution: ${contribution_margin}`, contribution_margin.length);
+                  console.log(`Production: ${production_income}`, production_income.length);
                 }
                 else if (data["header"] === "LinePowerConsumption") {
                   line_power_consumption = response["timeRange"][0]
@@ -1205,9 +1199,10 @@ function updating_humidity_environment(timeOut) {
   }, timeOut)
 };
 
-/// updating economics ///
-var updating_economics = function() {
 
+/// updating economics ///
+var timeoutIdEconomics;
+function updating_economics(timeOut){
   $.ajax({
     type: "GET",
     url: "/Charts/update_economics_chart",
@@ -1217,18 +1212,21 @@ var updating_economics = function() {
       var _material_costs=data["MaterialCosts"];
       var _contribution_margin=data["ContributionMargin"];
       var _production_income=data["ProductionIncome"];
+      var _economics_time=data["EconomicsTime"]
        
-      var now = new Date();
+      var date = new Date(_economics_time);
 
       if (/^\d{2}:\d{2}/.test(economics_chart.data.labels[0])) {
-        var time = now.toLocaleTimeString();
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
       }
       else {
-        var day = String(now.getDate()).padStart(2, '0'); 
-        var month = String(now.getMonth() + 1).padStart(2, '0'); 
-        var hour = String(now.getHours()).padStart(2, '0'); 
-        var minute = String(now.getMinutes()).padStart(2, '0'); 
-        var time = `${day}-${month} ${hour}:${minute}`;
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
 
@@ -1246,11 +1244,12 @@ var updating_economics = function() {
       economics_chart.data.datasets[3].data.shift();
 
       economics_chart.update('none');
-
     }
   });
-
-
+  clearTimeout(timeoutIdEconomics);
+  timeoutIdEconomics = setTimeout(function() {
+    updating_economics(timeOut); 
+  }, timeOut)
 }
 
 /// updating line power consumption///
@@ -1310,10 +1309,14 @@ timeoutIdHumidity = setTimeout(function() {
   updating_humidity_environment(60000);
 }, 60000);
 
+timeoutIdEconomics = setTimeout(function() {
+  updating_economics(60000);
+}, 60000);
+
 timeoutIdLinePower = setTimeout(function() {
   updating_line_power_consumption(60000);
 }, 60000);
-  
+ 
 
 // Set new updating interval for selecting different time
 // Updating nonwoven unevenness
@@ -1355,7 +1358,6 @@ document.getElementById("dropdownCardFloorEveness").addEventListener("change", f
 });
 
 
-
 // Updating ambient temperature
 document.getElementById("dropdownAmbientTemperature").addEventListener("change", function() {
   let selectedValue = this.value;
@@ -1393,6 +1395,10 @@ document.getElementById("dropdownLaboratoryValues").addEventListener("change", f
   }
 });
 
+
+
+
+
 // Updating humidtiy environment
 document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
   var delayHumidity;
@@ -1408,25 +1414,28 @@ document.getElementById("dropdownHumidityEnvironment").addEventListener("change"
     delayHumidity = 3600000;
   }
   clearTimeout(timeoutIdHumidity);
-  updating_card_floor_evenness(delayHumidity);
+  updating_humidity_environment(delayHumidity);
 });
+
 
 // Updating economics
 document.getElementById("dropdownEconomics").addEventListener("change", function() {
-  clearInterval(update_economics);
-
+  var delayEconomics;
   let selectedValue = this.value;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_economics = setInterval(updating_economics, 60000);
+    delayEconomics = 60000;
   }
   else if (selectedValue === "1d") {
-    update_economics = setInterval(updating_economics, 600000);
+    delayEconomics = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_economics = setInterval(updating_economics, 3600000);
+    delayEconomics = 3600000;
   }
+  clearTimeout(timeoutIdEconomics);
+  updating_economics(delayEconomics);
 });
+
 
 // Updating line power consumption
 document.getElementById("dropdownLinePowerConsumption").addEventListener("change", function() {
@@ -1443,7 +1452,7 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
     delayLinePower = 3600000; 
   }
   clearTimeout(timeoutIdLinePower);
-  updating_nonenwoven_unevenness(delayLinePower);
+  updating_line_power_consumption(delayLinePower);
 });
 
 
