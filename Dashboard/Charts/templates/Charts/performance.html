@@ -48,8 +48,8 @@
 
     <div class="col-md-4" data-row-id="row3">
       <div class="border1">
-        <h1>Ambient Temperature
-            <select id="dropdownAmbientTemperature">
+        <h1>Environmental Values
+          <select id="dropdownAmbientTemperature">
             <option value="1h">1h</option>
             <option value="3h">3h</option>
             <option value="6h">6h</option>
@@ -72,7 +72,7 @@
 
     <div class="col-8">
       <div class="border1">
-        <h1>Laboratory Values
+        <h1>Laboratory Values 1
           <select id="dropdownLaboratoryValues">
             <option value="1h">1h</option>
             <option value="3h">3h</option>
@@ -92,8 +92,8 @@
 
     <div class="col-4">
       <div class="border1">
-        <h1>Humidity Environment
-          <select id="dropdownHumidityEnvironment">
+        <h1>Laboratory Values 2
+          <select id="dropdownTearLength">
             <option value="1h">1h</option>
             <option value="3h">3h</option>
             <option value="6h">6h</option>
@@ -102,16 +102,15 @@
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
-          <button onclick="resetZoomChart('HumidityEnvironment')" class="small-button">
+          <button onclick="resetZoomChart('TearLength')" class="small-button">
               <i class="fa-solid fa-rotate-left"></i>
           </button>
         </h1>
-        <canvas id="HumidityEnvironment"></canvas>
+        <canvas id="TearLength"></canvas>
       </div>
     </div>
 
   </div>
-
 
   <div class="row">
 
@@ -172,6 +171,8 @@ var time_select = {
   '30d': 720
   }
 
+
+// Listen for dropdown changes
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
     sendDataToBackend("NonwovenUnevennes", this.value);   
 });
@@ -188,8 +189,8 @@ document.getElementById("dropdownLaboratoryValues").addEventListener("change", f
     sendDataToBackend("LaboratoryValues", this.value);  
 });
 
-document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
-    sendDataToBackend("HumidityEnvironment", this.value);  
+document.getElementById("dropdownTearLength").addEventListener("change", function() {
+    sendDataToBackend("TearLength", this.value);  
 });
 
 document.getElementById("dropdownEconomics").addEventListener("change", function() {
@@ -201,100 +202,97 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
 });
 
 
-
-
 // sending chart name and time selection to backend and get new data
 function sendDataToBackend(headerOfChart, dropdown_time) {
 
-    var data = {
-        timeRange: dropdown_time,
-        header: headerOfChart
-    };
+  var data = {
+      timeRange: dropdown_time,
+      header: headerOfChart
+  };
 
-    $.ajax({
-            type: "GET",
-            url: '/Adanowo/update/',
-            data: data,
-            dataType: "json",
-            success: function(response) {
-                console.log('Antwort vom Server:', response);
+  $.ajax({
+    type: "GET",
+    url: '/Adanowo/update/',
+    data: data,
+    dataType: "json",
+    success: function(response) {
+      if (data["header"] === "NonwovenUnevennes") {
+        nonwoven_uvenness = response["timeRange"][0]
+        nonwoven_uvenness_time = response["timeRange"][1]
+        nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
+        nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
+        nonwoven_unevenness_chart.update();
+      }
+      else if (data["header"] === "CardFloorEvenness") {
+        card_floor_evenness = response["timeRange"][0]
+        card_floor_evenness_time = response["timeRange"][1]                
+        card_floor_evenness_chart.data.labels = card_floor_evenness_time
+        card_floor_evenness_chart.data.datasets[0].data = card_floor_evenness;
+        card_floor_evenness_chart.update();
+      }
+      else if (data["header"] === "AmbientTemperature") {
+        ambient_temperature = response["timeRange"][0][0]
+        humidity_environment = response["timeRange"][0][1]
 
-                if (data["header"] === "NonwovenUnevennes") {
-                  nonwoven_uvenness = response["timeRange"][0]
-                  nonwoven_uvenness_time = response["timeRange"][1]
-                  nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
-                  nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
-                  nonwoven_unevenness_chart.update();
-                }
-                else if (data["header"] === "CardFloorEvenness") {
-                  card_floor_evenness = response["timeRange"][0]
-                  card_floor_evenness_time = response["timeRange"][1]                
-                  card_floor_evenness_chart.data.labels = card_floor_evenness_time
-                  card_floor_evenness_chart.data.datasets[0].data = card_floor_evenness;
-                  card_floor_evenness_chart.update();
-                }
-                else if (data["header"] === "AmbientTemperature") {
-                  ambient_temperature = response["timeRange"][0]
-                  ambient_temperature_time = response["timeRange"][1]                
-                  ambient_temperature_chart.data.labels = ambient_temperature_time
-                  ambient_temperature_chart.data.datasets[0].data = ambient_temperature;
-                  ambient_temperature_chart.update();
-                }
-                else if (data["header"] === "LaboratoryValues") {
-                  area_weights = response["timeRange"][0][0]
-                  tensile_force_md_all = response["timeRange"][0][1]
-                  tensile_force_cd_all = response["timeRange"][0][2]
-                  laboratory_values_time = response["timeRange"][1]                
-                  laboratory_values_chart.data.labels = laboratory_values_time
-                  laboratory_values_chart.data.datasets[0].data = area_weights;
-                  laboratory_values_chart.data.datasets[1].data = tensile_force_md_all
-                  laboratory_values_chart.data.datasets[2].data = tensile_force_cd_all
-                  //laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
-                  //laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
-                  //laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
-                  //laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
-                  //laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
-                  //laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
-                  laboratory_values_chart.update();
-                }
-                else if (data["header"] === "HumidityEnvironment") {
-                  humidity_environment = response["timeRange"][0]
-                  humidity_environment_time = response["timeRange"][1]                
-                  humidity_environment_chart.data.labels = humidity_environment_time
-                  humidity_environment_chart.data.datasets[0].data = humidity_environment;
-                  humidity_environment_chart.update();
-                }
-                else if (data["header"] === "Economics") {
-                  economics = response["timeRange"][0][0]
-                  material_costs = response["timeRange"][0][1]
-                  contribution_margin = response["timeRange"][0][2]
-                  production_income = response["timeRange"][0][3]
-                  economics_time = response["timeRange"][1]                
-                  economics_chart.data.labels = economics_time
-                  economics_chart.data.datasets[0].data = economics;
-                  economics_chart.data.datasets[1].data = material_costs;
-                  economics_chart.data.datasets[2].data = contribution_margin;
-                  economics_chart.data.datasets[3].data = production_income;
-                  economics_chart.update();
+        ambient_temperature_time = response["timeRange"][1]                
+        ambient_temperature_chart.data.labels = ambient_temperature_time
 
-                  console.log(`Energy: ${economics}`, economics.length);
-                  console.log(`Material: ${material_costs}`, material_costs.length);
-                  console.log(`Contribution: ${contribution_margin}`, contribution_margin.length);
-                  console.log(`Production: ${production_income}`, production_income.length);
-                }
-                else if (data["header"] === "LinePowerConsumption") {
-                  line_power_consumption = response["timeRange"][0]
-                  line_power_consumption_time = response["timeRange"][1]                
-                  line_power_consumption_chart.data.labels = line_power_consumption_time
-                  line_power_consumption_chart.data.datasets[0].data = line_power_consumption;
-                  line_power_consumption_chart.update();
-                }
+        ambient_temperature_chart.data.datasets[0].data = ambient_temperature;
+        ambient_temperature_chart.data.datasets[1].data = humidity_environment;
 
-            },
-            error: function(xhr, status, error) {
-                console.error('Fehler beim Senden der Anfrage:', error);
-            }
-        });
+        ambient_temperature_chart.update();
+      }
+      else if (data["header"] === "LaboratoryValues") {
+        area_weights = response["timeRange"][0][0]
+        tensile_force_md_all = response["timeRange"][0][1]
+        tensile_force_cd_all = response["timeRange"][0][2]
+        laboratory_values_time = response["timeRange"][1]                
+        laboratory_values_chart.data.labels = laboratory_values_time
+        laboratory_values_chart.data.datasets[0].data = area_weights;
+        laboratory_values_chart.data.datasets[1].data = tensile_force_md_all
+        laboratory_values_chart.data.datasets[2].data = tensile_force_cd_all
+        //laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
+        //laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
+        //laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
+        //laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
+        //laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
+        //laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
+        laboratory_values_chart.update();
+      }
+      else if (data["header"] === "TearLength") {
+        tear_length_md = response["timeRange"][0][0]
+        tear_length_cd = response["timeRange"][0][1]
+        tear_length_time = response["timeRange"][1]                
+        tear_length_chart.data.labels = tear_length_time
+        tear_length_chart.data.datasets[0].data = tear_length_md;
+        tear_length_chart.data.datasets[1].data = tear_length_cd;
+        tear_length_chart.update();
+      }
+      else if (data["header"] === "Economics") {
+        economics = response["timeRange"][0][0]
+        material_costs = response["timeRange"][0][1]
+        contribution_margin = response["timeRange"][0][2]
+        production_income = response["timeRange"][0][3]
+        economics_time = response["timeRange"][1]                
+        economics_chart.data.labels = economics_time
+        economics_chart.data.datasets[0].data = economics;
+        economics_chart.data.datasets[1].data = material_costs;
+        economics_chart.data.datasets[2].data = contribution_margin;
+        economics_chart.data.datasets[3].data = production_income;
+        economics_chart.update();
+      }
+      else if (data["header"] === "LinePowerConsumption") {
+        line_power_consumption = response["timeRange"][0]
+        line_power_consumption_time = response["timeRange"][1]                
+        line_power_consumption_chart.data.labels = line_power_consumption_time
+        line_power_consumption_chart.data.datasets[0].data = line_power_consumption;
+        line_power_consumption_chart.update();
+      }
+    },
+    error: function(xhr, status, error) {
+        console.error('Fehler beim Senden der Anfrage:', error);
+    }
+  });
 }
 
 
@@ -430,7 +428,7 @@ const options_card_floor_evenness = {
       suggestedMax: 0,
       title: {
         display: true,
-        text: 'quantity', 
+        text: '[quantity]', 
         font: {
           size: 12, 
         },
@@ -467,9 +465,10 @@ var card_floor_evenness_chart = new Chart(ctx_live, {
 
 // create initial chart Ambient Temperature
 var ambient_temperature = {{ ambient_temperature|safe }}
+var humidity_environment = {{ humidity_environment|safe }}
 var ambient_temperature_time = {{ ambient_temperature_time|safe }}
 
-const options3 = {
+const options_ambient_temperature = {
   plugins: {
     zoom: {
       zoom: {
@@ -521,6 +520,30 @@ const options3 = {
         },
         position: 'top',
       },
+    },
+    y2: {
+      position: 'right',
+      beginAtZero: true,
+      type: 'linear',
+      grid: {
+        drawBorder: false,
+        color: (context) => {
+        if(context.tick.value === 0) {
+            return 'black'
+        }
+        } 
+      },
+      beginAtZero: false,
+      suggestedMin: 0,
+      suggestedMax: 0,
+      title: {
+        display: true,
+        text: '[%]', 
+        font: {
+          size: 12, 
+        },
+        position: 'bottom',
+      },
     }
   }
 };
@@ -530,21 +553,27 @@ var ambient_temperature_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
     labels: ambient_temperature_time,
-    datasets: [{
+    datasets: [
+    {
       data: ambient_temperature,
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 0, 0, 1)',
       label: 'Temperature',
       tension: 0.25,
-      fill: {
-       target: 'origin',
-       below: 'rgba(255, 0, 0, 0.1)',
-       above: 'rgba(255, 0, 0, 0.1)'
-      }, 
-    }]
+    },
+    {
+      data: humidity_environment,
+      borderWidth: 2,
+      radius: 2,
+      borderColor:'rgba(255, 99, 132, 1)',
+      label: 'Humidity',
+      tension: 0.25,
+      yAxisID: 'y2'
+    }
+    ]
   },
-  options: options3,
+  options: options_ambient_temperature,
 });
 
 
@@ -552,11 +581,11 @@ var ambient_temperature_chart = new Chart(ctx_live, {
 
 // create initial chart LaborWerte
 var laboratory_values_time = {{ laboratory_values_time|safe }} 
-var area_weights = {{ area_weights|safe }}
-var tensile_force_md_all = {{ tensile_force_md_all|safe }}
-var tensile_force_cd_all = {{ tensile_force_cd_all|safe }}
+var area_weights = {{ area_weight|safe }}
+var tensile_force_md_all = {{ tensile_force_md|safe }}
+var tensile_force_cd_all = {{ tensile_force_cd|safe }}
 
-const options5 = {
+const options_laboratory_value = {
   plugins: {
     zoom: {
       zoom: {
@@ -594,9 +623,9 @@ const options5 = {
       grid: {
         drawBorder: false,
         color: (context) => {
-        if(context.tick.value === 0) {
-            return 'black'
-        }
+          if(context.tick.value === 0) {
+              return 'black'
+          }
         } 
       },
       beginAtZero: false,
@@ -617,9 +646,9 @@ const options5 = {
       grid: {
         drawBorder: false,
         color: (context) => {
-        if(context.tick.value === 0) {
-            return 'black'
-        }
+          if(context.tick.value === 0) {
+              return 'black'
+          }
         } 
       },
       beginAtZero: false,
@@ -653,11 +682,11 @@ var laboratory_values_chart = new Chart(ctx_live, {
     },
     {
       radius: 2,
-      data: tensile_force_cd_all,
+      data: tensile_force_md_all,
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 180, 100, 1)', 
-      label: 'Tensile Strength CD Median',
+      label: 'Tensile Strength MD Median',
       tension: 0.25,
       yAxisID: 'y2',
       showLine: false 
@@ -675,17 +704,23 @@ var laboratory_values_chart = new Chart(ctx_live, {
     },
     ]
   },
-  options: options5
+  options: options_laboratory_value
 });
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 // create initial chart Ambient Temperature
-var humidity_environment = {{ humidity_environment|safe }}
-var humidity_environment_time = {{ humidity_environment_time|safe }}
+var tear_length_md = {{ tear_length_md|safe }}
+var tear_length_cd = {{ tear_length_cd|safe }}
+var tear_length_time = {{ tear_length_time|safe }}
 
-const options4 = {
+console.log(tear_length_md)
+console.log(tear_length_cd)
+console.log(tear_length_time)
+
+
+const options_tear_length = {
   plugins: {
     zoom: {
       zoom: {
@@ -706,9 +741,6 @@ const options4 = {
   maintainAspectRatio: false,
   responsive: true,
   legend: {
-    display: true,
-  },
-  legend: {
     display: false
   },
   scales: {
@@ -717,14 +749,14 @@ const options4 = {
       drawBorder: false,
     },
     y: {
-      beginAtZero: true,
+      position: 'left',
       type: 'linear',
       grid: {
         drawBorder: false,
         color: (context) => {
-        if(context.tick.value === 0) {
-            return 'black'
-        }
+          if(context.tick.value === 0) {
+              return 'black'
+          }
         } 
       },
       beginAtZero: false,
@@ -739,29 +771,35 @@ const options4 = {
         position: 'bottom',
       },
     }
+
   }
 };
 
-var ctx_live = document.getElementById("HumidityEnvironment");
-var humidity_environment_chart = new Chart(ctx_live, {
+var ctx_live = document.getElementById("TearLength");
+var tear_length_chart = new Chart(ctx_live, {
   type: 'line',
   data: {
-    labels: humidity_environment_time,
-    datasets: [{
-      data: humidity_environment,
+    labels: tear_length_time,
+    datasets: [
+    {
+      data: tear_length_md,
       borderWidth: 2,
       radius: 2,
       borderColor:'rgba(255, 99, 132, 1)',
-      label: 'Humidity',
-      tension: 0.25,
-      fill: {
-        target: 'origin',
-        below: 'rgba(255, 99, 132, 0.1)',
-        above: 'rgba(255, 99, 132, 0.1)'
-      }, 
-    }]
+      label: 'Tear Length MD median',
+      tension: 0.25
+    },
+    {
+      data: tear_length_cd,
+      borderWidth: 2,
+      radius: 2,
+      borderColor:'rgba(55, 121, 132, 1)',
+      label: 'Tear Length CD median',
+      tension: 0.25
+    },
+    ]
   },
-  options: options4,
+  options: options_tear_length,
 });
 
 
@@ -922,9 +960,9 @@ const options_line_power_consumption = {
       grid: {
         drawBorder: false,
         color: (context) => {
-        if(context.tick.value === 0) {
-            return 'black'
-        }
+          if(context.tick.value === 0) {
+              return 'black'
+          }
         } 
       },
       beginAtZero: false,
@@ -950,7 +988,7 @@ var line_power_consumption_chart = new Chart(ctx_live, {
     datasets: [{
       data: line_power_consumption,
       borderWidth: 2,
-      radius: 2,
+      radius: 0,
       borderColor:'rgba(122, 22, 12, 1)',
       label: 'Energy Consumption',
       tension: 0.25,
@@ -994,12 +1032,9 @@ function updating_nonenwoven_unevenness(timeOut) {
 
       nonwoven_unevenness_chart.data.labels.push(time);
       nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
-
       nonwoven_unevenness_chart.data.labels.shift();
       nonwoven_unevenness_chart.data.datasets[0].data.shift();
       nonwoven_unevenness_chart.update('none');
-
-      console.log("Nonwoven: ", _nonwoven_unevenness, time)
     }
   });
   clearTimeout(timeoutIdNonwoven);
@@ -1040,11 +1075,8 @@ function updating_card_floor_evenness(timeOut) {
       card_floor_evenness_chart.data.labels.shift();
       card_floor_evenness_chart.data.datasets[0].data.shift();
       card_floor_evenness_chart.update('none');
-
-      console.log("Card Floor: ", _card_floor_evenness, time)
     }
   });
-
   clearTimeout(timeoutIdCardFloor);
   timeoutIdCardFloor = setTimeout(function() {
     updating_card_floor_evenness(timeOut); 
@@ -1079,12 +1111,9 @@ function updating_ambient_temperature(timeOut) {
 
       ambient_temperature_chart.data.labels.push(time);
       ambient_temperature_chart.data.datasets[0].data.push(_ambient_temperature);
-
       ambient_temperature_chart.data.labels.shift();
       ambient_temperature_chart.data.datasets[0].data.shift();
       ambient_temperature_chart.update('none');
-      console.log("Ambient Temp: ", _ambient_temperature, time)
-
     }
   });
   clearTimeout(timeoutIdAmbientTemp);
@@ -1094,83 +1123,28 @@ function updating_ambient_temperature(timeOut) {
 };
 
 
-
-
 /// updating laboratory values ///
-var updating_laboratory_values = function() {
-    $.ajax({
-      type: "GET",
-      url: "/Charts/update_laboratory_values_chart",
-      success: function(data) {
-
-        //var _area_weight_min=data["AreaWeightMin"];
-        var _area_weight_med=data["AreaWeightMed"];
-        //var _area_weight_max=data["AreaWeightMax"];
-
-        //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
-        var _tensile_strength_med_cd = data["TensileStrengthMedCD"]
-        //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
-
-        //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
-        var _tensile_strength_med_md = data["TensileStrengthMedMD"]
-        //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
-
-
-        var now = new Date();
-
-        if (/^\d{2}:\d{2}:\d{2}$/.test(laboratory_values_chart.data.labels[0])) {
-          var time = now.toLocaleTimeString();
-        }
-        else {
-          var day = String(now.getDate()).padStart(2, '0'); 
-          var month = String(now.getMonth() + 1).padStart(2, '0'); 
-          var hour = String(now.getHours()).padStart(2, '0'); 
-          var minute = String(now.getMinutes()).padStart(2, '0'); 
-          var time = `${day}-${month} ${hour}:${minute}`;
-        }
-
-
-        laboratory_values_chart.data.labels.push(time);
-        //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
-        laboratory_values_chart.data.datasets[0].data.push(_area_weight_med);
-        //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
-
-        //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
-        laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_cd);
-        //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
-
-        //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
-        laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_md);
-        //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
-
-        laboratory_values_chart.data.labels.shift();
-        laboratory_values_chart.data.datasets[0].data.shift();
-        laboratory_values_chart.data.datasets[1].data.shift();
-        laboratory_values_chart.data.datasets[2].data.shift();
-        //laboratory_values_chart.data.datasets[3].data.shift();
-        //laboratory_values_chart.data.datasets[4].data.shift();
-        //laboratory_values_chart.data.datasets[5].data.shift();
-        //laboratory_values_chart.data.datasets[6].data.shift();
-        //laboratory_values_chart.data.datasets[7].data.shift();
-        //laboratory_values_chart.data.datasets[8].data.shift();
-        laboratory_values_chart.update('none');
-    }
-  });
-}
-
-/// updating Humidty Environment ///
-var timeoutIdHumidity;
-function updating_humidity_environment(timeOut) {
+var timeoutIdLaboratory;
+function updating_laboratory_values(timeOut) {
   $.ajax({
     type: "GET",
-    url: "/Charts/update_humidity_environment_chart",
+    url: "/Charts/update_laboratory_values_chart",
     success: function(data) {
-  
-      var _humidity_environment=data["HumidityEnvironment"];
-      var _humidity_environment_time=data["HumidityEnvironmentTime"];
-      var date = new Date(_humidity_environment_time);
-  
-      if (/^\d{2}:\d{2}/.test(humidity_environment_chart.data.labels[0])) {
+
+      var _area_weight_time=data["AreaWeightTime"];
+      //var _area_weight_min=data["AreaWeightMin"];
+      var _area_weight=data["AreaWeight"];
+      //var _area_weight_max=data["AreaWeightMax"];
+      //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
+      var _tensile_strength_med_md = data["TensileMD"]
+      //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
+      //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
+      var _tensile_strength_med_cd = data["TensileCD"]
+      //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
+
+      var date = new Date(_area_weight_time);
+
+      if (/^\d{2}:\d{2}$/.test(laboratory_values_chart.data.labels[0])) {
         var hours = date.getUTCHours().toString().padStart(2, '0');
         var minutes = date.getUTCMinutes().toString().padStart(2, '0');
         var time =  `${hours}:${minutes}`;
@@ -1183,19 +1157,71 @@ function updating_humidity_environment(timeOut) {
         var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-      // Updating AmbientTemperature
-      console.log(humidity_environment_chart.data.datasets[0].data)
-      console.log(humidity_environment_chart.data.labels)
-      humidity_environment_chart.data.labels.push(time);
-      humidity_environment_chart.data.datasets[0].data.push(_humidity_environment);
-      humidity_environment_chart.data.labels.shift();
-      humidity_environment_chart.data.datasets[0].data.shift();
-      humidity_environment_chart.update('none');
+      laboratory_values_chart.data.labels.push(time);
+      //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
+      laboratory_values_chart.data.datasets[0].data.push(_area_weight);
+      //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
+      //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
+      laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_md);
+      //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
+      //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
+      laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_cd);
+      //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
+      laboratory_values_chart.data.labels.shift();
+      laboratory_values_chart.data.datasets[0].data.shift();
+      laboratory_values_chart.data.datasets[1].data.shift();
+      laboratory_values_chart.data.datasets[2].data.shift();
+      //laboratory_values_chart.data.datasets[3].data.shift();
+      //laboratory_values_chart.data.datasets[4].data.shift();
+      //laboratory_values_chart.data.datasets[5].data.shift();
+      //laboratory_values_chart.data.datasets[6].data.shift();
+      //laboratory_values_chart.data.datasets[7].data.shift();
+      //laboratory_values_chart.data.datasets[8].data.shift();
+      laboratory_values_chart.update('none');
     }
   });
-  clearTimeout(timeoutIdHumidity);
-  timeoutIdHumidity = setTimeout(function() {
-    updating_humidity_environment(timeOut); 
+  clearTimeout(timeoutIdLaboratory);
+  timeoutIdLaboratory = setTimeout(function() {
+    updating_laboratory_values(timeOut); 
+  }, timeOut)
+}
+
+
+/// updating Tensile Strength ///
+var timeoutIdTear;
+function updating_tear_length(timeOut) {
+  $.ajax({
+    type: "GET",
+    url: "/Charts/update_tear_length_chart",
+    success: function(data) {
+  
+      var _tear_length=data["TearLength"];
+      var _tear_length_time=data["TearLengthTime"];
+      var date = new Date(_tear_length_time);
+  
+      if (/^\d{2}:\d{2}/.test(tear_length_chart.data.labels[0])) {
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time =  `${hours}:${minutes}`;
+      }
+      else {
+        var day = date.getUTCDate().toString();
+        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        var hours = date.getUTCHours().toString().padStart(2, '0');
+        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        var time = `${day}-${month} ${hours}:${minutes}`;
+      }
+
+      tear_length_chart.data.labels.push(time);
+      tear_length_chart.data.datasets[0].data.push(_tear_length);
+      tear_length_chart.data.labels.shift();
+      tear_length_chart.data.datasets[0].data.shift();
+      tear_length_chart.update('none');
+    }
+  });
+  clearTimeout(timeoutIdTear);
+  timeoutIdTear = setTimeout(function() {
+    updating_tear_length(timeOut); 
   }, timeOut)
 };
 
@@ -1229,8 +1255,6 @@ function updating_economics(timeOut){
         var time = `${day}-${month} ${hours}:${minutes}`;
       }
 
-
-      // Updating AmbientTemperature
       economics_chart.data.labels.push(time);
       economics_chart.data.datasets[0].data.push(_energy_costs);
       economics_chart.data.datasets[1].data.push(_material_costs);
@@ -1305,8 +1329,12 @@ timeoutIdAmbientTemp = setTimeout(function() {
   updating_ambient_temperature(60000);
 }, 60000);
 
-timeoutIdHumidity = setTimeout(function() {
-  updating_humidity_environment(60000);
+timeoutIdLaboratory = setTimeout(function() {
+  updating_laboratory_values(60000);
+}, 60000);
+
+timeoutIdTear = setTimeout(function() {
+  updating_tear_length(60000);
 }, 60000);
 
 timeoutIdEconomics = setTimeout(function() {
@@ -1319,7 +1347,7 @@ timeoutIdLinePower = setTimeout(function() {
  
 
 // Set new updating interval for selecting different time
-// Updating nonwoven unevenness
+// Updating interval nonwoven unevenness
 document.getElementById("dropdownNonwoven").addEventListener("change", function() {
   let selectedValue = this.value;
   var delayNonwoven;
@@ -1338,7 +1366,7 @@ document.getElementById("dropdownNonwoven").addEventListener("change", function(
 });
 
 
-// Updating card floor evenness
+// Updating interval card floor evenness
 document.getElementById("dropdownCardFloorEveness").addEventListener("change", function() {
   let selectedValue = this.value;
   var delayCardFloor;
@@ -1358,7 +1386,7 @@ document.getElementById("dropdownCardFloorEveness").addEventListener("change", f
 });
 
 
-// Updating ambient temperature
+// Updating interval ambient temperature
 document.getElementById("dropdownAmbientTemperature").addEventListener("change", function() {
   let selectedValue = this.value;
   var delayAmbientTemp;
@@ -1377,48 +1405,45 @@ document.getElementById("dropdownAmbientTemperature").addEventListener("change",
 });
 
 
-
-// updating laboratory values
+// updating interval laboratory values
 document.getElementById("dropdownLaboratoryValues").addEventListener("change", function() {
-  clearInterval(update_laboratory_values);
-
   let selectedValue = this.value;
+  var delayLaboratory;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    update_laboratory_values = setInterval(updating_laboratory_values, 60000);
+    delayLaboratory = 60000;
   }
   else if (selectedValue === "1d") {
-    update_laboratory_values = setInterval(updating_laboratory_values, 600000);
+    delayLaboratory = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    update_laboratory_values = setInterval(updating_laboratory_values, 3600000);
+    delayLaboratory = 3600000;
   }
+  clearTimeout(timeoutIdLaboratory);
+  updating_laboratory_values(delayLaboratory);
 });
 
 
-
-
-
-// Updating humidtiy environment
-document.getElementById("dropdownHumidityEnvironment").addEventListener("change", function() {
-  var delayHumidity;
+// Updating interval humidtiy environment
+document.getElementById("dropdownTearLength").addEventListener("change", function() {
+  var delayTear;
   let selectedValue = this.value;
 
   if (selectedValue === "1h" || selectedValue === "3h" || selectedValue === "6h" || selectedValue === "12h") {
-    delayHumidity = 60000;
+    delayTear = 60000;
   }
   else if (selectedValue === "1d") {
-    delayHumidity = 600000;
+    delayTear = 600000;
   }
   else if (selectedValue === "7d" || selectedValue === "30d") {
-    delayHumidity = 3600000;
+    delayTear = 3600000;
   }
-  clearTimeout(timeoutIdHumidity);
-  updating_humidity_environment(delayHumidity);
+  clearTimeout(timeoutIdTear);
+  updating_tear_length(delayTear);
 });
 
 
-// Updating economics
+// Updating interval economics
 document.getElementById("dropdownEconomics").addEventListener("change", function() {
   var delayEconomics;
   let selectedValue = this.value;
@@ -1437,7 +1462,7 @@ document.getElementById("dropdownEconomics").addEventListener("change", function
 });
 
 
-// Updating line power consumption
+// Updating interval line power consumption
 document.getElementById("dropdownLinePowerConsumption").addEventListener("change", function() {
   var delayLinePower;
   let selectedValue = this.value;
@@ -1456,8 +1481,7 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
 });
 
 
-
-
+// reset zoom
 function resetZoomChart(chartZoom) {
   if (chartZoom === "Nonwoven") {
     nonwoven_unevenness_chart.resetZoom();
@@ -1471,8 +1495,8 @@ function resetZoomChart(chartZoom) {
   else if (chartZoom === "LaboratoryValues") {
     laboratory_values_chart.resetZoom();
   }
-  else if (chartZoom === "HumidityEnvironment") {
-    humidity_environment_chart.resetZoom();
+  else if (chartZoom === "TensileStrength") {
+    tear_length_chart.resetZoom();
   }
   else if (chartZoom === "Economics") {
     economics_chart.resetZoom();

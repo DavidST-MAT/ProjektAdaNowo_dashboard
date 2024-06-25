@@ -38,8 +38,7 @@ time_select_empty_table = {
   '1d': 24,
   '7d': 168,
   '30d': 720
-  }
-
+}
 
 
 # Influx Configuration
@@ -63,7 +62,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
-        |> group(columns: ["_measurement"])
+        |> filter(fn: (r) => r["Unit"] == "-")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
@@ -73,7 +72,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
     nonwoven_uvenness2 = []
     nonwoven_uvenness_time = []
 
-
     for table_nonwoven_uvenness in tables_nonwoven_uvenness:
         for record_nonwoven_uvenness in table_nonwoven_uvenness.records:
             nu_value = record_nonwoven_uvenness.values["_value"]
@@ -81,17 +79,12 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             nonwoven_uvenness.append(nu_value)
             nonwoven_uvenness2.append(nu_value)
 
-            #if nu_value == None:
-            #    nonwoven_uvenness.append(0)
-
             nu_time_updated = nu_time + timedelta(hours=2)
             if aggregate_time[selected_time] == "1h":
                 nu_formatted_datetime = nu_time_updated.strftime("%d-%m %H:%M")
             else:
                 nu_formatted_datetime = nu_time_updated.strftime("%H:%M")
             nonwoven_uvenness_time.append(nu_formatted_datetime)
-
-
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == 0:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
@@ -102,7 +95,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
             nonwoven_uvenness.append("NaN")
             nonwoven_uvenness2.append(None)
-
 
     if nonwoven_uvenness_time == []:
         time_now = datetime.now()
@@ -138,7 +130,7 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AmbientTemperature")
-        |> group(columns: ["_measurement"])
+        |> filter(fn: (r) => r["Unit"] == "°C")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
@@ -160,7 +152,7 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
             if aggregate_time[selected_time] == "1h":
                 at_formatted_datetime = at_time_updated.strftime("%d-%m %H:%M")
             else:
-                at_formatted_datetime = at_time_updated.strftime("%H:%M:%S")
+                at_formatted_datetime = at_time_updated.strftime("%H:%M")
             ambient_temperature_time.append(at_formatted_datetime)
 
     if ambient_temperature != [] and ambient_temperature[-1] == 0:
@@ -186,142 +178,17 @@ def get_ambient_temperature(selected_time, influxdb_config, query_api):
 
     ambient_temperature = [x if x is not None else "NaN" for x in ambient_temperature]
 
-    return ambient_temperature, ambient_temperature_time
 
 
-############################################################################################################
-
-### Laboratory Values ###
-def get_laboratory_values(selected_time, influxdb_config, query_api):
-    query_time_modified = f"-{selected_time}"
-
-    area_weights = []
-    #aggregation_fns = ["min", "max", "mean"]
-    aggregation_fns = ["mean"]
-
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_area_weight = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_time_modified}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
-        area_weight = []
-        area_weight_time = []
-        
-
-        for table_area_weight in tables_area_weight:
-            #print(table_area_weight)
-            for record_area_weight in table_area_weight.records:
-                aw_value = record_area_weight.values["_value"]
-                aw_time = record_area_weight.values["_time"]
-                if aw_value == None: 
-                    aw_value = 0
-                area_weight.append(aw_value)
-                aw_updated_time = aw_time + timedelta(hours=2)
-                aw_formatted_datetime = aw_updated_time.strftime("%H:%M")
-                area_weight_time.append(aw_formatted_datetime)
-
-        #area_weights.append(area_weight)
-
-    if area_weight == []:
-        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            area_weight.append(0)
-
-    if area_weight_time == []:
-        time_now = datetime.now()
-        area_weight_time = []
-
-        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
-            time = time_now - timedelta(minutes=i)
-            if aggregate_time[selected_time] == "1h":
-                area_weight_time.append(time.strftime("%d-%m %H:%M"))
-            else:
-                area_weight_time.append(time.strftime("%H:%M"))
-
-
-    # tensile md
-    tensile_force_md_all = []
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_tables_tensile_md = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_time_modified}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
-        tensile_force_md = []
-  
-        
-
-        for table_tensile_force_md in tables_tensile_force_md:
-            #print(table_tensile_force_md)
-            for record_tensile_force_md in table_tensile_force_md.records:
-                tf_md_value = record_tensile_force_md.values["_value"]
-                if tf_md_value == None: 
-                    tf_md_value = 0
-                tensile_force_md.append(tf_md_value)
-
-
-        #tensile_force_md_all.append(tensile_force_md)
-
-
-    tensile_force_cd_all = []
-    for index, aggregation_fn in enumerate(aggregation_fns):
-        query_tables_tensile_cd = f'''
-        from(bucket: "LabValues")
-        |> range(start: {query_time_modified}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
-        |> yield(name: "min")
-        '''
-
-        # Execute the Flux query and store the result in tables
-        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
-        tensile_force_cd = []
-  
-        
-
-        for table_tensile_force_cd in tables_tensile_force_cd:
-            for record_tensile_force_cd in table_tensile_force_cd.records:
-                tf_cd_value = record_tensile_force_cd.values["_value"]
-                if tf_cd_value == None: 
-                    tf_cd_value = 0
-                tensile_force_cd.append(tf_cd_value)
-
-
-        #tensile_force_cd_all.append(tensile_force_cd)
-
-    return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
-
-
-############################################################################################################
-
-### Humidty Ennvironment ###
-def get_humidity_environment(selected_time, influxdb_config, query_api):
-
-    query_time_modified = f"-{selected_time}"
+    ######################################################################################
 
     query_humidity_environment = f"""from(bucket: "AgentValues")
-        |> range(start: {query_time_modified}, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
-        |> filter(fn: (r) => r["_field"] == "RelativeHumidityEnvironment")
-        |> group(columns: ["_measurement"])
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+    |> range(start: {query_time_modified}, stop: now())
+    |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+    |> filter(fn: (r) => r["_field"] == "RelativeHumidityEnvironment")
+    |> filter(fn: (r) => r["Unit"] == "%")
+    |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+    |> yield(name: "last")"""
 
     # Execute the Flux query and store the result in tables
     tables_humidity_environment = query_api.query(query_humidity_environment, org=influxdb_config.org)
@@ -371,7 +238,240 @@ def get_humidity_environment(selected_time, influxdb_config, query_api):
     
     humidity_environment = [x if x is not None else "NaN" for x in humidity_environment]
 
-    return humidity_environment, humidity_environment_time
+    return [ambient_temperature, humidity_environment], ambient_temperature_time
+
+
+############################################################################################################
+
+### Laboratory Values ###
+def get_laboratory_values(selected_time, influxdb_config, query_api):
+    query_time_modified = f"-{selected_time}"
+
+    #aggregation_fns = ["min", "max", "mean"]
+    aggregation_fns = ["mean"]
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_area_weight = f'''
+        from(bucket: "AgentValues")
+            |> range(start: {query_time_modified}, stop: now())
+            |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+            |> filter(fn: (r) => r["_field"] == "AreaWeightLane1" or r["_field"] == "AreaWeightLane2" or r["_field"] == "AreaWeightLane3")
+            |> group(columns: ["_measurement"])
+            |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
+            |> yield(name: "min")
+        '''
+
+        # Execute the Flux query and store the result in tables
+        tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
+        area_weight = []
+        area_weight_time = []
+        
+        for table_area_weight in tables_area_weight:
+            for record_area_weight in table_area_weight.records:
+                aw_value = record_area_weight.values["_value"]
+                aw_time = record_area_weight.values["_time"]
+                area_weight.append(aw_value)
+                aw_updated_time = aw_time + timedelta(hours=2)
+                aw_formatted_datetime = aw_updated_time.strftime("%H:%M")
+                area_weight_time.append(aw_formatted_datetime)
+
+
+    if area_weight != [] and area_weight[-1] == 0:
+        area_weight[-1] = area_weight[-2]
+    if area_weight != [] and area_weight[0] == 0:
+        area_weight[0] = area_weight[1]
+
+    if area_weight == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            area_weight.append("NaN")
+
+    if area_weight_time == []:
+        time_now = datetime.now()
+        area_weight_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                area_weight_time.append(time.strftime("%d-%m %H:%M"))
+            else:
+                area_weight_time.append(time.strftime("%H:%M"))
+
+    area_weight = [x if x is not None else "NaN" for x in area_weight]
+
+
+    ##################################### TENSILE MD ################################################
+
+    for index, aggregation_fn in enumerate(aggregation_fns): # enumarate macht kein sinn !
+        query_tables_tensile_md = f"""
+        from(bucket: "AgentValues")
+            |> range(start: {query_time_modified}, stop: now())
+            |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+            |> filter(fn: (r) => r["_field"] == "TensileStrengthMD_avg")
+            |> filter(fn: (r) => r["Unit"] == "N")
+            |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+            |> yield(name: "last")
+        """
+
+        # Execute the Flux query and store the result in tables
+        tables_tensile_force_md = query_api.query(query_tables_tensile_md, org=influxdb_config.org)
+        tensile_force_md = []
+  
+        for table_tensile_force_md in tables_tensile_force_md:
+            #print(table_tensile_force_md)
+            for record_tensile_force_md in table_tensile_force_md.records:
+                tf_md_value = record_tensile_force_md.values["_value"]
+                tensile_force_md.append(tf_md_value)
+
+    if tensile_force_md != [] and tensile_force_md[-1] == 0:
+        tensile_force_md[-1] = tensile_force_md[-2]
+    if tensile_force_md != [] and tensile_force_md[0] == 0:
+        tensile_force_md[0] = tensile_force_md[1]
+
+    if tensile_force_md == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            tensile_force_md.append("NaN")
+
+    tensile_force_md = [x if x is not None else "NaN" for x in tensile_force_md]
+
+
+
+    ##################################### TENSILE CD ################################################
+
+    for index, aggregation_fn in enumerate(aggregation_fns):
+        query_tables_tensile_cd = f"""
+        from(bucket: "AgentValues")
+            |> range(start: {query_time_modified}, stop: now())
+            |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+            |> filter(fn: (r) => r["_field"] == "TensileStrengthCD_avg")
+            |> filter(fn: (r) => r["Unit"] == "N")
+            |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+            |> yield(name: "last")
+        """
+
+        # Execute the Flux query and store the result in tables
+        tables_tensile_force_cd = query_api.query(query_tables_tensile_cd, org=influxdb_config.org)
+        tensile_force_cd = []
+
+        for table_tensile_force_cd in tables_tensile_force_cd:
+            for record_tensile_force_cd in table_tensile_force_cd.records:
+                tf_cd_value = record_tensile_force_cd.values["_value"]
+                tensile_force_cd.append(tf_cd_value)
+
+    if tensile_force_cd != [] and tensile_force_cd[-1] == 0:
+        tensile_force_cd[-1] = tensile_force_cd[-2]
+    if tensile_force_cd != [] and tensile_force_cd[0] == 0:
+        tensile_force_cd[0] = tensile_force_cd[1]
+
+    if tensile_force_cd == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            tensile_force_cd.append("NaN")
+
+    tensile_force_cd = [x if x is not None else "NaN" for x in tensile_force_cd]
+
+
+        #tensile_force_cd_all.append(tensile_force_cd)
+
+    return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
+
+
+############################################################################################################
+
+### Humidty Ennvironment ###
+def get_tear_length(selected_time, influxdb_config, query_api):
+
+    query_time_modified = f"-{selected_time}"
+
+    query_tear_length_md = f"""from(bucket: "LabValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TearLength_MD1" or r["_field"] == "TearLength_MD2" or r["_field"] == "TearLength_MD3" or r["_field"] == "TearLength_MD4" or r["_field"] == "TearLength_MD5")
+        |> filter(fn: (r) => r["Unit"] == "%")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> yield(name: "mean")
+    """
+
+    # Execute the Flux query and store the result in tables
+    tables_tear_length_md = query_api.query(query_tear_length_md, org=influxdb_config.org)
+    tear_length_md = []
+    tear_length_time = []
+
+    print("hi")
+
+    for table_tear_length_md in tables_tear_length_md:
+        for record_tear_length_md in table_tear_length_md.records:
+            tl_md_value = record_tear_length_md.values["_value"]
+            tl_time = record_tear_length_md.values["_time"]
+
+            tear_length_md.append(tl_md_value)
+
+            tl_time_updated = tl_time + timedelta(hours=2)
+            if aggregate_time[selected_time] == "1h":
+                tl_formatted_datetime = tl_time_updated.strftime("%d-%m %H:%M")
+            else:
+                tl_formatted_datetime = tl_time_updated.strftime("%H:%M")
+            tear_length_time.append(tl_formatted_datetime)
+
+    if tear_length_md != [] and tear_length_md[-1] == 0:
+        tear_length_md[-1] = tear_length_md[-2]
+    if tear_length_md != [] and tear_length_md[0] == 0:
+        tear_length_md[0] = tear_length_md[1]
+
+    if tear_length_md == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            tear_length_md.append("NaN")
+
+    if tear_length_time == []:
+        time_now = datetime.now()
+        tear_length_time = []
+
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            time = time_now - timedelta(minutes=i)
+            if aggregate_time[selected_time] == "1h":
+                tear_length_time.append(time.strftime("%d-%m %H:%M"))
+            else:
+                tear_length_time.append(time.strftime("%H:%M"))
+    
+    tear_length_md = [x if x is not None else "NaN" for x in tear_length_md]
+
+
+    ################### CD #########################################
+
+    query_tensile_strength = f"""from(bucket: "LabValues")
+        |> range(start: {query_time_modified}, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TearLength_CD1" or r["_field"] == "TearLength_CD2" or r["_field"] == "TearLength_CD3" or r["_field"] == "TearLength_CD4" or r["_field"] == "TearLength_CD5")
+        |> filter(fn: (r) => r["Unit"] == "%")
+        |> group(columns: ["_measurement"])
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> yield(name: "mean")
+        """
+
+    # Execute the Flux query and store the result in tables
+    tables_tear_length_cd = query_api.query(query_tensile_strength, org=influxdb_config.org)
+    tear_length_cd = []
+
+    for table_tear_length_cd in tables_tear_length_cd:
+        for record_tensile_strength_cd in table_tear_length_cd.records:
+            tl_cd_value = record_tensile_strength_cd.values["_value"]
+
+            tear_length_cd.append(tl_cd_value)
+
+    if tear_length_cd != [] and tear_length_cd[-1] == 0:
+        tear_length_cd[-1] = tear_length_cd[-2]
+    if tear_length_cd != [] and tear_length_cd[0] == 0:
+        tear_length_cd[0] = tear_length_cd[1]
+
+
+    if tear_length_cd == []:
+        for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+            tear_length_cd.append("NaN")
+
+    tear_length_cd = [x if x is not None else "NaN" for x in tear_length_cd]
+
+
+    return [tear_length_md, tear_length_cd], tear_length_time
+
 
 ############################################################################################################
 
@@ -384,36 +484,34 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
+        |> filter(fn: (r) => r["Unit"] == "g/m^2" or r["Unit"] == "m/min")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
     tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
     card_delivery_weight_per_area = []
     card_delivery_speed = []
-    test = []
-    counter = 0
+
 
     for table_material_costs in tables_material_costs:
 
         print(tables_material_costs)
-        # for record_material_costs in table_material_costs.records:
-        #     mc_value = record_material_costs.values["_value"]
-        #     mc_field = record_material_costs.values["_field"]
+        for record_material_costs in table_material_costs.records:
+            mc_value = record_material_costs.values["_value"]
+            mc_field = record_material_costs.values["_field"]
 
-        #     print(mc_field, mc_value, counter)
-        #     if mc_value == None: 
-        #         mc_value = 0.0
-        #     test.append(mc_value)
-        #     if mc_field == "CardDeliveryWeightPerArea":
-        #         card_delivery_weight_per_area.append(mc_value)
-        #     elif mc_field == "CardDeliverySpeed":
-        #         card_delivery_speed.append(mc_value)
-        #     counter += 1
+
+            if mc_value == None: 
+                mc_value = 0.0
+   
+            if mc_field == "CardDeliveryWeightPerArea":
+                card_delivery_weight_per_area.append(mc_value)
+            elif mc_field == "CardDeliverySpeed":
+                card_delivery_speed.append(mc_value)
+
 
                 
 
-    ####################################################
-    #print("test: ", len(test))
     print("cardD: ", len(card_delivery_speed))
     print("card: ", len(card_delivery_weight_per_area))
 
@@ -440,7 +538,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
-        |> group(columns: ["_measurement"])
+        |> filter(fn: (r) => r["Unit"] == "kW")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
@@ -495,6 +593,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> filter(fn: (r) => r["Unit"] == "m" or r["Unit"] == "m/min")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
@@ -555,7 +654,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
-        |> group(columns: ["_measurement"])
+        |> filter(fn: (r) => r["Unit"] == "kW")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
         |> yield(name: "last")"""
 
@@ -626,8 +725,8 @@ def handle_time_range(request):
             query_data, query_time = get_ambient_temperature(selected_time, influxdb_config, query_api)
         elif selected_header == "LaboratoryValues":
             query_data, query_time = get_laboratory_values(selected_time, influxdb_config, query_api)
-        elif selected_header == "HumidityEnvironment":
-            query_data, query_time = get_humidity_environment(selected_time, influxdb_config, query_api)
+        elif selected_header == "TearLength":
+            query_data, query_time = get_tear_length(selected_time, influxdb_config, query_api)
         elif selected_header == "Economics":
             query_data, query_time = get_economics(selected_time, influxdb_config, query_api)
         elif selected_header == "LinePowerConsumption":
@@ -668,7 +767,7 @@ def index(request):
     laboratory_values, laboratory_values_time = get_laboratory_values(get_hour, influxdb_config, query_api)
 
     ### Humidty Environment ###
-    humidity_environment, humidity_environment_time = get_humidity_environment(get_hour, influxdb_config, query_api)
+    tear_length, tear_length_time = get_tear_length(get_hour, influxdb_config, query_api)
 
     ### Economics ###
     economics, economics_time = get_economics(get_hour, influxdb_config, query_api)
@@ -682,14 +781,16 @@ def index(request):
         'nonwoven_uvenness_time': nonwoven_uvenness_time,
         'card_floor_evenness': card_floor_evenness,
         'card_floor_evenness_time': card_floor_evenness_time,
-        'ambient_temperature': ambient_temperature,
+        'ambient_temperature': ambient_temperature[0],
+        'humidity_environment': ambient_temperature[1],
         'ambient_temperature_time': ambient_temperature_time,
         'laboratory_values_time': laboratory_values_time,   
-        'area_weights': laboratory_values[0], 
-        'tensile_force_md_all': laboratory_values[1], 
-        'tensile_force_cd_all': laboratory_values[2],
-        'humidity_environment': humidity_environment,
-        'humidity_environment_time': humidity_environment_time,
+        'area_weight': laboratory_values[0], 
+        'tensile_force_md': laboratory_values[1], 
+        'tensile_force_cd': laboratory_values[2],
+        'tear_length_md': tear_length[0],
+        'tear_length_cd': tear_length[1],
+        'tear_length_time': tear_length_time,
         'energy_costs_time': economics_time,
         'energy_costs': economics[0],
         'material_costs': economics[1],
@@ -718,7 +819,7 @@ def update_nonwoven_unevenness_chart(request):
     query_performance = """from(bucket: "AgentValues")
     |> range(start: -1m, stop: now())
     |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "NonwovenUnevenness" and r["Iteration"] == "-1")
-    |> group(columns: ["_field"])
+    |> filter(fn: (r) => r["Unit"] == "-")
     |> last()"""
 
     tables = query_api.query(query_performance, org=influxdb_config.org)
@@ -753,7 +854,7 @@ def update_card_floor_evenness_chart(request):
     query_performance = """from(bucket: "AgentValues")
     |> range(start: -1m, stop: now())
     |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "NonwovenUnevenness" and r["Iteration"] == "-1")
-    |> group(columns: ["_field"])
+    |> filter(fn: (r) => r["Unit"] == "-")
     |> last()"""
 
     tables = query_api.query(query_performance, org=influxdb_config.org)
@@ -769,7 +870,7 @@ def update_card_floor_evenness_chart(request):
                 time = record.values["_time"]
                 time += timedelta(hours=2)
                 updated_values_dict["NonwovenUnevenness"] = value
-                updated_values_dict["CardFloorEvennessTimeTime"] = time
+                updated_values_dict["CardFloorEvennessTime"] = time
 
                 scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
                 card_floor_evenness = scaled_signal * floor_quality_weight
@@ -792,7 +893,7 @@ def update_ambient_temperature_chart(request):
     query_energy = """from(bucket: "AgentValues")
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "AmbientTemperature" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
+        |> filter(fn: (r) => r["Unit"] == "°C")
         |> last()"""
 
     tables = query_api.query(query_energy, org=influxdb_config.org)
@@ -824,44 +925,71 @@ def update_laboratory_values_chart(request):
     query_api = client_influxdb.query_api()
 
     ### Updating AreaWeight ###
-    query_area = """from(bucket: "LabValues")
+    query_area = """from(bucket: "AgentValues")
         |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "LabValues")
-        |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3" or r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5" or r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
-        |> group(columns: ["_field"])
-        |> last()"""
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "AreaWeightLane1" or r["_field"] == "AreaWeightLane2" or r["_field"] == "AreaWeightLane3")
+        |> filter(fn: (r) => r["Unit"] == "g/m^2")
+        |> last()
+        |> mean(column: "_value")
+    """
     
     tables = query_api.query(query_area, org=influxdb_config.org)
-    lab_values = []
-    
+  
     if tables == []:
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        lab_values.append(0)
-        
+        now = datetime.now()
+        now += timedelta(hours=2)
+        updated_values_dict["AreaWeightTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                lab_values.append(value)
+                time = record.values["_time"]
+                time += timedelta(hours=2)
+                updated_values_dict["AreaWeight"] = value
+                updated_values_dict["AreaWeightTime"] = time
 
-    updated_values_dict["AreaWeightMin"] = min(lab_values[:3])
-    updated_values_dict["AreaWeightMed"] = median(lab_values[:3])
-    updated_values_dict["AreaWeightMax"] = max(lab_values[:3])
 
-    updated_values_dict["TensileStrengthMinCD"] = min(lab_values[3:6])
-    updated_values_dict["TensileStrengthMedCD"] = median(lab_values[3:6])
-    updated_values_dict["TensileStrengthMaxCD"] = max(lab_values[3:6])
+    ### Tensile MD ###
+    query_area_md = """
+    from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "TensileStrengthMD_avg")
+        |> filter(fn: (r) => r["Unit"] == "N")
+        |> last()
+    """
 
-    updated_values_dict["TensileStrengthMinMD"] = min(lab_values[6:])
-    updated_values_dict["TensileStrengthMedMD"] = median(lab_values[6:])
-    updated_values_dict["TensileStrengthMaxMD"] = max(lab_values[6:])
+    tables = query_api.query(query_area_md, org=influxdb_config.org)
+  
+    if tables == []:
+        pass
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                updated_values_dict["TensileMD"] = value
+
+
+    ### Tensile CD ###
+    query_area_cd = """
+    from(bucket: "AgentValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
+        |> filter(fn: (r) => r["_field"] == "TensileStrengthCD_avg")
+        |> filter(fn: (r) => r["Unit"] == "N")
+        |> last()
+    """
+
+    tables = query_api.query(query_area_cd, org=influxdb_config.org)
+  
+    if tables == []:
+        pass
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                updated_values_dict["TensileCD"] = value
 
     return JsonResponse(updated_values_dict, safe=False)
 
@@ -869,34 +997,59 @@ def update_laboratory_values_chart(request):
 ############################################################################################################
 
 # function for updating humidty environment
-def update_humidity_environment_chart(request):
+def update_tear_length_chart(request):
     updated_values_dict = {}
   
     influxdb_config = InfluxDBConfig()
     client_influxdb = InfluxDBClient(url=influxdb_config.url, token=influxdb_config.token, org=influxdb_config.org)
     query_api = client_influxdb.query_api()
 
-    query_energy = """from(bucket: "AgentValues")
+    query_tear_length_md = """from(bucket: "LabValues")
         |> range(start: -1m, stop: now())
-        |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "RelativeHumidityEnvironment" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
-        |> last()"""
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TearLength_MD1" and r["_field"] == "TearLength_MD2" and r["_field"] == "TearLength_MD3" and r["_field"] == "TearLength_MD4" and r["_field"] == "TearLength_MD5")
+        |> filter(fn: (r) => r["Unit"] == "%")
+        |> last()
+        |> mean(column: "_value")
+    """
 
-    tables = query_api.query(query_energy, org=influxdb_config.org)
+    tables = query_api.query(query_tear_length_md, org=influxdb_config.org)
 
     if tables == []:
         now = datetime.now()
         now += timedelta(hours=2)
-        updated_values_dict["HumidityEnvironmentTime"] = now
+        updated_values_dict["TearLengthTime"] = now
     else:
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
                 time = record.values["_time"]
                 time += timedelta(hours=2)
-                updated_values_dict["HumidityEnvironment"] = value
-                updated_values_dict["HumidityEnvironmentTime"] = time
+                updated_values_dict["TearLengthMD"] = value
+                updated_values_dict["TearLengthTime"] = time
 
+
+    ########################################################################
+
+    query_tear_length_cd = """from(bucket: "LabValues")
+        |> range(start: -1m, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "LabValues")
+        |> filter(fn: (r) => r["_field"] == "TearLength_MD1" and r["_field"] == "TearLength_MD2" and r["_field"] == "TearLength_MD3" and r["_field"] == "TearLength_MD4" and r["_field"] == "TearLength_MD5")
+        |> filter(fn: (r) => r["Unit"] == "%")
+        |> last()
+        |> mean(column: "_value")
+    """
+
+    tables = query_api.query(query_tear_length_cd, org=influxdb_config.org)
+
+    if tables == []:
+        pass
+    else:
+        for table in tables:
+            for record in table.records:
+                value = record.values["_value"]
+                updated_values_dict["TearLengthCD"] = value
+ 
 
     return JsonResponse(updated_values_dict, safe=False)
 
@@ -915,7 +1068,7 @@ def update_economics_chart(request):
     query_energy = """from(bucket: "AgentValues")
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
+        |> filter(fn: (r) => r["Unit"] == "kW")
         |> last()"""
 
     tables = query_api.query(query_energy, org=influxdb_config.org)
@@ -929,8 +1082,11 @@ def update_economics_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
+                time = record.values["_time"]
+                time += timedelta(hours=2)
                 ec_value = value * 0.28
                 updated_values_dict["EnergyCosts"] = ec_value
+                updated_values_dict["EconomicsTime"] = time
 
 
     ### updating material costs
@@ -938,7 +1094,7 @@ def update_economics_chart(request):
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
-        |> group(columns: ["_field"])
+        |> filter(fn: (r) => r["Unit"] == "g/m^2" or r["Unit"] == "m/min")
         |> last()"""
 
     tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
@@ -969,6 +1125,7 @@ def update_economics_chart(request):
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
+        |> filter(fn: (r) => r["Unit"] == "m" or r["Unit"] == "m/min")
         |> last()"""
 
     tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
@@ -1011,7 +1168,7 @@ def update_line_power_consumption_chart(request):
     query_energy = """from(bucket: "AgentValues")
         |> range(start: -1m, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["_field"] == "LinePowerConsumption" and r["Iteration"] == "-1")
-        |> group(columns: ["_field"])
+        |> filter(fn: (r) => r["Unit"] == "kW")
         |> last()"""
 
     tables = query_api.query(query_energy, org=influxdb_config.org)
