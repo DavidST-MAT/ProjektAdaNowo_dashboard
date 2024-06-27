@@ -343,6 +343,7 @@ const options_nonwoven_uvenness = {
           }
         } 
       },
+      beginAtZero: false,
       suggestedMin: 0,
       suggestedMax: 0,
       title: {
@@ -618,7 +619,7 @@ const options_laboratory_value = {
       drawBorder: false,
     },
     y: {
-      position: 'right',
+      position: 'left',
       beginAtZero: true,
       type: 'linear',
       grid: {
@@ -641,7 +642,7 @@ const options_laboratory_value = {
       },
     },
     y2: {
-      position: 'left',
+      position: 'right',
       beginAtZero: true,
       type: 'linear',
       grid: {
@@ -677,7 +678,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(0, 0, 255, 1)',
-      label: 'Area Weight Median',
+      label: 'Area Weight Median [g/m^2]',
       tension: 0.25,
       showLine: false 
     },
@@ -687,7 +688,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 180, 100, 1)', 
-      label: 'Tensile Strength MD Median',
+      label: 'Tensile Strength MD Median [N]',
       tension: 0.25,
       yAxisID: 'y2',
       showLine: false 
@@ -698,7 +699,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 128, 128, 1)', 
-      label: 'Tensile Strength CD Median',
+      label: 'Tensile Strength CD Median [N]',
       tension: 0.25,
       yAxisID: 'y2',
       showLine: false
@@ -715,11 +716,6 @@ var laboratory_values_chart = new Chart(ctx_live, {
 var tear_length_md = {{ tear_length_md|safe }}
 var tear_length_cd = {{ tear_length_cd|safe }}
 var tear_length_time = {{ tear_length_time|safe }}
-
-console.log(tear_length_md)
-console.log(tear_length_cd)
-console.log(tear_length_time)
-
 
 const options_tear_length = {
   plugins: {
@@ -788,7 +784,8 @@ var tear_length_chart = new Chart(ctx_live, {
       radius: 2,
       borderColor:'rgba(255, 99, 132, 1)',
       label: 'Tear Length MD median',
-      tension: 0.25
+      tension: 0.25,
+      showLine: false
     },
     {
       data: tear_length_cd,
@@ -796,7 +793,8 @@ var tear_length_chart = new Chart(ctx_live, {
       radius: 2,
       borderColor:'rgba(55, 121, 132, 1)',
       label: 'Tear Length CD median',
-      tension: 0.25
+      tension: 0.25,
+      showLine: false
     },
     ]
   },
@@ -1199,7 +1197,8 @@ function updating_tear_length(timeOut) {
     url: "/Charts/update_tear_length_chart",
     success: function(data) {
   
-      var _tear_length=data["TearLength"];
+      var _tear_length_md=data["TearLengthMD"];
+      var _tear_length_cd=data["TearLengthCD"];
       var _tear_length_time=data["TearLengthTime"];
       var date = new Date(_tear_length_time);
   
@@ -1217,9 +1216,11 @@ function updating_tear_length(timeOut) {
       }
 
       tear_length_chart.data.labels.push(time);
-      tear_length_chart.data.datasets[0].data.push(_tear_length);
+      tear_length_chart.data.datasets[0].data.push(_tear_length_md);
+      tear_length_chart.data.datasets[1].data.push(_tear_length_cd);
       tear_length_chart.data.labels.shift();
       tear_length_chart.data.datasets[0].data.shift();
+      tear_length_chart.data.datasets[1].data.shift();
       tear_length_chart.update('none');
     }
   });
