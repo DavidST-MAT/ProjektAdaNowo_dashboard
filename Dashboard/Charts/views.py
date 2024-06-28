@@ -58,13 +58,18 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     query_time_modified = f"-{selected_time}"
 
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
+
     query_nonwoven_uvenness = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
         |> filter(fn: (r) => r["Unit"] == "-")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-"""
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     # Execute the Flux query and store the result in tables
     tables_nonwoven_uvenness = query_api.query(query_nonwoven_uvenness, org=influxdb_config.org)
@@ -79,17 +84,23 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             nonwoven_uvenness.append(nu_value)
             nonwoven_uvenness2.append(nu_value)
 
-            nu_time_updated = nu_time + timedelta(hours=2)
-            if aggregate_time[selected_time] == "1h":
-                nu_formatted_datetime = nu_time_updated.strftime("%d-%m %H:%M")
-            else:
-                nu_formatted_datetime = nu_time_updated.strftime("%H:%M")
-            nonwoven_uvenness_time.append(nu_formatted_datetime)
+            nu_time_updated = nu_time + timedelta(hours=2) - timedelta(minutes=1)
+
+            nonwoven_uvenness_time.append(nu_time_updated.strftime(time_string))
+    
+    
+    nu_time_updated = nu_time + timedelta(hours=2)
+    nonwoven_uvenness_time[-1] = nu_time_updated.strftime("%H:%M")
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
     if nonwoven_uvenness != [] and nonwoven_uvenness[0] == None:
         nonwoven_uvenness[0] = nonwoven_uvenness[1]
+
+    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[-1] == None:
+        nonwoven_uvenness2[-1] = nonwoven_uvenness2[-2]
+    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[0] == None:
+        nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
 
     if nonwoven_uvenness == []:
         for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -98,23 +109,25 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if nonwoven_uvenness_time == []:
         time_now = datetime.now()
-        nonwoven_uvenness_time = []
 
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            time = time_now - timedelta(minutes=i)
-            if aggregate_time[selected_time] == "1h":
+        if aggregate_time[selected_time] == "1h":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(hours=i)
                 nonwoven_uvenness_time.append(time.strftime("%d-%m %H:%M"))
-            else:
+        else:
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(minutes=i)
                 nonwoven_uvenness_time.append(time.strftime("%H:%M"))
 
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
-
+        print(nonwoven_uvenness, nonwoven_uvenness_time)
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
         card_floor_evenness = [x * floor_quality_weight if x != "NaN" else "NaN" for x in scaled_signal]
+        print(len(card_floor_evenness), len(nonwoven_uvenness_time))
         return card_floor_evenness, nonwoven_uvenness_time
 
 
@@ -260,7 +273,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
     if area_weight == []:
         for i in range(time_select_empty_table[selected_time], -1, -1):
             area_weight.append("NaN")
-    print(len(area_weight))
+   
 
     if area_weight_time == []:
         time_now = datetime.now()
@@ -476,7 +489,7 @@ def get_economics(selected_time, influxdb_config, query_api):
 
     for table_material_costs in tables_material_costs:
 
-        print(tables_material_costs)
+      
         for record_material_costs in table_material_costs.records:
             mc_value = record_material_costs.values["_value"]
             mc_field = record_material_costs.values["_field"]
@@ -687,8 +700,9 @@ def handle_time_range(request):
         selected_time = request.GET.get("timeRange")
         selected_header = request.GET.get("header")
 
-        if selected_header == "NonwovenUnevennes": 
-            query_data, query_time = get_nonwoven_unevenness("NonwovenUnevennes",selected_time, influxdb_config, query_api)
+        if selected_header == "NonwovenUnevennes":
+            query_data, query_time = get_nonwoven_unevenness("NonwovenUnevennes", selected_time, influxdb_config, query_api)
+            print(query_time) 
         elif selected_header == "CardFloorEvenness":
             query_data, query_time = get_nonwoven_unevenness("CardFloorEvenness", selected_time, influxdb_config, query_api)
         elif selected_header == "EnvironmentalValues":

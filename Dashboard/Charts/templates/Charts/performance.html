@@ -219,16 +219,22 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
       if (data["header"] === "NonwovenUnevennes") {
         nonwoven_uvenness = response["timeRange"][0]
         nonwoven_uvenness_time = response["timeRange"][1]
-        nonwoven_unevenness_chart.data.labels = nonwoven_uvenness_time
-        nonwoven_unevenness_chart.data.datasets[0].data = nonwoven_uvenness;
-        nonwoven_unevenness_chart.update();
+
+        nonwoven_unevenness_chart.data.labels = response["timeRange"][1]
+        nonwoven_unevenness_chart.data.datasets[0].data = response["timeRange"][0]
+
+        nonwoven_unevenness_chart.update()
+    
+        nonwoven_unevenness_chart.update()
+        nonwoven_unevenness_chart.render()
+        console.log(nonwoven_unevenness_chart.data.datasets[0].data.length)
       }
       else if (data["header"] === "CardFloorEvenness") {
         card_floor_evenness = response["timeRange"][0]
         card_floor_evenness_time = response["timeRange"][1]                
         card_floor_evenness_chart.data.labels = card_floor_evenness_time
         card_floor_evenness_chart.data.datasets[0].data = card_floor_evenness;
-        card_floor_evenness_chart.update();
+        card_floor_evenness_chart.update('none');
       }
       else if (data["header"] === "EnvironmentalValues") {
         ambient_temperature = response["timeRange"][0][0]
@@ -239,7 +245,7 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         environmental_values_chart.data.datasets[0].data = ambient_temperature;
         environmental_values_chart.data.datasets[1].data = humidity_environment;
 
-        environmental_values_chart.update();
+        environmental_values_chart.update('none');
       }
       else if (data["header"] === "LaboratoryValues") {
         area_weights = response["timeRange"][0][0]
@@ -256,7 +262,7 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         //laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
         //laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
         //laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
-        laboratory_values_chart.update();
+        laboratory_values_chart.update('none');
       }
       else if (data["header"] === "TearLength") {
         tear_length_md = response["timeRange"][0][0]
@@ -265,7 +271,7 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         tear_length_chart.data.labels = tear_length_time
         tear_length_chart.data.datasets[0].data = tear_length_md;
         tear_length_chart.data.datasets[1].data = tear_length_cd;
-        tear_length_chart.update();
+        tear_length_chart.update('none');
       }
       else if (data["header"] === "Economics") {
         economics = response["timeRange"][0][0]
@@ -278,14 +284,14 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         economics_chart.data.datasets[1].data = material_costs;
         economics_chart.data.datasets[2].data = contribution_margin;
         economics_chart.data.datasets[3].data = production_income;
-        economics_chart.update();
+        economics_chart.update('none');
       }
       else if (data["header"] === "LinePowerConsumption") {
         line_power_consumption = response["timeRange"][0]
         line_power_consumption_time = response["timeRange"][1]                
         line_power_consumption_chart.data.labels = line_power_consumption_time
         line_power_consumption_chart.data.datasets[0].data = line_power_consumption;
-        line_power_consumption_chart.update();
+        line_power_consumption_chart.update('none');
       }
     },
     error: function(xhr, status, error) {
@@ -301,6 +307,8 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
 var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
 var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
 
+console.log(nonwoven_uvenness)
+console.log(nonwoven_uvenness_time)
 const options_nonwoven_uvenness = {
   plugins: {
     zoom: {
