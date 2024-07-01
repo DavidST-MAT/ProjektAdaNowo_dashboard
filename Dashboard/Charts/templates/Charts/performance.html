@@ -686,7 +686,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(0, 0, 255, 1)',
-      label: 'Area Weight Median [g/m^2]',
+      label: 'Area Weight Mean [g/m^2]',
       tension: 0.25,
       showLine: false 
     },
@@ -696,7 +696,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 180, 100, 1)', 
-      label: 'Tensile Strength MD Median [N]',
+      label: 'Tensile Strength MD Mean [N]',
       tension: 0.25,
       yAxisID: 'y2',
       showLine: false 
@@ -707,7 +707,7 @@ var laboratory_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor: 'rgba(255, 128, 128, 1)', 
-      label: 'Tensile Strength CD Median [N]',
+      label: 'Tensile Strength CD Mean [N]',
       tension: 0.25,
       yAxisID: 'y2',
       showLine: false
@@ -791,7 +791,7 @@ var tear_length_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor:'rgba(255, 99, 132, 1)',
-      label: 'Tear Length MD median',
+      label: 'Tear Length MD Mean',
       tension: 0.25,
       showLine: false
     },
@@ -800,7 +800,7 @@ var tear_length_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 2,
       borderColor:'rgba(55, 121, 132, 1)',
-      label: 'Tear Length CD median',
+      label: 'Tear Length CD Mean',
       tension: 0.25,
       showLine: false
     },
@@ -1142,15 +1142,9 @@ function updating_laboratory_values(timeOut) {
     success: function(data) {
 
       var _area_weight_time=data["AreaWeightTime"];
-      //var _area_weight_min=data["AreaWeightMin"];
       var _area_weight=data["AreaWeight"];
-      //var _area_weight_max=data["AreaWeightMax"];
-      //var _tensile_strength_min_cd = data["TensileStrengthMinCD"]
       var _tensile_strength_med_md = data["TensileMD"]
-      //var _tensile_strength_max_cd = data["TensileStrengthMaxCD"]
-      //var _tensile_strength_min_md = data["TensileStrengthMinMD"]
       var _tensile_strength_med_cd = data["TensileCD"]
-      //var _tensile_strength_max_md = data["TensileStrengthMaxMD"]
 
       var date = new Date(_area_weight_time);
 
@@ -1168,25 +1162,15 @@ function updating_laboratory_values(timeOut) {
       }
 
       laboratory_values_chart.data.labels.push(time);
-      //laboratory_values_chart.data.datasets[0].data.push(_area_weight_min);
+
       laboratory_values_chart.data.datasets[0].data.push(_area_weight);
-      //laboratory_values_chart.data.datasets[2].data.push(_area_weight_max);
-      //laboratory_values_chart.data.datasets[3].data.push(_tensile_strength_min_cd);
       laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_md);
-      //laboratory_values_chart.data.datasets[5].data.push(_tensile_strength_max_cd);
-      //laboratory_values_chart.data.datasets[6].data.push(_tensile_strength_min_md);
       laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_cd);
-      //laboratory_values_chart.data.datasets[8].data.push(_tensile_strength_max_md);
+ 
       laboratory_values_chart.data.labels.shift();
       laboratory_values_chart.data.datasets[0].data.shift();
       laboratory_values_chart.data.datasets[1].data.shift();
       laboratory_values_chart.data.datasets[2].data.shift();
-      //laboratory_values_chart.data.datasets[3].data.shift();
-      //laboratory_values_chart.data.datasets[4].data.shift();
-      //laboratory_values_chart.data.datasets[5].data.shift();
-      //laboratory_values_chart.data.datasets[6].data.shift();
-      //laboratory_values_chart.data.datasets[7].data.shift();
-      //laboratory_values_chart.data.datasets[8].data.shift();
       laboratory_values_chart.update('none');
     }
   });
@@ -1226,6 +1210,7 @@ function updating_tear_length(timeOut) {
       tear_length_chart.data.labels.push(time);
       tear_length_chart.data.datasets[0].data.push(_tear_length_md);
       tear_length_chart.data.datasets[1].data.push(_tear_length_cd);
+
       tear_length_chart.data.labels.shift();
       tear_length_chart.data.datasets[0].data.shift();
       tear_length_chart.data.datasets[1].data.shift();
@@ -1375,7 +1360,9 @@ document.getElementById("dropdownNonwoven").addEventListener("change", function(
     delayNonwoven = 3600000; 
   }
   clearTimeout(timeoutIdNonwoven);
-  updating_nonenwoven_unevenness(delayNonwoven);
+  timeoutIdNonwoven = setTimeout(function() {
+    updating_nonenwoven_unevenness(delayNonwoven); 
+  }, delayNonwoven);
 });
 
 
@@ -1395,7 +1382,9 @@ document.getElementById("dropdownCardFloorEveness").addEventListener("change", f
   }
 
   clearTimeout(timeoutIdCardFloor);
-  updating_card_floor_evenness(delayCardFloor);
+  timeoutIdCardFloor = setTimeout(function() {
+    updating_card_floor_evenness(delayCardFloor); 
+  }, delayCardFloor);
 });
 
 
@@ -1414,7 +1403,9 @@ document.getElementById("dropdownEnvironmentalValues").addEventListener("change"
     delayEnvironmentalValues = 3600000;
   }
   clearTimeout(timeoutIdEnvironmentalValues);
-  updating_environmental_values(delayEnvironmentalValues);
+  timeoutIdEnvironmentalValues = setTimeout(function() {
+    updating_environmental_values(delayEnvironmentalValues); 
+  }, delayEnvironmentalValues);
 });
 
 
@@ -1433,7 +1424,9 @@ document.getElementById("dropdownLaboratoryValues").addEventListener("change", f
     delayLaboratory = 3600000;
   }
   clearTimeout(timeoutIdLaboratory);
-  updating_laboratory_values(delayLaboratory);
+  timeoutIdLaboratory = setTimeout(function() {
+    updating_laboratory_values(delayLaboratory); 
+  }, delayLaboratory)
 });
 
 
@@ -1452,7 +1445,9 @@ document.getElementById("dropdownTearLength").addEventListener("change", functio
     delayTear = 3600000;
   }
   clearTimeout(timeoutIdTear);
-  updating_tear_length(delayTear);
+  timeoutIdTear = setTimeout(function() {
+    updating_tear_length(delayTear); 
+  }, delayTear)
 });
 
 
@@ -1508,7 +1503,7 @@ function resetZoomChart(chartZoom) {
   else if (chartZoom === "LaboratoryValues") {
     laboratory_values_chart.resetZoom();
   }
-  else if (chartZoom === "TensileStrength") {
+  else if (chartZoom === "TearLength") {
     tear_length_chart.resetZoom();
   }
   else if (chartZoom === "Economics") {

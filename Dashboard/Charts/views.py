@@ -8,6 +8,7 @@ import datetime
 import pandas as pd
 from datetime import datetime, timedelta
 from statistics import median
+from statistics import mean
 import os
 
 
@@ -85,12 +86,10 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             nonwoven_uvenness2.append(nu_value)
 
             nu_time_updated = nu_time + timedelta(hours=2) - timedelta(minutes=1)
-
             nonwoven_uvenness_time.append(nu_time_updated.strftime(time_string))
     
-    
-    nu_time_updated = nu_time + timedelta(hours=2)
-    nonwoven_uvenness_time[-1] = nu_time_updated.strftime("%H:%M")
+        nu_time_updated = nu_time + timedelta(hours=2)
+        nonwoven_uvenness_time[-1] = nu_time_updated.strftime(time_string)
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
@@ -138,58 +137,57 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
 
     query_time_modified = f"-{selected_time}"
 
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
+
     query_ambient_temperature = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AmbientTemperature")
         |> filter(fn: (r) => r["Unit"] == "°C")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     tables_ambient_temperature = query_api.query(query_ambient_temperature, org=influxdb_config.org)
     ambient_temperature = []
     environmental_values_time = []
 
-
     for table_ambient_temperature in tables_ambient_temperature:
         for record_ambient_temperature in table_ambient_temperature.records:
             at_value = record_ambient_temperature.values["_value"]
             at_time = record_ambient_temperature.values["_time"]
-
-            # if at_value == None: 
-            #     at_value = 0.0
-
             ambient_temperature.append(at_value)
-            at_time_updated = at_time + timedelta(hours=2)
-            if aggregate_time[selected_time] == "1h":
-                at_formatted_datetime = at_time_updated.strftime("%d-%m %H:%M")
-            else:
-                at_formatted_datetime = at_time_updated.strftime("%H:%M")
-            environmental_values_time.append(at_formatted_datetime)
 
-    if ambient_temperature != [] and ambient_temperature[-1] == 0:
+            at_time_updated = at_time + timedelta(hours=2) - timedelta(minutes=1)
+            environmental_values_time.append(at_time_updated.strftime(time_string))
+
+        at_time_updated = at_time + timedelta(hours=2)
+        environmental_values_time[-1] = at_time_updated.strftime(time_string)
+
+    if ambient_temperature != [] and ambient_temperature[-1] == None:
         ambient_temperature[-1] = ambient_temperature[-2]
-    if ambient_temperature != [] and ambient_temperature[0] == 0:
+    if ambient_temperature != [] and ambient_temperature[0] == None:
         ambient_temperature[0] = ambient_temperature[1]
 
     if ambient_temperature == []:
         for i in range(time_select_empty_table[selected_time], -1, -1):
             ambient_temperature.append("NaN")
 
-
     if environmental_values_time == []:
         time_now = datetime.now()
-        environmental_values_time = [] # ?
 
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            time = time_now - timedelta(minutes=i)
-            if aggregate_time[selected_time] == "1h":
-                environmental_values_time.append(time.strftime("%d-%m %H:%M"))
-            else:
-                environmental_values_time.append(time.strftime("%H:%M"))
+        if aggregate_time[selected_time] == "1h":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(hours=i)
+                environmental_values_time.append(time.strftime(time_string))
+        else:
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(minutes=i)
+                environmental_values_time.append(time.strftime(time_string))
 
     ambient_temperature = [x if x is not None else "NaN" for x in ambient_temperature]
-
 
 
     ######################################################################################
@@ -199,8 +197,8 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
     |> filter(fn: (r) => r["_field"] == "RelativeHumidityEnvironment")
     |> filter(fn: (r) => r["Unit"] == "%")
-    |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-    |> yield(name: "last")"""
+    |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     # Execute the Flux query and store the result in tables
     tables_humidity_environment = query_api.query(query_humidity_environment, org=influxdb_config.org)
@@ -209,13 +207,11 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     for table_humidity_environment in tables_humidity_environment:
         for record_humidity_environment in table_humidity_environment.records:
             he_value = record_humidity_environment.values["_value"]
-
             humidity_environment.append(he_value)
 
-
-    if humidity_environment != [] and humidity_environment[-1] == 0:
+    if humidity_environment != [] and humidity_environment[-1] == None:
         humidity_environment[-1] = humidity_environment[-2]
-    if humidity_environment != [] and humidity_environment[0] == 0:
+    if humidity_environment != [] and humidity_environment[0] == None:
         humidity_environment[0] = humidity_environment[1]
 
 
@@ -235,6 +231,11 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
 def get_laboratory_values(selected_time, influxdb_config, query_api):
     query_time_modified = f"-{selected_time}"
 
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
+
     #aggregation_fns = ["min", "max", "mean"]
     aggregation_fns = ["mean"]
 
@@ -242,11 +243,11 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         query_area_weight = f'''
         from(bucket: "LabValues")
             |> range(start: {query_time_modified}, stop: now())
-            |> filter(fn: (r) => r["_measurement"] == "LabValues" and r["Iteration"] == "-1")
+            |> filter(fn: (r) => r["_measurement"] == "LabValues")
             |> filter(fn: (r) => r["_field"] == "AreaWeight_AW1" or r["_field"] == "AreaWeight_AW2" or r["_field"] == "AreaWeight_AW3")
+            |> filter(fn: (r) => r["Unit"] == "g/m^2")
             |> group(columns: ["_measurement"])
             |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
-            |> yield(name: "min")
         '''
 
         # Execute the Flux query and store the result in tables
@@ -259,10 +260,12 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
                 aw_value = record_area_weight.values["_value"]
                 aw_time = record_area_weight.values["_time"]
                 area_weight.append(aw_value)
-                aw_updated_time = aw_time + timedelta(hours=2)
-                aw_formatted_datetime = aw_updated_time.strftime("%H:%M")
-                area_weight_time.append(aw_formatted_datetime)
 
+                aw_updated_time = aw_time + timedelta(hours=2) - timedelta(minutes=1)
+                area_weight_time.append(aw_updated_time.strftime(time_string))
+
+            aw_updated_time = aw_time + timedelta(hours=2)
+            area_weight_time[-1] = aw_updated_time.strftime(time_string)
 
 
     if area_weight != [] and area_weight[-1] == 0:
@@ -277,18 +280,15 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
 
     if area_weight_time == []:
         time_now = datetime.now()
-        area_weight_time = []
 
-        
-            
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
-                area_weight_time.append(time.strftime("%d-%m %H:%M"))
+                area_weight_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(minutes=i)
-                area_weight_time.append(time.strftime("%H:%M"))
+                area_weight_time.append(time.strftime(time_string))
 
     area_weight = [x if x is not None else "NaN" for x in area_weight]
 
@@ -301,10 +301,9 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
             |> range(start: {query_time_modified}, stop: now())
             |> filter(fn: (r) => r["_measurement"] == "LabValues")
             |> filter(fn: (r) => r["_field"] == "TensileStrength_MD1" or r["_field"] == "TensileStrength_MD2" or r["_field"] == "TensileStrength_MD3" or r["_field"] == "TensileStrength_MD4" or r["_field"] == "TensileStrength_MD5")
-            |> filter(fn: (r) => r["Unit"] == "%")
+            |> filter(fn: (r) => r["Unit"] == "N")
             |> group(columns: ["_measurement"])
             |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
-            |> yield(name: "mean")
         """
 
         # Execute the Flux query and store the result in tables
@@ -312,7 +311,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         tensile_force_md = []
   
         for table_tensile_force_md in tables_tensile_force_md:
-            #print(table_tensile_force_md)
             for record_tensile_force_md in table_tensile_force_md.records:
                 tf_md_value = record_tensile_force_md.values["_value"]
                 tensile_force_md.append(tf_md_value)
@@ -329,7 +327,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
     tensile_force_md = [x if x is not None else "NaN" for x in tensile_force_md]
 
 
-
     ##################################### TENSILE CD ################################################
 
     for index, aggregation_fn in enumerate(aggregation_fns):
@@ -338,10 +335,9 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
             |> range(start: {query_time_modified}, stop: now())
             |> filter(fn: (r) => r["_measurement"] == "LabValues")
             |> filter(fn: (r) => r["_field"] == "TensileStrength_CD1" or r["_field"] == "TensileStrength_CD2" or r["_field"] == "TensileStrength_CD3" or r["_field"] == "TensileStrength_CD4" or r["_field"] == "TensileStrength_CD5")
-            |> filter(fn: (r) => r["Unit"] == "%")
+            |> filter(fn: (r) => r["Unit"] == "N")
             |> group(columns: ["_measurement"])
             |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
-            |> yield(name: "mean")
         """
 
         # Execute the Flux query and store the result in tables
@@ -365,8 +361,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
     tensile_force_cd = [x if x is not None else "NaN" for x in tensile_force_cd]
 
 
-        #tensile_force_cd_all.append(tensile_force_cd)
-
     return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
 
 
@@ -377,6 +371,11 @@ def get_tear_length(selected_time, influxdb_config, query_api):
 
     query_time_modified = f"-{selected_time}"
 
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
+
     query_tear_length_md = f"""from(bucket: "LabValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "LabValues")
@@ -384,7 +383,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["Unit"] == "%")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
-        |> yield(name: "mean")
     """
 
     # Execute the Flux query and store the result in tables
@@ -396,16 +394,14 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         for record_tear_length_md in table_tear_length_md.records:
             tl_md_value = record_tear_length_md.values["_value"]
             tl_time = record_tear_length_md.values["_time"]
-
             tear_length_md.append(tl_md_value)
 
-            tl_time_updated = tl_time + timedelta(hours=2)
-            if aggregate_time[selected_time] == "1h":
-                tl_formatted_datetime = tl_time_updated.strftime("%d-%m %H:%M")
-            else:
-                tl_formatted_datetime = tl_time_updated.strftime("%H:%M")
-            tear_length_time.append(tl_formatted_datetime)
+            tl_time_updated = tl_time + timedelta(hours=2) - timedelta(minutes=1)
+            tear_length_time.append(tl_time_updated.strftime(time_string))
 
+        tl_time_updated = tl_time + timedelta(hours=2)
+        tear_length_time[-1] = tl_time_updated.strftime(time_string)
+    
     if tear_length_md != [] and tear_length_md[-1] == 0:
         tear_length_md[-1] = tear_length_md[-2]
     if tear_length_md != [] and tear_length_md[0] == 0:
@@ -417,14 +413,18 @@ def get_tear_length(selected_time, influxdb_config, query_api):
 
     if tear_length_time == []:
         time_now = datetime.now()
-        tear_length_time = []
+
 
         for i in range(time_select_empty_table[selected_time], -1, -1):
             time = time_now - timedelta(minutes=i)
-            if aggregate_time[selected_time] == "1h":
-                tear_length_time.append(time.strftime("%d-%m %H:%M"))
-            else:
-                tear_length_time.append(time.strftime("%H:%M"))
+        if aggregate_time[selected_time] == "1h":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(hours=i)
+                tear_length_time.append(time.strftime(time_string))
+        else:
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(minutes=i)
+                tear_length_time.append(time.strftime(time_string))
     
     tear_length_md = [x if x is not None else "NaN" for x in tear_length_md]
 
@@ -438,7 +438,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["Unit"] == "%")
         |> group(columns: ["_measurement"])
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
-        |> yield(name: "mean")
         """
 
     # Execute the Flux query and store the result in tables
@@ -448,14 +447,12 @@ def get_tear_length(selected_time, influxdb_config, query_api):
     for table_tear_length_cd in tables_tear_length_cd:
         for record_tensile_strength_cd in table_tear_length_cd.records:
             tl_cd_value = record_tensile_strength_cd.values["_value"]
-
             tear_length_cd.append(tl_cd_value)
 
     if tear_length_cd != [] and tear_length_cd[-1] == 0:
         tear_length_cd[-1] = tear_length_cd[-2]
     if tear_length_cd != [] and tear_length_cd[0] == 0:
         tear_length_cd[0] = tear_length_cd[1]
-
 
     if tear_length_cd == []:
         for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -948,10 +945,11 @@ def update_laboratory_values_chart(request):
             for record in table.records:
                 value = record.values["_value"]
                 area_weight.append(value)
-        updated_values_dict["AreaWeight"] = median(area_weight)
+        updated_values_dict["AreaWeight"] = mean(area_weight)
    
 
     ########################################################################
+
     ### Tensile MD ###
     query_area_md = """
     from(bucket: "LabValues")
@@ -976,12 +974,13 @@ def update_laboratory_values_chart(request):
                 time = record.values["_time"]
                 time += timedelta(hours=2)
 
-        updated_values_dict["TensileMD"] = median(tensile_strength_md)
+        updated_values_dict["TensileMD"] = mean(tensile_strength_md)
         updated_values_dict["AreaWeightTime"] = time
 
 
 
      ########################################################################
+
     ### Tensile CD ###
     query_area_cd = """
     from(bucket: "LabValues")
@@ -1002,7 +1001,7 @@ def update_laboratory_values_chart(request):
                 value = record.values["_value"]
                 tensile_strength_cd.append(value)
 
-        updated_values_dict["TensileCD"] = median(tensile_strength_cd)
+        updated_values_dict["TensileCD"] = mean(tensile_strength_cd)
 
     return JsonResponse(updated_values_dict, safe=False)
 
