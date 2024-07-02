@@ -256,12 +256,6 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         laboratory_values_chart.data.datasets[0].data = area_weights;
         laboratory_values_chart.data.datasets[1].data = tensile_force_md_all
         laboratory_values_chart.data.datasets[2].data = tensile_force_cd_all
-        //laboratory_values_chart.data.datasets[3].data[2] = tensile_force_md_all[1];
-        //laboratory_values_chart.data.datasets[4].data[2] = tensile_force_md_all[2];
-        //laboratory_values_chart.data.datasets[5].data[2] = tensile_force_md_all[3];
-        //laboratory_values_chart.data.datasets[6].data[3] = tensile_force_cd_all[1];
-        //laboratory_values_chart.data.datasets[7].data[3] = tensile_force_cd_all[2];
-        //laboratory_values_chart.data.datasets[8].data[3] = tensile_force_cd_all[3];
         laboratory_values_chart.update('none');
       }
       else if (data["header"] === "TearLength") {
@@ -276,14 +270,14 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
       else if (data["header"] === "Economics") {
         economics = response["timeRange"][0][0]
         material_costs = response["timeRange"][0][1]
-        contribution_margin = response["timeRange"][0][2]
-        production_income = response["timeRange"][0][3]
+        production_income = response["timeRange"][0][2]
+        contribution_margin = response["timeRange"][0][3]
         economics_time = response["timeRange"][1]                
         economics_chart.data.labels = economics_time
         economics_chart.data.datasets[0].data = economics;
         economics_chart.data.datasets[1].data = material_costs;
-        economics_chart.data.datasets[2].data = contribution_margin;
-        economics_chart.data.datasets[3].data = production_income;
+        economics_chart.data.datasets[2].data = production_income;
+        economics_chart.data.datasets[3].data = contribution_margin;
         economics_chart.update('none');
       }
       else if (data["header"] === "LinePowerConsumption") {
@@ -813,11 +807,11 @@ var tear_length_chart = new Chart(ctx_live, {
 ////////////////////////////////////////////////////////////////////
 
 // create initial chart Economics
+var material_costs = {{ material_costs|safe }}
 var energy_costs = {{ energy_costs|safe }}
 var economics_time = {{ energy_costs_time|safe }}
-var material_costs = {{ material_costs|safe }}
-var contribution_margin = {{ contribution_margin|safe }}
 var production_income = {{ production_income|safe }}
+var contribution_margin = {{ contribution_margin|safe }}
 
 const options_economics = {
     plugins: {
@@ -888,11 +882,6 @@ var economics_chart = new Chart(ctx_live, {
       borderColor:'rgba(155, 99, 132, 1)',
       label: 'Energy Costs',
       tension: 0.25,
-      //fill: {
-      // target: 'origin',
-        //below: 'rgba(255, 99, 132, 0.2)',
-        //above: 'rgba(4, 216, 14, 0.2)'
-      //}, 
     },
     {
       data: material_costs,
@@ -903,19 +892,19 @@ var economics_chart = new Chart(ctx_live, {
       tension: 0.25,
     },
     {
-      data: contribution_margin,
-      borderWidth: 2,
-      radius: 0,
-      borderColor: 'rgba(77, 77, 77, 1)',
-      label: 'Contribution Margin',
-      tension: 0.25,
-    },
-    {
       data: production_income,
       borderWidth: 2,
       radius: 0,
-      borderColor: 'rgba(255, 0, 255, 1)',
+      borderColor: 'rgba(77, 77, 77, 1)',
       label: 'Production Income',
+      tension: 0.25,
+    },
+    {
+      data: contribution_margin,
+      borderWidth: 2,
+      radius: 0,
+      borderColor: 'rgba(255, 0, 255, 1)',
+      label: 'Contribution Margin',
       tension: 0.25,
     }
     ]  
@@ -1466,7 +1455,9 @@ document.getElementById("dropdownEconomics").addEventListener("change", function
     delayEconomics = 3600000;
   }
   clearTimeout(timeoutIdEconomics);
-  updating_economics(delayEconomics);
+  timeoutIdEconomics = setTimeout(function() {
+    updating_economics(delayEconomics); 
+  }, delayEconomics)
 });
 
 
@@ -1485,7 +1476,9 @@ document.getElementById("dropdownLinePowerConsumption").addEventListener("change
     delayLinePower = 3600000; 
   }
   clearTimeout(timeoutIdLinePower);
-  updating_line_power_consumption(delayLinePower);
+  timeoutIdLinePower = setTimeout(function() {
+    updating_line_power_consumption(delayLinePower); 
+  }, delayLinePower);
 });
 
 

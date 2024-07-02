@@ -90,6 +90,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
     
         nu_time_updated = nu_time + timedelta(hours=2)
         nonwoven_uvenness_time[-1] = nu_time_updated.strftime(time_string)
+        
 
     if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
         nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
@@ -112,21 +113,21 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
-                nonwoven_uvenness_time.append(time.strftime("%d-%m %H:%M"))
+                nonwoven_uvenness_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(minutes=i)
-                nonwoven_uvenness_time.append(time.strftime("%H:%M"))
+                nonwoven_uvenness_time.append(time.strftime(time_string))
 
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
-        print(nonwoven_uvenness, nonwoven_uvenness_time)
+        print(nonwoven_uvenness_time)
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
         card_floor_evenness = [x * floor_quality_weight if x != "NaN" else "NaN" for x in scaled_signal]
-        print(len(card_floor_evenness), len(nonwoven_uvenness_time))
+   
         return card_floor_evenness, nonwoven_uvenness_time
 
 
@@ -414,9 +415,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
     if tear_length_time == []:
         time_now = datetime.now()
 
-
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            time = time_now - timedelta(minutes=i)
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
@@ -470,14 +468,19 @@ def get_tear_length(selected_time, influxdb_config, query_api):
 def get_economics(selected_time, influxdb_config, query_api):
     query_time_modified = f"-{selected_time}"
 
-    # Material Costs
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
+
+    ######################################### Material Costs #########################################
     query_material_costs = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
         |> filter(fn: (r) => r["Unit"] == "g/m^2" or r["Unit"] == "m/min")
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+    """
 
     tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
     card_delivery_weight_per_area = []
@@ -485,16 +488,13 @@ def get_economics(selected_time, influxdb_config, query_api):
 
 
     for table_material_costs in tables_material_costs:
-
-      
         for record_material_costs in table_material_costs.records:
             mc_value = record_material_costs.values["_value"]
             mc_field = record_material_costs.values["_field"]
 
-
             if mc_value == None: 
                 mc_value = 0.0
-   
+
             if mc_field == "CardDeliveryWeightPerArea":
                 card_delivery_weight_per_area.append(mc_value)
             elif mc_field == "CardDeliverySpeed":
@@ -506,29 +506,32 @@ def get_economics(selected_time, influxdb_config, query_api):
     if card_delivery_speed != [] and card_delivery_speed[0] == 0:
         card_delivery_speed[0] = card_delivery_speed[1]
 
+    if card_delivery_weight_per_area != [] and card_delivery_weight_per_area[-1] == 0:
+        card_delivery_weight_per_area[-1] = card_delivery_weight_per_area[-2]
+    if card_delivery_weight_per_area != [] and card_delivery_weight_per_area[0] == 0:
+        card_delivery_weight_per_area[0] = card_delivery_weight_per_area[1]
 
     if len(card_delivery_weight_per_area) != len(card_delivery_speed):
         print("Length of lists are not the same")
     else:
         material_costs = [x * y * 6/100 * fibre_costs for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
-
+        # fibre_costs = 1.20 # € per kg
     if material_costs == []:
         for i in range(time_select_empty_table[selected_time], -1, -1):
             material_costs.append(0)
 
 
-    ###
-    # Energy Costs 
+    ######################################### Energy Costs #########################################
+
     query_energy_costs = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> filter(fn: (r) => r["Unit"] == "kW")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     tables_energy_costs = query_api.query(query_energy_costs, org=influxdb_config.org)
-
     energy_costs = []
     energy_costs_time = []
 
@@ -536,17 +539,19 @@ def get_economics(selected_time, influxdb_config, query_api):
         for record_energy_costs in table_energy_costs.records:
             pc_value = record_energy_costs.values["_value"]
             pc_time = record_energy_costs.values["_time"]
+
             if pc_value == None: 
                 ec_value = 0.0
             else: 
-                ec_value = pc_value * 0.28
+                ec_value = pc_value * 0.28    
             energy_costs.append(ec_value)
-            pc_time_updated = pc_time + timedelta(hours=2)
-            if aggregate_time[selected_time] == "1h":
-                pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
-            else:
-                pc_formatted_datetime = pc_time_updated.strftime("%H:%M")
-            energy_costs_time.append(pc_formatted_datetime)
+
+            pc_time_updated = pc_time + timedelta(hours=2) - timedelta(minutes=1)
+            energy_costs_time.append(pc_time_updated.strftime(time_string))
+
+        pc_time_updated = pc_time + timedelta(hours=2)
+        energy_costs_time[-1] = pc_time_updated.strftime(time_string)
+
 
     #########################################
 
@@ -561,24 +566,28 @@ def get_economics(selected_time, influxdb_config, query_api):
 
     if energy_costs_time == []:
         time_now = datetime.now()
-        energy_costs_time = []
 
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            time = time_now - timedelta(minutes=i)
-            if aggregate_time[selected_time] == "1h":
-                energy_costs_time.append(time.strftime("%d-%m %H:%M"))
-            else:
-                energy_costs_time.append(time.strftime("%H:%M"))
 
-    ###
+        if aggregate_time[selected_time] == "1h":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(hours=i)
+                energy_costs_time.append(time.strftime(time_string))
+
+        else:
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                time = time_now - timedelta(minutes=i)
+                energy_costs_time.append(time.strftime(time_string))
+
+
+   ######################################### Production income #########################################
     # Production income
     query_production_income = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
         |> filter(fn: (r) => r["Unit"] == "m" or r["Unit"] == "m/min")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
     production_width = []
@@ -603,6 +612,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         print("Length of lists are not the same")
     else:
         production_income = [x * y * 60 * selling_price for x, y in zip(production_width, production_speed)]
+        #selling_price = 2.10 # € per sqm
 
         if production_income != [] and production_income[-1] == 0:
             production_income[-1] = production_income[-2]
@@ -620,22 +630,28 @@ def get_economics(selected_time, influxdb_config, query_api):
     #Contribution Margin 
     contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
     #print(len(material_costs))
-    return [energy_costs, material_costs, contribution_margin, production_income], energy_costs_time
+    return [energy_costs, material_costs, production_income, contribution_margin], energy_costs_time
+
 
 ############################################################################################################
 
-### Line Power Consumption ### Economics ###
+### Line Power Consumption ### 
 def get_line_power_consumption(chart, selected_time, influxdb_config, query_api):
 
     query_time_modified = f"-{selected_time}"
+
+    if aggregate_time[selected_time] == "1h":
+        time_string = "%d-%m %H:%M"
+    else:
+        time_string = "%H:%M"
 
     query_energy_costs = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> filter(fn: (r) => r["Unit"] == "kW")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
-        |> yield(name: "last")"""
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    """
 
     tables_energy_costs = query_api.query(query_energy_costs, org=influxdb_config.org)
     line_power_consumption = []
@@ -645,15 +661,18 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
         for record_energy_costs in table_energy_costs.records:
             pc_value = record_energy_costs.values["_value"]
             pc_time = record_energy_costs.values["_time"]
+
             if pc_value == None: 
                 pc_value = 0.0
+
             line_power_consumption.append(pc_value)
-            pc_time_updated = pc_time + timedelta(hours=2)
-            if aggregate_time[selected_time] == "1h":
-                pc_formatted_datetime = pc_time_updated.strftime("%d-%m %H:%M")
-            else:
-                pc_formatted_datetime = pc_time_updated.strftime("%H:%M")
-            line_power_consumption_time.append(pc_formatted_datetime)
+
+            pc_time_updated = pc_time + timedelta(hours=2) - timedelta(minutes=1)
+            line_power_consumption_time.append(pc_time_updated.strftime(time_string))
+
+        pc_time_updated = pc_time + timedelta(hours=2)
+        line_power_consumption_time[-1] = pc_time_updated.strftime(time_string)
+
 
     if line_power_consumption != [] and line_power_consumption[-1] == 0:
         line_power_consumption[-1] = line_power_consumption[-2]
@@ -669,17 +688,18 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
 
         if line_power_consumption_time == []:
             time_now = datetime.now()
-            line_power_consumption_time = []
 
-            for i in range(time_select_empty_table[selected_time], -1, -1):
-                time = time_now - timedelta(minutes=i)
-                if aggregate_time[selected_time] == "1h":
-                    line_power_consumption_time.append(time.strftime("%d-%m %H:%M"))
-                else:
-                    line_power_consumption_time.append(time.strftime("%H:%M"))
+            if aggregate_time[selected_time] == "1h":
+                for i in range(time_select_empty_table[selected_time], -1, -1):
+                    time = time_now - timedelta(hours=i)
+                    line_power_consumption_time.append(time.strftime(time_string))
+            else:
+                for i in range(time_select_empty_table[selected_time], -1, -1):
+                    time = time_now - timedelta(minutes=i)
+                    line_power_consumption_time.append(time.strftime(time_string))
 
 
-        return line_power_consumption, line_power_consumption_time
+    return line_power_consumption, line_power_consumption_time
 
 
 
@@ -814,10 +834,15 @@ def update_nonwoven_unevenness_chart(request):
             for record in table.records:
                 value = record.values["_value"]
                 time = record.values["_time"]
-                time += timedelta(hours=2)
-                updated_values_dict["NonwovenUnevenness"] = value
-                updated_values_dict["NonwovenUnevennessTime"] = time
 
+                now = datetime.now()
+                now += timedelta(hours=2)
+
+                time = time + timedelta(hours=2, minutes=1)
+                updated_values_dict["NonwovenUnevenness"] = value
+                updated_values_dict["NonwovenUnevennessTime"] = now
+
+    print(updated_values_dict["NonwovenUnevennessTime"])
 
     return JsonResponse(updated_values_dict, safe=False)
 
@@ -978,7 +1003,6 @@ def update_laboratory_values_chart(request):
         updated_values_dict["AreaWeightTime"] = time
 
 
-
      ########################################################################
 
     ### Tensile CD ###
@@ -1116,7 +1140,6 @@ def update_economics_chart(request):
 
     if tables_material_costs == []:
         updated_values_dict["MaterialCosts"] = 0.0
-
     else:
         for table_material_costs in tables_material_costs:
             for record_material_costs in table_material_costs.records:
@@ -1132,7 +1155,6 @@ def update_economics_chart(request):
                     card_delivery_speed = mc_value
 
         updated_values_dict["MaterialCosts"]  = card_delivery_speed * card_delivery_weight_per_area * 6/100 * fibre_costs
-
 
 
     ### Updating Production income ###
