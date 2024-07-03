@@ -36,7 +36,7 @@ time_select_empty_table = {
   '3h': 180,
   '6h': 360,
   '12h': 720,
-  '1d': 166,
+  '1d': 1440,
   '7d': 168,
   '30d': 720
 }
@@ -114,6 +114,10 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
                 nonwoven_uvenness_time.append(time.strftime(time_string))
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                time = time_now - timedelta(minutes=i)
+                nonwoven_uvenness_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(minutes=i)
@@ -122,7 +126,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
-        print(nonwoven_uvenness_time)
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
@@ -182,6 +185,10 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
+                environmental_values_time.append(time.strftime(time_string))
+        if aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                time = time_now - timedelta(minutes=i)
                 environmental_values_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -279,12 +286,18 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
             area_weight.append("NaN")
    
 
+
     if area_weight_time == []:
         time_now = datetime.now()
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
+                area_weight_time.append(time.strftime(time_string))
+
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                time = time_now - timedelta(minutes=i)
                 area_weight_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -418,6 +431,10 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
+                tear_length_time.append(time.strftime(time_string))
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                time = time_now - timedelta(minutes=i)
                 tear_length_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -572,7 +589,10 @@ def get_economics(selected_time, influxdb_config, query_api):
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(hours=i)
                 energy_costs_time.append(time.strftime(time_string))
-
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                time = time_now - timedelta(minutes=i)
+                energy_costs_time.append(time.strftime(time_string))
         else:
             for i in range(time_select_empty_table[selected_time], -1, -1):
                 time = time_now - timedelta(minutes=i)
@@ -693,6 +713,10 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                 for i in range(time_select_empty_table[selected_time], -1, -1):
                     time = time_now - timedelta(hours=i)
                     line_power_consumption_time.append(time.strftime(time_string))
+            elif aggregate_time[selected_time] == "10m":
+                for i in range(time_select_empty_table[selected_time], -1, -10):
+                    time = time_now - timedelta(minutes=i)
+                    line_power_consumption_time.append(time.strftime(time_string))
             else:
                 for i in range(time_select_empty_table[selected_time], -1, -1):
                     time = time_now - timedelta(minutes=i)
@@ -700,8 +724,6 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
 
 
     return line_power_consumption, line_power_consumption_time
-
-
 
 
 
@@ -719,7 +741,6 @@ def handle_time_range(request):
 
         if selected_header == "NonwovenUnevennes":
             query_data, query_time = get_nonwoven_unevenness("NonwovenUnevennes", selected_time, influxdb_config, query_api)
-            print(query_time) 
         elif selected_header == "CardFloorEvenness":
             query_data, query_time = get_nonwoven_unevenness("CardFloorEvenness", selected_time, influxdb_config, query_api)
         elif selected_header == "EnvironmentalValues":
@@ -833,16 +854,14 @@ def update_nonwoven_unevenness_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
+                #time = record.values["_time"]
+                #time = time + timedelta(hours=2, minutes=1)
 
                 now = datetime.now()
                 now += timedelta(hours=2)
 
-                time = time + timedelta(hours=2, minutes=1)
                 updated_values_dict["NonwovenUnevenness"] = value
                 updated_values_dict["NonwovenUnevennessTime"] = now
-
-    print(updated_values_dict["NonwovenUnevennessTime"])
 
     return JsonResponse(updated_values_dict, safe=False)
 
@@ -873,10 +892,14 @@ def update_card_floor_evenness_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
+
+                now = datetime.now()
+                now += timedelta(hours=2)
+
                 updated_values_dict["NonwovenUnevenness"] = value
-                updated_values_dict["CardFloorEvennessTime"] = time
+                updated_values_dict["CardFloorEvennessTime"] = now
 
                 scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
                 card_floor_evenness = scaled_signal * floor_quality_weight
@@ -912,10 +935,14 @@ def update_environmental_values_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
+
+                now = datetime.now()
+                now += timedelta(hours=2)
+
                 updated_values_dict["AmbientTemperature"] = value
-                updated_values_dict["EnvironmentalValuesTime"] = time
+                updated_values_dict["EnvironmentalValuesTime"] = now
 
 
     ### Updating Humidity ###
@@ -996,11 +1023,15 @@ def update_laboratory_values_chart(request):
             for record in table.records:
                 value = record.values["_value"]
                 tensile_strength_md.append(value)
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
+
+                now = datetime.now()
+                now += timedelta(hours=2)
 
         updated_values_dict["TensileMD"] = mean(tensile_strength_md)
-        updated_values_dict["AreaWeightTime"] = time
+        updated_values_dict["AreaWeightTime"] = now
 
 
      ########################################################################
@@ -1060,11 +1091,14 @@ def update_tear_length_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
                 tear_length_md.append(value)
 
-        updated_values_dict["TearLengthTime"] = time
+                now = datetime.now()
+                now += timedelta(hours=2)
+
+        updated_values_dict["TearLengthTime"] = now
         updated_values_dict["TearLengthMD"] = median(tear_length_md)
 
     ########################################################################
@@ -1121,11 +1155,15 @@ def update_economics_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
+
+                now = datetime.now()
+                now += timedelta(hours=2)
+
                 ec_value = value * 0.28
                 updated_values_dict["EnergyCosts"] = ec_value
-                updated_values_dict["EconomicsTime"] = time
+                updated_values_dict["EconomicsTime"] = now
 
 
     ### updating material costs
@@ -1220,10 +1258,14 @@ def update_line_power_consumption_chart(request):
         for table in tables:
             for record in table.records:
                 value = record.values["_value"]
-                time = record.values["_time"]
-                time += timedelta(hours=2)
+                #time = record.values["_time"]
+                #time += timedelta(hours=2)
+
+                now = datetime.now()
+                now += timedelta(hours=2)
+
                 updated_values_dict["LinePowerConsumption"] = value
-                updated_values_dict["LinePowerConsumptionTime"] = time
+                updated_values_dict["LinePowerConsumptionTime"] = now
 
         
     return JsonResponse(updated_values_dict, safe=False)
