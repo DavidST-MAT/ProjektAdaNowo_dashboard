@@ -103,9 +103,14 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
 
     if nonwoven_uvenness == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            nonwoven_uvenness.append("NaN")
-            nonwoven_uvenness2.append(None)
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                nonwoven_uvenness.append("NaN")
+                nonwoven_uvenness2.append(None)
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                nonwoven_uvenness.append("NaN")
+                nonwoven_uvenness2.append(None)
 
     if nonwoven_uvenness_time == []:
         time_now = datetime.now()
@@ -126,11 +131,12 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
+        print("Nonwoven: ", len(nonwoven_uvenness), len(nonwoven_uvenness_time))
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
         card_floor_evenness = [x * floor_quality_weight if x != "NaN" else "NaN" for x in scaled_signal]
-   
+        print("CardFloor: ", len(card_floor_evenness), len(nonwoven_uvenness_time))
         return card_floor_evenness, nonwoven_uvenness_time
 
 
@@ -176,8 +182,12 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
         ambient_temperature[0] = ambient_temperature[1]
 
     if ambient_temperature == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            ambient_temperature.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                ambient_temperature.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                ambient_temperature.append("NaN")
 
     if environmental_values_time == []:
         time_now = datetime.now()
@@ -222,14 +232,17 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     if humidity_environment != [] and humidity_environment[0] == None:
         humidity_environment[0] = humidity_environment[1]
 
-
     if humidity_environment == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            humidity_environment.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                humidity_environment.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                humidity_environment.append("NaN")
 
     
     humidity_environment = [x if x is not None else "NaN" for x in humidity_environment]
-
+    print("Environment: ", len(ambient_temperature), len(humidity_environment), len(environmental_values_time))
     return [ambient_temperature, humidity_environment], environmental_values_time
 
 
@@ -282,8 +295,12 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         area_weight[0] = area_weight[1]
 
     if area_weight == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            area_weight.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                area_weight.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                area_weight.append("NaN")
    
 
 
@@ -335,8 +352,12 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         tensile_force_md[0] = tensile_force_md[1]
 
     if tensile_force_md == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            tensile_force_md.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                tensile_force_md.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                tensile_force_md.append("NaN")
 
     tensile_force_md = [x if x is not None else "NaN" for x in tensile_force_md]
 
@@ -369,12 +390,16 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
         tensile_force_cd[0] = tensile_force_cd[1]
 
     if tensile_force_cd == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            tensile_force_cd.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                tensile_force_cd.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                tensile_force_cd.append("NaN")
 
     tensile_force_cd = [x if x is not None else "NaN" for x in tensile_force_cd]
 
-
+    print("LabValues1: ", len(area_weight), len(tensile_force_md), len(tensile_force_cd), len(area_weight_time))
     return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
 
 
@@ -422,8 +447,12 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         tear_length_md[0] = tear_length_md[1]
 
     if tear_length_md == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            tear_length_md.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                tear_length_md.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                tear_length_md.append("NaN")
 
     if tear_length_time == []:
         time_now = datetime.now()
@@ -469,13 +498,18 @@ def get_tear_length(selected_time, influxdb_config, query_api):
     if tear_length_cd != [] and tear_length_cd[0] == 0:
         tear_length_cd[0] = tear_length_cd[1]
 
+
     if tear_length_cd == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            tear_length_cd.append("NaN")
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                tear_length_cd.append("NaN")
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                tear_length_cd.append("NaN")
 
     tear_length_cd = [x if x is not None else "NaN" for x in tear_length_cd]
 
-
+    print("LabValues2: ", len(tear_length_md), len(tear_length_cd), len(tear_length_time))
     return [tear_length_md, tear_length_cd], tear_length_time
 
 
@@ -533,9 +567,15 @@ def get_economics(selected_time, influxdb_config, query_api):
     else:
         material_costs = [x * y * 6/100 * fibre_costs for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
         # fibre_costs = 1.20 # € per kg
+
+
     if material_costs == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            material_costs.append(0)
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                material_costs.append(0)
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                material_costs.append(0)
 
 
     ######################################### Energy Costs #########################################
@@ -578,8 +618,12 @@ def get_economics(selected_time, influxdb_config, query_api):
         energy_costs[0] = energy_costs[1]
 
     if energy_costs == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            energy_costs.append(0)
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                energy_costs.append(0)
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                energy_costs.append(0)
 
     if energy_costs_time == []:
         time_now = datetime.now()
@@ -639,17 +683,20 @@ def get_economics(selected_time, influxdb_config, query_api):
         if production_income != [] and production_income[0] == 0:
             production_income[0] = production_income[1]
 
-
     if production_income == []:
-        for i in range(time_select_empty_table[selected_time], -1, -1):
-            production_income.append(0)
-    #print(production_income)
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                production_income.append(0)
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
+                production_income.append(0)
 
 
     ###
     #Contribution Margin 
     contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
     #print(len(material_costs))
+    print("Eco: ", len(energy_costs), len(material_costs), len(production_income), len(contribution_margin), len(energy_costs_time))
     return [energy_costs, material_costs, production_income, contribution_margin], energy_costs_time
 
 
@@ -700,9 +747,12 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
         line_power_consumption[0] = line_power_consumption[1]
 
 
-    if chart == "LinePowerConsumption":
-        if line_power_consumption == []:
-            for i in range(time_select_empty_table[selected_time] * 60, -1, -1):
+    if line_power_consumption == []:
+        if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
+            for i in range(time_select_empty_table[selected_time], -1, -1):
+                line_power_consumption.append(0)
+        elif aggregate_time[selected_time] == "10m":
+            for i in range(time_select_empty_table[selected_time], -1, -10):
                 line_power_consumption.append(0)
 
 
@@ -722,7 +772,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                     time = time_now - timedelta(minutes=i)
                     line_power_consumption_time.append(time.strftime(time_string))
 
-
+    print("LinePower: ", len(line_power_consumption), len(line_power_consumption_time))
     return line_power_consumption, line_power_consumption_time
 
 

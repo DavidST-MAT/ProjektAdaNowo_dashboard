@@ -219,33 +219,31 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
       if (data["header"] === "NonwovenUnevennes") {
         nonwoven_uvenness = response["timeRange"][0]
         nonwoven_uvenness_time = response["timeRange"][1]
-
         nonwoven_unevenness_chart.data.labels = response["timeRange"][1]
         nonwoven_unevenness_chart.data.datasets[0].data = response["timeRange"][0]
+        nonwoven_unevenness_chart.update('none')
+console.log("Nonwoven: ", nonwoven_uvenness.length, nonwoven_uvenness_time.length)
 
-        nonwoven_unevenness_chart.update()
-    
-        nonwoven_unevenness_chart.update()
-        nonwoven_unevenness_chart.render()
-        console.log(nonwoven_unevenness_chart.data.datasets[0].data.length)
       }
       else if (data["header"] === "CardFloorEvenness") {
         card_floor_evenness = response["timeRange"][0]
         card_floor_evenness_time = response["timeRange"][1]                
         card_floor_evenness_chart.data.labels = card_floor_evenness_time
         card_floor_evenness_chart.data.datasets[0].data = card_floor_evenness;
+
         card_floor_evenness_chart.update('none');
+console.log("CardFloor: ", card_floor_evenness.length, card_floor_evenness_time.length)
       }
       else if (data["header"] === "EnvironmentalValues") {
         ambient_temperature = response["timeRange"][0][0]
         humidity_environment = response["timeRange"][0][1]
         environmental_values_time = response["timeRange"][1]
-
         environmental_values_chart.data.labels = environmental_values_time;
         environmental_values_chart.data.datasets[0].data = ambient_temperature;
         environmental_values_chart.data.datasets[1].data = humidity_environment;
 
         environmental_values_chart.update('none');
+console.log("Environment: ", ambient_temperature.length, humidity_environment.length, environmental_values_time.length)
       }
       else if (data["header"] === "LaboratoryValues") {
         area_weights = response["timeRange"][0][0]
@@ -256,7 +254,9 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         laboratory_values_chart.data.datasets[0].data = area_weights;
         laboratory_values_chart.data.datasets[1].data = tensile_force_md_all
         laboratory_values_chart.data.datasets[2].data = tensile_force_cd_all
+
         laboratory_values_chart.update('none');
+console.log("LabValues1: ", area_weights.length, tensile_force_md_all.length, tensile_force_cd_all.length, laboratory_values_time.length)
       }
       else if (data["header"] === "TearLength") {
         tear_length_md = response["timeRange"][0][0]
@@ -265,7 +265,9 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         tear_length_chart.data.labels = tear_length_time
         tear_length_chart.data.datasets[0].data = tear_length_md;
         tear_length_chart.data.datasets[1].data = tear_length_cd;
+
         tear_length_chart.update('none');
+console.log("LabValues2: ", tear_length_md.length, tear_length_cd.length, tear_length_time.length)
       }
       else if (data["header"] === "Economics") {
         economics = response["timeRange"][0][0]
@@ -278,14 +280,18 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
         economics_chart.data.datasets[1].data = material_costs;
         economics_chart.data.datasets[2].data = production_income;
         economics_chart.data.datasets[3].data = contribution_margin;
+
         economics_chart.update('none');
+console.log("Eco: ", economics.length, material_costs.length, production_income.length, contribution_margin.length, economics_time.length)
       }
       else if (data["header"] === "LinePowerConsumption") {
         line_power_consumption = response["timeRange"][0]
         line_power_consumption_time = response["timeRange"][1]                
         line_power_consumption_chart.data.labels = line_power_consumption_time
         line_power_consumption_chart.data.datasets[0].data = line_power_consumption;
+
         line_power_consumption_chart.update('none');
+console.log("LinePower: ", line_power_consumption.length, line_power_consumption_time.length)
       }
     },
     error: function(xhr, status, error) {
@@ -301,8 +307,7 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
 var nonwoven_uvenness = {{ nonwoven_uvenness|safe }}
 var nonwoven_uvenness_time = {{ nonwoven_uvenness_time|safe }}
 
-console.log(nonwoven_uvenness)
-console.log(nonwoven_uvenness_time)
+
 const options_nonwoven_uvenness = {
   plugins: {
     zoom: {
