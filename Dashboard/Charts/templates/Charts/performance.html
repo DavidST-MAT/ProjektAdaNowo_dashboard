@@ -210,6 +210,8 @@ function sendDataToBackend(headerOfChart, dropdown_time) {
       header: headerOfChart
   };
 
+  console.log(dropdown_time)
+
   $.ajax({
     type: "GET",
     url: '/Adanowo/update/',
@@ -372,7 +374,7 @@ var nonwoven_unevenness_chart = new Chart(ctx_live, {
     datasets: [{
       data: nonwoven_uvenness,
       borderWidth: 2,
-      radius: 2,
+      radius: 1,
       borderColor: 'rgba(54, 162, 235, 1)',
       label: 'Nonwoven Unevenness',
       tension: 0.25,
@@ -455,7 +457,7 @@ var card_floor_evenness_chart = new Chart(ctx_live, {
     datasets: [{
       data: card_floor_evenness,
       borderWidth: 2,
-      radius: 2,
+      radius: 1,
       borderColor: 'rgba(0, 128, 0, 1)',
       label: 'Card Floor Evenness',
       tension: 0.25,
@@ -566,7 +568,7 @@ var environmental_values_chart = new Chart(ctx_live, {
     {
       data: ambient_temperature,
       borderWidth: 2,
-      radius: 2,
+      radius: 1,
       borderColor: 'rgba(255, 0, 0, 1)',
       label: 'Temperature [°C]',
       tension: 0.25,
@@ -574,7 +576,7 @@ var environmental_values_chart = new Chart(ctx_live, {
     {
       data: humidity_environment,
       borderWidth: 2,
-      radius: 2,
+      radius: 1,
       borderColor: 'rgba(22, 128, 22, 1)',
       label: 'Humidity [%]',
       tension: 0.25,
@@ -1009,35 +1011,47 @@ var line_power_consumption_chart = new Chart(ctx_live, {
 /// updating Nonwoven Environment ///
 var timeoutIdNonwoven;
 function updating_nonenwoven_unevenness(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_nonwoven_unevenness_chart",
-    success: function(data) {
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_nonwoven_unevenness_chart",
+      success: function(data) {
 
-      var _nonwoven_unevenness=data["NonwovenUnevenness"];
-      var _nonwoven_unevenness_time=data["NonwovenUnevennessTime"];
-      var date = new Date(_nonwoven_unevenness_time);
+        var _nonwoven_unevenness=data["NonwovenUnevenness"];
+        var _nonwoven_unevenness_time=data["NonwovenUnevennessTime"];
+        var date = new Date(_nonwoven_unevenness_time);
 
-      if (/^\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
+        if (/^\d{2}:\d{2}$/.test(nonwoven_unevenness_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
+
+        nonwoven_unevenness_chart.data.labels.push(time);
+        nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
+        nonwoven_unevenness_chart.data.labels.shift();
+        nonwoven_unevenness_chart.data.datasets[0].data.shift();
+        nonwoven_unevenness_chart.update('none');
       }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+    });
 
-      nonwoven_unevenness_chart.data.labels.push(time);
-      nonwoven_unevenness_chart.data.datasets[0].data.push(_nonwoven_unevenness);
-      nonwoven_unevenness_chart.data.labels.shift();
-      nonwoven_unevenness_chart.data.datasets[0].data.shift();
-      nonwoven_unevenness_chart.update('none');
-    }
-  });
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("NonwovenUnevennes", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownNonwoven');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("NonwovenUnevennes", selectedValue)
+  }
+
   clearTimeout(timeoutIdNonwoven);
   timeoutIdNonwoven = setTimeout(function() {
     updating_nonenwoven_unevenness(timeOut); 
@@ -1048,36 +1062,48 @@ function updating_nonenwoven_unevenness(timeOut) {
 /// updating Card Floor Evenness ///
 var timeoutIdCardFloor;
 function updating_card_floor_evenness(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_card_floor_evenness_chart",
-    success: function(data) {
-  
-      var _card_floor_evenness=data["CardFloorEvenness"];
-      var _card_floor_evenness_time=data["CardFloorEvennessTime"];
-      
-      var date = new Date(_card_floor_evenness_time);
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_card_floor_evenness_chart",
+      success: function(data) {
+    
+        var _card_floor_evenness=data["CardFloorEvenness"];
+        var _card_floor_evenness_time=data["CardFloorEvennessTime"];
+        
+        var date = new Date(_card_floor_evenness_time);
 
-      if (/^\d{2}:\d{2}$/.test(card_floor_evenness_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
-      }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+        if (/^\d{2}:\d{2}$/.test(card_floor_evenness_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
 
-      card_floor_evenness_chart.data.labels.push(time);
-      card_floor_evenness_chart.data.datasets[0].data.push(_card_floor_evenness);
-      card_floor_evenness_chart.data.labels.shift();
-      card_floor_evenness_chart.data.datasets[0].data.shift();
-      card_floor_evenness_chart.update('none');
-    }
-  });
+        card_floor_evenness_chart.data.labels.push(time);
+        card_floor_evenness_chart.data.datasets[0].data.push(_card_floor_evenness);
+        card_floor_evenness_chart.data.labels.shift();
+        card_floor_evenness_chart.data.datasets[0].data.shift();
+        card_floor_evenness_chart.update('none');
+      }
+    });
+
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("CardFloorEvenness", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownCardFloorEveness');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("CardFloorEvenness", selectedValue)
+  }
+
   clearTimeout(timeoutIdCardFloor);
   timeoutIdCardFloor = setTimeout(function() {
     updating_card_floor_evenness(timeOut); 
@@ -1088,38 +1114,50 @@ function updating_card_floor_evenness(timeOut) {
 /// updating Ambient Temperature ///
 var timeoutIdEnvironmentalValues;
 function updating_environmental_values(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_environmental_values_chart",
-    success: function(data) {
-  
-      var _ambient_temperature=data["AmbientTemperature"];
-      var _humidty=data["Humidity"];
-      var _environmental_values_time=data["EnvironmentalValuesTime"];
-      var date = new Date(_environmental_values_time);
-  
-      if (/^\d{2}:\d{2}$/.test(environmental_values_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
-      }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_environmental_values_chart",
+      success: function(data) {
+    
+        var _ambient_temperature=data["AmbientTemperature"];
+        var _humidty=data["Humidity"];
+        var _environmental_values_time=data["EnvironmentalValuesTime"];
+        var date = new Date(_environmental_values_time);
+    
+        if (/^\d{2}:\d{2}$/.test(environmental_values_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
 
-      environmental_values_chart.data.labels.push(time);
-      environmental_values_chart.data.datasets[0].data.push(_ambient_temperature);
-      environmental_values_chart.data.datasets[1].data.push(_humidty);
-      environmental_values_chart.data.labels.shift();
-      environmental_values_chart.data.datasets[0].data.shift();
-      environmental_values_chart.data.datasets[1].data.shift();
-      environmental_values_chart.update('none');
-    }
-  });
+        environmental_values_chart.data.labels.push(time);
+        environmental_values_chart.data.datasets[0].data.push(_ambient_temperature);
+        environmental_values_chart.data.datasets[1].data.push(_humidty);
+        environmental_values_chart.data.labels.shift();
+        environmental_values_chart.data.datasets[0].data.shift();
+        environmental_values_chart.data.datasets[1].data.shift();
+        environmental_values_chart.update('none');
+      }
+    });
+
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("EnvironmentalValues", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownEnvironmentalValues');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("EnvironmentalValues", selectedValue)
+  }
+
   clearTimeout(timeoutIdEnvironmentalValues);
   timeoutIdEnvironmentalValues = setTimeout(function() {
     updating_environmental_values(timeOut); 
@@ -1130,44 +1168,56 @@ function updating_environmental_values(timeOut) {
 /// updating laboratory values ///
 var timeoutIdLaboratory;
 function updating_laboratory_values(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_laboratory_values_chart",
-    success: function(data) {
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_laboratory_values_chart",
+      success: function(data) {
 
-      var _area_weight_time=data["AreaWeightTime"];
-      var _area_weight=data["AreaWeight"];
-      var _tensile_strength_med_md = data["TensileMD"]
-      var _tensile_strength_med_cd = data["TensileCD"]
+        var _area_weight_time=data["AreaWeightTime"];
+        var _area_weight=data["AreaWeight"];
+        var _tensile_strength_med_md = data["TensileMD"]
+        var _tensile_strength_med_cd = data["TensileCD"]
 
-      var date = new Date(_area_weight_time);
+        var date = new Date(_area_weight_time);
 
-      if (/^\d{2}:\d{2}$/.test(laboratory_values_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
+        if (/^\d{2}:\d{2}$/.test(laboratory_values_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
+
+        laboratory_values_chart.data.labels.push(time);
+
+        laboratory_values_chart.data.datasets[0].data.push(_area_weight);
+        laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_md);
+        laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_cd);
+  
+        laboratory_values_chart.data.labels.shift();
+        laboratory_values_chart.data.datasets[0].data.shift();
+        laboratory_values_chart.data.datasets[1].data.shift();
+        laboratory_values_chart.data.datasets[2].data.shift();
+        laboratory_values_chart.update('none');
       }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+    });
 
-      laboratory_values_chart.data.labels.push(time);
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("LaboratoryValues", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownLaboratoryValues');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("LaboratoryValues", selectedValue)
+  }
 
-      laboratory_values_chart.data.datasets[0].data.push(_area_weight);
-      laboratory_values_chart.data.datasets[1].data.push(_tensile_strength_med_md);
-      laboratory_values_chart.data.datasets[2].data.push(_tensile_strength_med_cd);
- 
-      laboratory_values_chart.data.labels.shift();
-      laboratory_values_chart.data.datasets[0].data.shift();
-      laboratory_values_chart.data.datasets[1].data.shift();
-      laboratory_values_chart.data.datasets[2].data.shift();
-      laboratory_values_chart.update('none');
-    }
-  });
   clearTimeout(timeoutIdLaboratory);
   timeoutIdLaboratory = setTimeout(function() {
     updating_laboratory_values(timeOut); 
@@ -1178,39 +1228,51 @@ function updating_laboratory_values(timeOut) {
 /// updating Tensile Strength ///
 var timeoutIdTear;
 function updating_tear_length(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_tear_length_chart",
-    success: function(data) {
-  
-      var _tear_length_md=data["TearLengthMD"];
-      var _tear_length_cd=data["TearLengthCD"];
-      var _tear_length_time=data["TearLengthTime"];
-      var date = new Date(_tear_length_time);
-  
-      if (/^\d{2}:\d{2}/.test(tear_length_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
-      }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_tear_length_chart",
+      success: function(data) {
+    
+        var _tear_length_md=data["TearLengthMD"];
+        var _tear_length_cd=data["TearLengthCD"];
+        var _tear_length_time=data["TearLengthTime"];
+        var date = new Date(_tear_length_time);
+    
+        if (/^\d{2}:\d{2}/.test(tear_length_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
 
-      tear_length_chart.data.labels.push(time);
-      tear_length_chart.data.datasets[0].data.push(_tear_length_md);
-      tear_length_chart.data.datasets[1].data.push(_tear_length_cd);
+        tear_length_chart.data.labels.push(time);
+        tear_length_chart.data.datasets[0].data.push(_tear_length_md);
+        tear_length_chart.data.datasets[1].data.push(_tear_length_cd);
 
-      tear_length_chart.data.labels.shift();
-      tear_length_chart.data.datasets[0].data.shift();
-      tear_length_chart.data.datasets[1].data.shift();
-      tear_length_chart.update('none');
-    }
-  });
+        tear_length_chart.data.labels.shift();
+        tear_length_chart.data.datasets[0].data.shift();
+        tear_length_chart.data.datasets[1].data.shift();
+        tear_length_chart.update('none');
+      }
+    });
+
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("TearLength", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownTearLength');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("TearLength", selectedValue)
+  }
+
   clearTimeout(timeoutIdTear);
   timeoutIdTear = setTimeout(function() {
     updating_tear_length(timeOut); 
@@ -1221,47 +1283,58 @@ function updating_tear_length(timeOut) {
 /// updating economics ///
 var timeoutIdEconomics;
 function updating_economics(timeOut){
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_economics_chart",
-    success: function(data) {
-  
-      var _energy_costs=data["EnergyCosts"];
-      var _material_costs=data["MaterialCosts"];
-      var _contribution_margin=data["ContributionMargin"];
-      var _production_income=data["ProductionIncome"];
-      var _economics_time=data["EconomicsTime"]
-       
-      var date = new Date(_economics_time);
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_economics_chart",
+      success: function(data) {
+    
+        var _energy_costs=data["EnergyCosts"];
+        var _material_costs=data["MaterialCosts"];
+        var _production_income=data["ProductionIncome"];
+        var _contribution_margin=data["ContributionMargin"];
+        var _economics_time=data["EconomicsTime"]
+        
+        var date = new Date(_economics_time);
 
-      if (/^\d{2}:\d{2}/.test(economics_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
+        if (/^\d{2}:\d{2}/.test(economics_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
+
+        economics_chart.data.labels.push(time);
+        economics_chart.data.datasets[0].data.push(_energy_costs);
+        economics_chart.data.datasets[1].data.push(_material_costs);
+        economics_chart.data.datasets[2].data.push(_production_income);
+        economics_chart.data.datasets[3].data.push(_contribution_margin);
+
+        economics_chart.data.labels.shift();
+        economics_chart.data.datasets[0].data.shift();
+        economics_chart.data.datasets[1].data.shift();
+        economics_chart.data.datasets[2].data.shift();
+        economics_chart.data.datasets[3].data.shift();
+
+        economics_chart.update('none');
       }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+    });
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("Economics", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownEconomics');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("Economics", selectedValue)
+  }
 
-      economics_chart.data.labels.push(time);
-      economics_chart.data.datasets[0].data.push(_energy_costs);
-      economics_chart.data.datasets[1].data.push(_material_costs);
-      economics_chart.data.datasets[2].data.push(_contribution_margin);
-      economics_chart.data.datasets[3].data.push(_production_income);
-
-      economics_chart.data.labels.shift();
-      economics_chart.data.datasets[0].data.shift();
-      economics_chart.data.datasets[1].data.shift();
-      economics_chart.data.datasets[2].data.shift();
-      economics_chart.data.datasets[3].data.shift();
-
-      economics_chart.update('none');
-    }
-  });
   clearTimeout(timeoutIdEconomics);
   timeoutIdEconomics = setTimeout(function() {
     updating_economics(timeOut); 
@@ -1271,36 +1344,48 @@ function updating_economics(timeOut){
 /// updating line power consumption///
 var timeoutIdLinePower;
 function updating_line_power_consumption(timeOut) {
-  $.ajax({
-    type: "GET",
-    url: "/Charts/update_line_power_consumption_chart",
-    success: function(data) {
-  
-      var _line_power_consumption=data["LinePowerConsumption"];
-      var _line_power_consumption_time=data["LinePowerConsumptionTime"];
-  
-      var date = new Date(_line_power_consumption_time);
+  console.log("hi")
+  if (timeOut == "60000") {
+    $.ajax({
+      type: "GET",
+      url: "/Charts/update_line_power_consumption_chart",
+      success: function(data) {
+    
+        var _line_power_consumption=data["LinePowerConsumption"];
+        var _line_power_consumption_time=data["LinePowerConsumptionTime"];
+    
+        var date = new Date(_line_power_consumption_time);
 
-      if (/^\d{2}:\d{2}/.test(line_power_consumption_chart.data.labels[0])) {
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time =  `${hours}:${minutes}`;
-      }
-      else {
-        var day = date.getUTCDate().toString();
-        var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        var time = `${day}-${month} ${hours}:${minutes}`;
-      }
+        if (/^\d{2}:\d{2}/.test(line_power_consumption_chart.data.labels[0])) {
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time =  `${hours}:${minutes}`;
+        }
+        else {
+          var day = date.getUTCDate().toString().padStart(2, '0');
+          var month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+          var hours = date.getUTCHours().toString().padStart(2, '0');
+          var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+          var time = `${day}-${month} ${hours}:${minutes}`;
+        }
 
-      line_power_consumption_chart.data.labels.push(time);
-      line_power_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
-      line_power_consumption_chart.data.labels.shift();
-      line_power_consumption_chart.data.datasets[0].data.shift();
-      line_power_consumption_chart.update('none');
-    }
-  });
+        line_power_consumption_chart.data.labels.push(time);
+        line_power_consumption_chart.data.datasets[0].data.push(_line_power_consumption);
+        line_power_consumption_chart.data.labels.shift();
+        line_power_consumption_chart.data.datasets[0].data.shift();
+        line_power_consumption_chart.update('none');
+      }
+    });
+  }
+  else if (timeOut == "600000") {
+    sendDataToBackend("LinePowerConsumption", "1d")
+  }
+  else if (timeOut == "3600000"){
+    const dropdown = document.getElementById('dropdownLinePowerConsumption');
+    const selectedValue = dropdown.value;
+    sendDataToBackend("LinePowerConsumption", selectedValue)
+  }
+
   clearTimeout(timeoutIdLinePower);
   timeoutIdLinePower = setTimeout(function() {
     updating_line_power_consumption(timeOut); 
