@@ -1,0 +1,9 @@
+
+{
+    "fibre_costs": 1.20, 
+    "energy_costs_x": 0.28, 
+    "selling_price": 2.10, 
+    "floor_quality_weight": 50.0,
+    "unevenness_signal_mean": 10.0,
+    "unevenness_signal_std": 2.0
+}

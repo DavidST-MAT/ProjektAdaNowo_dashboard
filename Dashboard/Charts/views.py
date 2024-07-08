@@ -10,15 +10,14 @@ from datetime import datetime, timedelta
 from statistics import median
 from statistics import mean
 import os
+import json
 
 
-# Config variables
-fibre_costs = 1.20 # € per kg
-energy_costs_x = 0.28 # € per kWh
-selling_price = 2.10 # € per sqm
-floor_quality_weight = 50.0
-unevenness_signal_mean = 10.0
-unevenness_signal_std = 2.0
+# JSON-File augsburg config
+with open('Charts/augsburg.json', 'r') as file:
+    json_data_input = file.read()
+augsburg_conf = json.loads(json_data_input)
+
 
 # Time selection
 aggregate_time = {
@@ -134,15 +133,15 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         print("Nonwoven: ", len(nonwoven_uvenness), len(nonwoven_uvenness_time))
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
-        scaled_signal = [(x - unevenness_signal_mean) / unevenness_signal_std if x is not None else "NaN" for x in nonwoven_uvenness2]
-        card_floor_evenness = [x * floor_quality_weight if x != "NaN" else "NaN" for x in scaled_signal]
+        scaled_signal = [(x - augsburg_conf["unevenness_signal_mean"]) / augsburg_conf["unevenness_signal_std"] if x is not None else "NaN" for x in nonwoven_uvenness2]
+        card_floor_evenness = [x * augsburg_conf["floor_quality_weight"] if x != "NaN" else "NaN" for x in scaled_signal]
         print("CardFloor: ", len(card_floor_evenness), len(nonwoven_uvenness_time))
         return card_floor_evenness, nonwoven_uvenness_time
 
 
 ############################################################################################################
 
-### AmbientTemperature ###
+### Environmental Values ###
 def get_environmental_values(selected_time, influxdb_config, query_api):
 
     query_time_modified = f"-{selected_time}"
@@ -152,6 +151,7 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     else:
         time_string = "%H:%M"
 
+    # Temperature
     query_ambient_temperature = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
@@ -565,7 +565,7 @@ def get_economics(selected_time, influxdb_config, query_api):
     if len(card_delivery_weight_per_area) != len(card_delivery_speed):
         print("Length of lists are not the same")
     else:
-        material_costs = [x * y * 6/100 * fibre_costs for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
+        material_costs = [x * y * 6/100 * augsburg_conf["fibre_costs"] for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
         # fibre_costs = 1.20 # € per kg
 
 
@@ -600,7 +600,7 @@ def get_economics(selected_time, influxdb_config, query_api):
             if pc_value == None: 
                 ec_value = 0.0
             else: 
-                ec_value = pc_value * 0.28    
+                ec_value = pc_value * augsburg_conf["energy_costs_x"]    
             energy_costs.append(ec_value)
 
             pc_time_updated = pc_time + timedelta(hours=2) - timedelta(minutes=1)
@@ -675,7 +675,7 @@ def get_economics(selected_time, influxdb_config, query_api):
     if len(production_width) != len(production_speed):
         print("Length of lists are not the same")
     else:
-        production_income = [x * y * 60 * selling_price for x, y in zip(production_width, production_speed)]
+        production_income = [x * y * 60 * augsburg_conf["selling_price"] for x, y in zip(production_width, production_speed)]
         #selling_price = 2.10 # € per sqm
 
         if production_income != [] and production_income[-1] == 0:
@@ -951,8 +951,8 @@ def update_card_floor_evenness_chart(request):
                 updated_values_dict["NonwovenUnevenness"] = value
                 updated_values_dict["CardFloorEvennessTime"] = now
 
-                scaled_signal = (updated_values_dict["NonwovenUnevenness"] - unevenness_signal_mean) / unevenness_signal_std
-                card_floor_evenness = scaled_signal * floor_quality_weight
+                scaled_signal = (updated_values_dict["NonwovenUnevenness"] - augsburg_conf["unevenness_signal_mean"]) / augsburg_conf["unevenness_signal_std"]
+                card_floor_evenness = scaled_signal * augsburg_conf["floor_quality_weight"]
                 updated_values_dict["CardFloorEvenness"] = card_floor_evenness
 
     return JsonResponse(updated_values_dict, safe=False)
@@ -1149,7 +1149,7 @@ def update_tear_length_chart(request):
                 now += timedelta(hours=2)
 
         updated_values_dict["TearLengthTime"] = now
-        updated_values_dict["TearLengthMD"] = median(tear_length_md)
+        updated_values_dict["TearLengthMD"] = mean(tear_length_md)
 
     ########################################################################
 
@@ -1171,7 +1171,7 @@ def update_tear_length_chart(request):
                 value = record.values["_value"]
                 tear_length_cd.append(value)
 
-        updated_values_dict["TearLengthCD"] = median(tear_length_cd)
+        updated_values_dict["TearLengthCD"] = mean(tear_length_cd)
  
 
     return JsonResponse(updated_values_dict, safe=False)
@@ -1211,7 +1211,7 @@ def update_economics_chart(request):
                 now = datetime.now()
                 now += timedelta(hours=2)
 
-                ec_value = value * 0.28
+                ec_value = value * augsburg_conf["energy_costs_x"] 
                 updated_values_dict["EnergyCosts"] = ec_value
                 updated_values_dict["EconomicsTime"] = now
 
@@ -1242,7 +1242,7 @@ def update_economics_chart(request):
                 elif mc_field == "CardDeliverySpeed":
                     card_delivery_speed = mc_value
 
-        updated_values_dict["MaterialCosts"]  = card_delivery_speed * card_delivery_weight_per_area * 6/100 * fibre_costs
+        updated_values_dict["MaterialCosts"]  = card_delivery_speed * card_delivery_weight_per_area * 6/100 * augsburg_conf["fibre_costs"]
 
 
     ### Updating Production income ###
@@ -1271,7 +1271,7 @@ def update_economics_chart(request):
                 elif pi_field == "ProductionSpeed":
                     production_speed = pi_value
 
-        updated_values_dict["ProductionIncome"] = production_width * production_speed * 60 * 2.10 
+        updated_values_dict["ProductionIncome"] = production_width * production_speed * 60 * augsburg_conf["selling_price"] 
 
 
     updated_values_dict["ContributionMargin"] = updated_values_dict["ProductionIncome"] - updated_values_dict["EnergyCosts"] - updated_values_dict["MaterialCosts"] 
