@@ -1265,6 +1265,8 @@ def update_economics_chart(request):
 
                 if pi_value == None: 
                     pi_value = 0
+                    production_width = 0
+                    production_speed = 0
 
                 if pi_field == "ProductWidth":
                     production_width = pi_value
