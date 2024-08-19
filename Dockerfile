@@ -32,5 +32,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Kopiere die Projektdateien in das Arbeitsverzeichnis
 COPY . .
 
+
 # Starte den Entwicklungsserver
 CMD ["python", "Dashboard/manage.py", "runserver", "0.0.0.0:8082"]

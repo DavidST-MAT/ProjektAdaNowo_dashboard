@@ -14,7 +14,7 @@ import json
 
 
 # JSON-File augsburg config
-with open('Charts/augsburg.json', 'r') as file:
+with open('Dashboard/augsburg.json', 'r') as file:
     json_data_input = file.read()
 augsburg_conf = json.loads(json_data_input)
 
@@ -113,6 +113,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if nonwoven_uvenness_time == []:
         time_now = datetime.now()
+        time_now = time_now + timedelta(hours=2)
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -191,6 +192,7 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
 
     if environmental_values_time == []:
         time_now = datetime.now()
+        time_now = time_now + timedelta(hours=2)
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -627,7 +629,7 @@ def get_economics(selected_time, influxdb_config, query_api):
 
     if energy_costs_time == []:
         time_now = datetime.now()
-
+        time_now = time_now + timedelta(hours=2)
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -758,6 +760,7 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
 
         if line_power_consumption_time == []:
             time_now = datetime.now()
+            time_now = time_now + timedelta(hours=2)
 
             if aggregate_time[selected_time] == "1h":
                 for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -898,7 +901,7 @@ def update_nonwoven_unevenness_chart(request):
 
     if tables == []:
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["NonwovenUnevennessTime"] = now
     else:
         for table in tables:
@@ -936,7 +939,7 @@ def update_card_floor_evenness_chart(request):
 
     if tables == []:
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["CardFloorEvennessTime"] = now
     else:
         for table in tables:
@@ -979,7 +982,7 @@ def update_environmental_values_chart(request):
 
     if tables == []:
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["EnvironmentalValuesTime"] = now
     else:
         for table in tables:
@@ -1066,7 +1069,7 @@ def update_laboratory_values_chart(request):
   
     if tables == []:
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["AreaWeightTime"] = now
     else:
         for table in tables:
@@ -1135,7 +1138,7 @@ def update_tear_length_chart(request):
 
     if tables == []:
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["TearLengthTime"] = now
     else:
         for table in tables:
@@ -1199,7 +1202,7 @@ def update_economics_chart(request):
     if tables == []:
         updated_values_dict["EnergyCosts"] = 0.0
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["EconomicsTime"] = now
     else:
         for table in tables:
@@ -1303,7 +1306,7 @@ def update_line_power_consumption_chart(request):
     if tables == []:
         updated_values_dict["LinePowerConsumption"] = 0.0
         now = datetime.now()
-        now += timedelta(hours=2)
+        now += timedelta(hours=4)
         updated_values_dict["LinePowerConsumptionTime"] = now
 
     else:
