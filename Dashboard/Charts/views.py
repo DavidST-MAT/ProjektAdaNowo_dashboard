@@ -911,7 +911,7 @@ def update_nonwoven_unevenness_chart(request):
                 #time = time + timedelta(hours=2, minutes=1)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
                 updated_values_dict["NonwovenUnevenness"] = value
                 updated_values_dict["NonwovenUnevennessTime"] = now
@@ -949,7 +949,7 @@ def update_card_floor_evenness_chart(request):
                 #time += timedelta(hours=2)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
                 updated_values_dict["NonwovenUnevenness"] = value
                 updated_values_dict["CardFloorEvennessTime"] = now
@@ -992,7 +992,7 @@ def update_environmental_values_chart(request):
                 #time += timedelta(hours=2)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
                 updated_values_dict["AmbientTemperature"] = value
                 updated_values_dict["EnvironmentalValuesTime"] = now
@@ -1149,7 +1149,7 @@ def update_tear_length_chart(request):
                 tear_length_md.append(value)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
         updated_values_dict["TearLengthTime"] = now
         updated_values_dict["TearLengthMD"] = mean(tear_length_md)
@@ -1212,7 +1212,7 @@ def update_economics_chart(request):
                 #time += timedelta(hours=2)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
                 ec_value = value * augsburg_conf["energy_costs_x"] 
                 updated_values_dict["EnergyCosts"] = ec_value
@@ -1317,7 +1317,7 @@ def update_line_power_consumption_chart(request):
                 #time += timedelta(hours=2)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
                 updated_values_dict["LinePowerConsumption"] = value
                 updated_values_dict["LinePowerConsumptionTime"] = now
