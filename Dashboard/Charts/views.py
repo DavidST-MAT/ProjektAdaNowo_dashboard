@@ -308,6 +308,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
 
     if area_weight_time == []:
         time_now = datetime.now()
+        time_now = time_now + timedelta(hours=2)
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
@@ -458,6 +459,7 @@ def get_tear_length(selected_time, influxdb_config, query_api):
 
     if tear_length_time == []:
         time_now = datetime.now()
+        time_now = time_now + timedelta(hours=2)
 
         if aggregate_time[selected_time] == "1h":
             for i in range(time_select_empty_table[selected_time], -1, -1):
