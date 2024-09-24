@@ -1083,7 +1083,7 @@ def update_laboratory_values_chart(request):
                 #time += timedelta(hours=2)
 
                 now = datetime.now()
-                now += timedelta(hours=2)
+                now += timedelta(hours=4)
 
         updated_values_dict["TensileMD"] = mean(tensile_strength_md)
         updated_values_dict["AreaWeightTime"] = now
