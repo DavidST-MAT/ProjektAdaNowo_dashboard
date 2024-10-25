@@ -522,7 +522,7 @@ const options_environmental_values = {
       },
       beginAtZero: false,
       suggestedMin: 0,
-      suggestedMax: 0,
+      suggestedMax: 50,
       title: {
         display: true,
         text: '[°C]', 
@@ -546,7 +546,7 @@ const options_environmental_values = {
       },
       beginAtZero: false,
       suggestedMin: 0,
-      suggestedMax: 0,
+      suggestedMax: 50,
       title: {
         display: true,
         text: '[%]', 
@@ -578,7 +578,7 @@ var environmental_values_chart = new Chart(ctx_live, {
       borderWidth: 2,
       radius: 1,
       borderColor: 'rgba(22, 128, 22, 1)',
-      label: 'Humidity [%]',
+      label: 'rel. Humidity [%]',
       tension: 0.25,
       yAxisID: 'y2'
     }
@@ -641,7 +641,7 @@ const options_laboratory_value = {
       },
       beginAtZero: false,
       suggestedMin: 0,
-      suggestedMax: 0,
+      suggestedMax: 500,
       title: {
         display: true,
         text: '[g/m^2]', 
@@ -664,7 +664,7 @@ const options_laboratory_value = {
       },
       beginAtZero: false,
       suggestedMin: 0,
-      suggestedMax: 0,
+      suggestedMax: 500,
       title: {
         display: true,
         text: '[N]', 

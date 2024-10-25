@@ -45,7 +45,7 @@ time_select_empty_table = {
 class InfluxDBConfig:
 
     def __init__(self):
-        self.url = os.getenv("INFLUXDB_URL", "http://localhost:8086")
+        self.url = os.getenv("INFLUXDB_URL", "http://192.168.178.50:8086")
         #self.token = os.getenv("INFLUXDB_TOKEN", "Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==")
         self.token = os.getenv("INFLUXDB_TOKEN", "L43SXxiyt-jYReLa0NdsUgvIvCSk_BsC7shKlf2HXiboELJsVYbWEQfv57-Ml0GX58m1CjateBgEBwFKEtK4mQ==")
         self.org = os.getenv("INFLUXDB_ORG", "MAT")
@@ -68,7 +68,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "NonwovenUnevenness")
         |> filter(fn: (r) => r["Unit"] == "-")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     # Execute the Flux query and store the result in tables
@@ -158,7 +158,7 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "AmbientTemperature")
         |> filter(fn: (r) => r["Unit"] == "°C")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     tables_ambient_temperature = query_api.query(query_ambient_temperature, org=influxdb_config.org)
@@ -217,7 +217,7 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
     |> filter(fn: (r) => r["_field"] == "RelativeHumidityEnvironment")
     |> filter(fn: (r) => r["Unit"] == "%")
-    |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+    |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     # Execute the Flux query and store the result in tables
@@ -534,7 +534,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "CardDeliveryWeightPerArea" or r["_field"] == "CardDeliverySpeed")
         |> filter(fn: (r) => r["Unit"] == "g/m^2" or r["Unit"] == "m/min")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: last)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     tables_material_costs= query_api.query(query_material_costs, org=influxdb_config.org)
@@ -589,7 +589,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "LinePowerConsumption")
         |> filter(fn: (r) => r["Unit"] == "kW")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     tables_energy_costs = query_api.query(query_energy_costs, org=influxdb_config.org)
@@ -654,7 +654,7 @@ def get_economics(selected_time, influxdb_config, query_api):
         |> filter(fn: (r) => r["_measurement"] == "ActualValues" and r["Iteration"] == "-1")
         |> filter(fn: (r) => r["_field"] == "ProductWidth" or r["_field"] == "ProductionSpeed")
         |> filter(fn: (r) => r["Unit"] == "m" or r["Unit"] == "m/min")
-        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
+        |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
     tables_production_income = query_api.query(query_production_income, org=influxdb_config.org)
