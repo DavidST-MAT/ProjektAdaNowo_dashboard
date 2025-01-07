@@ -45,10 +45,9 @@ time_select_empty_table = {
 class InfluxDBConfig:
 
     def __init__(self):
-        self.url = os.getenv("INFLUXDB_URL", "http://192.168.178.50:8086")
-        #self.token = os.getenv("INFLUXDB_TOKEN", "Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==")
-        self.token = os.getenv("INFLUXDB_TOKEN", "L43SXxiyt-jYReLa0NdsUgvIvCSk_BsC7shKlf2HXiboELJsVYbWEQfv57-Ml0GX58m1CjateBgEBwFKEtK4mQ==")
-        self.org = os.getenv("INFLUXDB_ORG", "MAT")
+        self.url = os.getenv("INFLUXDB_URL")
+        self.token = os.getenv("INFLUXDB_TOKEN")
+        self.org = os.getenv("INFLUXDB_ORG")
 
 
 ############################################################################################################
@@ -71,7 +70,6 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
-    # Execute the Flux query and store the result in tables
     tables_nonwoven_uvenness = query_api.query(query_nonwoven_uvenness, org=influxdb_config.org)
     nonwoven_uvenness = []
     nonwoven_uvenness2 = []
@@ -131,12 +129,10 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
 
     if chart == "NonwovenUnevennes":
         nonwoven_uvenness = [x if x is not None else "NaN" for x in nonwoven_uvenness]
-        print("Nonwoven: ", len(nonwoven_uvenness), len(nonwoven_uvenness_time))
         return nonwoven_uvenness, nonwoven_uvenness_time
     elif chart == "CardFloorEvenness":
         scaled_signal = [(x - augsburg_conf["unevenness_signal_mean"]) / augsburg_conf["unevenness_signal_std"] if x is not None else "NaN" for x in nonwoven_uvenness2]
         card_floor_evenness = [x * augsburg_conf["floor_quality_weight"] if x != "NaN" else "NaN" for x in scaled_signal]
-        print("CardFloor: ", len(card_floor_evenness), len(nonwoven_uvenness_time))
         return card_floor_evenness, nonwoven_uvenness_time
 
 
@@ -220,7 +216,6 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
     |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: max)
     """
 
-    # Execute the Flux query and store the result in tables
     tables_humidity_environment = query_api.query(query_humidity_environment, org=influxdb_config.org)
     humidity_environment = []
 
@@ -244,7 +239,7 @@ def get_environmental_values(selected_time, influxdb_config, query_api):
 
     
     humidity_environment = [x if x is not None else "NaN" for x in humidity_environment]
-    print("Environment: ", len(ambient_temperature), len(humidity_environment), len(environmental_values_time))
+
     return [ambient_temperature, humidity_environment], environmental_values_time
 
 
@@ -273,7 +268,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
             |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: {aggregation_fn})
         '''
 
-        # Execute the Flux query and store the result in tables
         tables_area_weight = query_api.query(query_area_weight, org=influxdb_config.org)
         area_weight = []
         area_weight_time = []
@@ -329,7 +323,7 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
 
     ##################################### TENSILE MD ################################################
 
-    for index, aggregation_fn in enumerate(aggregation_fns): # enumarate macht kein sinn !
+    for index, aggregation_fn in enumerate(aggregation_fns): 
         query_tables_tensile_md = f"""
         from(bucket: "LabValues")
             |> range(start: {query_time_modified}, stop: now())
@@ -402,7 +396,6 @@ def get_laboratory_values(selected_time, influxdb_config, query_api):
 
     tensile_force_cd = [x if x is not None else "NaN" for x in tensile_force_cd]
 
-    print("LabValues1: ", len(area_weight), len(tensile_force_md), len(tensile_force_cd), len(area_weight_time))
     return [area_weight, tensile_force_md, tensile_force_cd], area_weight_time
 
 
@@ -427,7 +420,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
     """
 
-    # Execute the Flux query and store the result in tables
     tables_tear_length_md = query_api.query(query_tear_length_md, org=influxdb_config.org)
     tear_length_md = []
     tear_length_time = []
@@ -488,7 +480,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
         |> aggregateWindow(every: {aggregate_time[selected_time]}, fn: mean)
         """
 
-    # Execute the Flux query and store the result in tables
     tables_tear_length_cd = query_api.query(query_tensile_strength, org=influxdb_config.org)
     tear_length_cd = []
 
@@ -513,7 +504,6 @@ def get_tear_length(selected_time, influxdb_config, query_api):
 
     tear_length_cd = [x if x is not None else "NaN" for x in tear_length_cd]
 
-    print("LabValues2: ", len(tear_length_md), len(tear_length_cd), len(tear_length_time))
     return [tear_length_md, tear_length_cd], tear_length_time
 
 
@@ -570,8 +560,6 @@ def get_economics(selected_time, influxdb_config, query_api):
         print("Length of lists are not the same")
     else:
         material_costs = [x * y * 6/100 * augsburg_conf["fibre_costs"] for x, y in zip(card_delivery_weight_per_area, card_delivery_speed)]
-        # fibre_costs = 1.20 # € per kg
-
 
     if material_costs == []:
         if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
@@ -675,7 +663,7 @@ def get_economics(selected_time, influxdb_config, query_api):
             elif pi_field == "ProductionSpeed":
                 production_speed.append(pi_value)
     
-    #print(len(production_width), len(production_speed))
+   
     if len(production_width) != len(production_speed):
         print("Length of lists are not the same")
     else:
@@ -699,8 +687,7 @@ def get_economics(selected_time, influxdb_config, query_api):
     ###
     #Contribution Margin 
     contribution_margin = [income - energy - material for income, energy, material in zip(production_income, energy_costs, material_costs)]
-    #print(len(material_costs))
-    print("Eco: ", len(energy_costs), len(material_costs), len(production_income), len(contribution_margin), len(energy_costs_time))
+
     return [energy_costs, material_costs, production_income, contribution_margin], energy_costs_time
 
 
@@ -777,7 +764,6 @@ def get_line_power_consumption(chart, selected_time, influxdb_config, query_api)
                     time = time_now - timedelta(minutes=i)
                     line_power_consumption_time.append(time.strftime(time_string))
 
-    print("LinePower: ", len(line_power_consumption), len(line_power_consumption_time))
     return line_power_consumption, line_power_consumption_time
 
 
@@ -816,7 +802,8 @@ def handle_time_range(request):
 
 
 ###########################################################################################################
-# main function
+
+# Main function
 def index(request):
 
     query_hours = request.GET.get('value')

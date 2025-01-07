@@ -2,8 +2,6 @@ from django.urls import path
 from . import views
 from .views import handle_time_range
 
-
-
 urlpatterns = [
     path('', views.index, name="index"),
     path('Charts/update_nonwoven_unevenness_chart/', views.update_nonwoven_unevenness_chart, name='update_nonwoven_unevenness_chart'),
