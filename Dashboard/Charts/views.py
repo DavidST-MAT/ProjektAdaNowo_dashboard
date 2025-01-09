@@ -50,6 +50,17 @@ class InfluxDBConfig:
         self.org = os.getenv("INFLUXDB_ORG")
 
 
+
+# Scale data for x-axis
+def scale_x_axis(x_list):
+    if x_list != [] and x_list[-1] == None:
+        x_list[-1] = x_list[-2]
+    if x_list != [] and x_list[0] == None:
+        x_list[0] = x_list[1]
+
+    return x_list
+
+
 ############################################################################################################
 
 ### NonwovenUnevenness ### Card Floor Unevenness ###
@@ -62,6 +73,7 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
     else:
         time_string = "%H:%M"
 
+    # Flux query for NonwovenUnevenness
     query_nonwoven_uvenness = f"""from(bucket: "AgentValues")
         |> range(start: {query_time_modified}, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "QualityValues" and r["Iteration"] == "-1")
@@ -89,15 +101,18 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         nonwoven_uvenness_time[-1] = nu_time_updated.strftime(time_string)
         
 
-    if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
-        nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
-    if nonwoven_uvenness != [] and nonwoven_uvenness[0] == None:
-        nonwoven_uvenness[0] = nonwoven_uvenness[1]
+    # if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
+    #     nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
+    # if nonwoven_uvenness != [] and nonwoven_uvenness[0] == None:
+    #     nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
-    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[-1] == None:
-        nonwoven_uvenness2[-1] = nonwoven_uvenness2[-2]
-    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[0] == None:
-        nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
+    # if nonwoven_uvenness2 != [] and nonwoven_uvenness2[-1] == None:
+    #     nonwoven_uvenness2[-1] = nonwoven_uvenness2[-2]
+    # if nonwoven_uvenness2 != [] and nonwoven_uvenness2[0] == None:
+    #     nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
+    
+    nonwoven_uvenness = scale_x_axis(nonwoven_uvenness)
+    nonwoven_uvenness2 = scale_x_axis(nonwoven_uvenness2)
 
     if nonwoven_uvenness == []:
         if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
