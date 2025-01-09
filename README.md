@@ -25,18 +25,19 @@ Follow these steps to set up the project on your local machine and make sure you
 
 ### Installation (local)
 
+Your y-axis might be offtime, when your are not using docker internal time.
+
 1. **Install dependencies**:
 
    ```bash
    pip install -r requirements.txt
    ```
 2. **Set up environment variables**: Create a `.env` file and set the `InfluxDB credentials`:
-4. **Start the development server**:
+3. **Start the development server**:
 
    ```bash
    python manage.py runserver 
    ```
-
 
 ## Running with Docker
 

@@ -45,20 +45,10 @@ time_select_empty_table = {
 class InfluxDBConfig:
 
     def __init__(self):
-        self.url = os.getenv("INFLUXDB_URL")
-        self.token = os.getenv("INFLUXDB_TOKEN")
-        self.org = os.getenv("INFLUXDB_ORG")
-
-
-
-# Scale data for x-axis
-def scale_x_axis(x_list):
-    if x_list != [] and x_list[-1] == None:
-        x_list[-1] = x_list[-2]
-    if x_list != [] and x_list[0] == None:
-        x_list[0] = x_list[1]
-
-    return x_list
+        self.url = os.getenv("INFLUXDB_URL", "http://localhost:8086")
+        #self.token = os.getenv("INFLUXDB_TOKEN", "Qc6s7RKI7ZnQpB5ZdesJzEmgd46XLGRmcXv5RJRbhTUc758Ma8g-LQv6_A2p125BZohkhbYnEhVtpeOHJ-BqTw==")
+        self.token = os.getenv("INFLUXDB_TOKEN", "L43SXxiyt-jYReLa0NdsUgvIvCSk_BsC7shKlf2HXiboELJsVYbWEQfv57-Ml0GX58m1CjateBgEBwFKEtK4mQ==")
+        self.org = os.getenv("INFLUXDB_ORG", "MAT")
 
 
 ############################################################################################################
@@ -101,18 +91,15 @@ def get_nonwoven_unevenness(chart, selected_time, influxdb_config, query_api):
         nonwoven_uvenness_time[-1] = nu_time_updated.strftime(time_string)
         
 
-    # if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
-    #     nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
-    # if nonwoven_uvenness != [] and nonwoven_uvenness[0] == None:
-    #     nonwoven_uvenness[0] = nonwoven_uvenness[1]
+    if nonwoven_uvenness != [] and nonwoven_uvenness[-1] == None:
+        nonwoven_uvenness[-1] = nonwoven_uvenness[-2]
+    if nonwoven_uvenness != [] and nonwoven_uvenness[0] == None:
+        nonwoven_uvenness[0] = nonwoven_uvenness[1]
 
-    # if nonwoven_uvenness2 != [] and nonwoven_uvenness2[-1] == None:
-    #     nonwoven_uvenness2[-1] = nonwoven_uvenness2[-2]
-    # if nonwoven_uvenness2 != [] and nonwoven_uvenness2[0] == None:
-    #     nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
-    
-    nonwoven_uvenness = scale_x_axis(nonwoven_uvenness)
-    nonwoven_uvenness2 = scale_x_axis(nonwoven_uvenness2)
+    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[-1] == None:
+        nonwoven_uvenness2[-1] = nonwoven_uvenness2[-2]
+    if nonwoven_uvenness2 != [] and nonwoven_uvenness2[0] == None:
+        nonwoven_uvenness2[0] = nonwoven_uvenness2[1]
 
     if nonwoven_uvenness == []:
         if aggregate_time[selected_time] == "1h" or aggregate_time[selected_time] == "1m":
